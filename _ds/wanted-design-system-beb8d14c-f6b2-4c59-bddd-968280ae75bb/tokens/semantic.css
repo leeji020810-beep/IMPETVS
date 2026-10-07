@@ -1,0 +1,20 @@
+/* Friendly aliases over the raw Figma variables in fig-tokens.css.
+   Values follow the file's canonical "Ungrouped" semantic set (-3 suffix = the one components reference). */
+:root{
+--color-primary:var(--primary-normal-3);--color-primary-strong:var(--primary-strong);--color-primary-heavy:var(--primary-heavy);
+--text-strong:var(--label-strong);--text-normal:var(--label-normal-3);--text-neutral:var(--label-neutral);--text-alternative:var(--label-alternative);--text-assistive:var(--label-assistive);--text-disable:var(--label-disable);
+--text-on-primary:var(--static-white);--text-inverse:var(--inverse-label);
+--surface-page:var(--background-normal-normal);--surface-page-alt:var(--background-normal-alternative);--surface-elevated:var(--background-elevated-normal);--surface-inverse:var(--inverse-background);
+--fill-subtle:var(--fill-alternative);--fill-default:var(--fill-normal);--fill-emphasis:var(--fill-strong);
+--border-subtle:var(--line-normal-alternative);--border-default:var(--line-normal-neutral);--border-normal:var(--line-normal-normal);--border-strong:var(--line-normal-strong);
+--status-success:var(--status-positive);--status-warning:var(--status-cautionary);--status-error:var(--status-negative);
+--dimmer:var(--material-dimmer);
+--radius-xs:6px;--radius-sm:8px;--radius-md:10px;--radius-lg:12px;--radius-xl:16px;--radius-2xl:20px;--radius-pill:999px;
+--space-1:2px;--space-2:4px;--space-3:6px;--space-4:8px;--space-5:12px;--space-6:16px;--space-7:20px;--space-8:24px;--space-9:32px;--space-10:40px;--space-11:48px;
+--shadow-hairline:inset 0 0 0 1px rgba(112,115,124,0.16);
+--shadow-input:0px 1px 2px 0px rgba(0,0,0,0.03);
+--shadow-floating:0px 6px 12px 0px rgba(0,0,0,0.12),0px 4px 8px 0px rgba(0,0,0,0.08),0px 0px 4px 0px rgba(0,0,0,0.08);
+--shadow-popover:0px 0px 60px 0px rgba(23,23,23,0.1);
+--focus-ring:inset 0 0 0 2px var(--primary-normal-3);
+--interaction-hover:0.05 /* @kind other */;--interaction-pressed:0.12 /* @kind other */;
+}

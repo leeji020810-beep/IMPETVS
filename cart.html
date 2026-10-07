@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>장바구니 | IMPETVS</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fig-tokens.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/typography.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/semantic.css">
+<link rel="stylesheet" href="shop.css">
+<style>html,body{margin:0;background:#fff}</style>
+</head>
+<body>
+<div data-shp-header></div>
+<main class="shp-page" id="cart-root">
+  <div class="shp-cartpg">
+    <h1>장바구니</h1>
+    <div id="cart-body"></div>
+  </div>
+</main>
+<script src="config.js"></script>
+<script src="shop.js"></script>
+<script src="auth.js"></script>
+<script id="shp-js-cart">
+(function () {
+  var S = window.IMShop, body = document.getElementById('cart-body');
+  function render() {
+    var list = S.cart.items();
+    if (!list.length) {
+      body.innerHTML = '<div class="shp-cart-empty"><p>장바구니가 비어 있습니다.</p></div><div class="shp-cart-go"><a class="shp-btn" href="' + S.links.product + '">상품 보러 가기</a></div>';
+      return;
+    }
+    var rows = list.map(function (it, i) {
+      var p = S.products[it.id];
+      return '<li class="shp-item" data-i="' + i + '">' +
+        '<a href="' + S.links.product + '" aria-label="' + S.esc(p.name) + ' 상품 보기"><img src="' + S.esc(S.img(S.imgFor(it.id, it.option))) + '" width="96" height="128" alt="' + S.esc(p.name + ' ' + it.option) + '"></a>' +
+        '<div><p class="shp-item-name">' + S.esc(p.name) + '</p>' +
+        '<p class="shp-item-opt">용량: ' + S.esc(it.option) + '</p>' +
+        '<p class="shp-item-unit">단가 ' + S.esc(S.money(S.cart.unit(it))) + '</p>' +
+        '<p class="shp-item-amt">합계 ' + S.esc(S.money(S.cart.line(it))) + '</p></div>' +
+        '<div class="shp-item-side"><div class="shp-qty" role="group" aria-label="' + S.esc(p.name + ' ' + it.option) + ' 수량">' +
+        '<button type="button" data-act="minus" aria-label="수량 줄이기"' + (it.qty <= 1 ? ' disabled' : '') + '>−</button>' +
+        '<input type="number" data-act="qty" value="' + it.qty + '" min="1" inputmode="numeric" aria-label="수량">' +
+        '<button type="button" data-act="plus" aria-label="수량 늘리기">+</button></div>' +
+        '<button type="button" class="shp-rm" data-act="rm" aria-label="' + S.esc(p.name + ' ' + it.option) + ' 삭제">삭제</button></div></li>';
+    }).join('');
+    body.innerHTML = '<ul class="shp-list">' + rows + '</ul>' +
+      '<div class="shp-sum"><span>상품금액 합계 <small style="font-weight:400;color:rgba(55,56,60,.61)">(총 ' + S.cart.count() + '개)</small></span><b id="cart-total">' + S.esc(S.money(S.cart.total())) + '</b></div>' +
+      '<a class="shp-btn" id="cart-order" href="' + S.links.order + '">주문하기</a>';
+  }
+  function refocus(i, act) {
+    var el = body.querySelector('.shp-item[data-i="' + i + '"] [data-act="' + act + '"]') || body.querySelector('.shp-item [data-act], a.shp-btn');
+    if (el && el.focus) el.focus();
+  }
+  // 주문하기: the whole cart (product / capacity / quantity) goes to the order page; nothing is removed from the cart here
+  body.addEventListener('click', function (e) {
+    if (e.target.closest('#cart-order')) { S.order.fromCart(); return; }
+    var b = e.target.closest('[data-act]'); if (!b) return;
+    var i = +b.closest('.shp-item').dataset.i, it = S.cart.items()[i]; if (!it) return;
+    if (b.dataset.act === 'minus') S.cart.setQty(i, it.qty - 1);
+    else if (b.dataset.act === 'plus') S.cart.setQty(i, it.qty + 1);
+    else if (b.dataset.act === 'rm') S.cart.remove(i);
+    else return;
+    render(); refocus(i, b.dataset.act);
+  });
+  body.addEventListener('change', function (e) {
+    if (e.target.dataset.act !== 'qty') return;
+    S.cart.setQty(+e.target.closest('.shp-item').dataset.i, Number(e.target.value)); render();
+  });
+  S.subscribe(function () { if (!body.contains(document.activeElement) || document.activeElement === document.body) render(); });
+  render();
+})();
+</script>
+</body>
+</html>

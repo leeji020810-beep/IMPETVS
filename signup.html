@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>회원가입 | IMPETVS</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fig-tokens.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/typography.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/semantic.css">
+<link rel="stylesheet" href="shop.css">
+<style>html,body{margin:0;background:#fff}</style>
+</head>
+<body>
+<div data-shp-header></div>
+<main class="shp-page" id="signup-root">
+  <div class="shp-auth">
+    <h1>회원가입</h1>
+    <form class="shp-form" id="su-form" novalidate>
+      <p class="shp-notice" id="su-notice" role="status" style="margin:0 0 24px" hidden></p>
+      <label class="shp-field"><span>이름</span><input class="shp-in" type="text" id="su-name" autocomplete="name" maxlength="50"></label>
+      <label class="shp-field"><span>이메일 (아이디)</span><input class="shp-in" type="email" id="su-email" autocomplete="email"></label>
+      <label class="shp-field"><span>휴대폰 번호 <small style="font-weight:400;color:rgba(55,56,60,.61)">(선택 · 아이디 찾기에 사용)</small></span><input class="shp-in" type="tel" id="su-phone" autocomplete="tel" inputmode="numeric" placeholder="숫자만 입력"></label>
+      <label class="shp-field"><span>비밀번호 <small style="font-weight:400;color:rgba(55,56,60,.61)">(8자 이상)</small></span><input class="shp-in" type="password" id="su-pw" autocomplete="new-password"></label>
+      <label class="shp-field"><span>비밀번호 확인</span><input class="shp-in" type="password" id="su-pw2" autocomplete="new-password"></label>
+      <label class="shp-chk"><input type="checkbox" id="su-c1"><span>[필수] <a href="terms.html" target="_blank" rel="noopener">이용약관</a>에 동의합니다.</span></label>
+      <label class="shp-chk"><input type="checkbox" id="su-c2"><span>[필수] <a href="privacy.html" target="_blank" rel="noopener">개인정보 수집·이용</a>에 동의합니다.</span></label>
+      <p class="shp-err" id="su-err" role="alert" hidden></p>
+      <p class="shp-okmsg" id="su-ok" role="status" hidden></p>
+      <button type="submit" class="shp-btn main" id="su-submit" style="margin-top:12px">회원가입</button>
+      <p class="shp-alt">이미 계정이 있으신가요? <a href="login.html">로그인</a></p>
+    </form>
+  </div>
+</main>
+<script src="config.js"></script>
+<script src="shop.js"></script>
+<script src="auth.js"></script>
+<script id="shp-js-signup">
+(function () {
+  var S = window.IMShop, A = window.IMAuth, $ = function (id) { return document.getElementById(id); };
+  var fields = ['su-name', 'su-email', 'su-phone', 'su-pw', 'su-pw2', 'su-c1', 'su-c2'];
+  // personal data is only collected when the server is connected AND the approved 이용약관 / 개인정보처리방침 are published
+  var on = A.legalReady();
+  fields.forEach(function (id) { $(id).disabled = !on; });
+  $('su-submit').setAttribute('aria-disabled', on ? 'false' : 'true');
+  var n = $('su-notice');
+  if (!A.backendReady()) { n.hidden = false; n.textContent = '회원 서비스 연결 전입니다. 서버(Supabase) 설정이 끝나면 가입할 수 있습니다. 지금은 입력과 제출을 할 수 없으며, 비밀번호 등 개인정보를 수집하거나 저장하지 않습니다.'; }
+  else if (!on) { n.hidden = false; n.textContent = '이용약관·개인정보처리방침 게시 후 가입할 수 있습니다. 그 전에는 개인정보를 받지 않습니다.'; }
+  function err(msg) { $('su-err').hidden = false; $('su-err').textContent = msg; }
+  $('su-form').addEventListener('submit', function (e) {
+    e.preventDefault(); $('su-err').hidden = true; $('su-ok').hidden = true;
+    if (!on) return err(n.textContent || '지금은 가입할 수 없습니다.');
+    var name = $('su-name').value.trim(), email = $('su-email').value.trim(), phone = $('su-phone').value.replace(/\D/g, ''), pw = $('su-pw').value;
+    if (!name) return err('이름을 입력해 주세요.');
+    if (!/^\S+@\S+\.\S+$/.test(email)) return err('이메일 주소를 정확히 입력해 주세요.');
+    if (phone && !/^01\d{8,9}$/.test(phone)) return err('휴대폰 번호를 정확히 입력하거나 비워 두세요.');
+    if (pw.length < 8) return err('비밀번호는 8자 이상이어야 합니다.');
+    if (pw !== $('su-pw2').value) return err('비밀번호 확인이 일치하지 않습니다.');
+    if (!$('su-c1').checked || !$('su-c2').checked) return err('필수 약관에 모두 동의해 주세요.');
+    var b = $('su-submit'); b.disabled = true; b.textContent = '처리 중…';
+    A.signUp({ name: name, email: email, phone: phone, password: pw }).then(function (r) {
+      b.disabled = false; b.textContent = '회원가입';
+      if (!r.ok) return err(r.message); // the form keeps what was typed (only the passwords are cleared below on success)
+      $('su-pw').value = ''; $('su-pw2').value = '';
+      if (r.loggedIn) { var nx = A.takeNext(); location.href = nx || S.links.home; return; }
+      $('su-ok').hidden = false; $('su-ok').textContent = '가입 요청이 접수되었습니다. 입력하신 이메일로 인증 메일을 보냈으니 메일의 링크로 인증을 마친 뒤 로그인해 주세요.';
+    });
+  });
+})();
+</script>
+</body>
+</html>

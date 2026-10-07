@@ -1,0 +1,42 @@
+/* Type scale — transcribed from the Figma "Typography" page (size / line-height / letter-spacing). */
+:root{
+--font-sans:"Pretendard JP","Pretendard",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+--font-brand:"Gloock","Pretendard JP",serif;
+--font-mono:"SF Mono",ui-monospace,Menlo,monospace;
+--weight-regular:400;--weight-medium:500;--weight-semibold:600;--weight-bold:700;
+--type-display-1-size:56px;--type-display-1-lh:1.286;--type-display-1-ls:-0.0319em;
+--type-display-2-size:40px;--type-display-2-lh:1.3;--type-display-2-ls:-0.0282em;
+--type-display-3-size:36px;--type-display-3-lh:1.334;--type-display-3-ls:-0.027em;
+--type-title-1-size:32px;--type-title-1-lh:1.375;--type-title-1-ls:-0.0253em;
+--type-title-2-size:28px;--type-title-2-lh:1.358;--type-title-2-ls:-0.0236em;
+--type-title-3-size:24px;--type-title-3-lh:1.334;--type-title-3-ls:-0.023em;
+--type-heading-1-size:22px;--type-heading-1-lh:1.364;--type-heading-1-ls:-0.0194em;
+--type-heading-2-size:20px;--type-heading-2-lh:1.4;--type-heading-2-ls:-0.012em;
+--type-headline-1-size:18px;--type-headline-1-lh:1.445;--type-headline-1-ls:-0.002em;
+--type-headline-2-size:17px;--type-headline-2-lh:1.412;--type-headline-2-ls:0em;
+--type-body-1-size:16px;--type-body-1-lh:1.5;--type-body-1-reading-lh:1.625;--type-body-1-ls:0.0057em;
+--type-body-2-size:15px;--type-body-2-lh:1.467;--type-body-2-reading-lh:1.6;--type-body-2-ls:0.0096em;
+--type-label-1-size:14px;--type-label-1-lh:1.429;--type-label-1-reading-lh:1.571;--type-label-1-ls:0.0145em;
+--type-label-2-size:13px;--type-label-2-lh:1.385;--type-label-2-ls:0.0194em;
+--type-caption-1-size:12px;--type-caption-1-lh:1.334;--type-caption-1-ls:0.0252em;
+--type-caption-2-size:11px;--type-caption-2-lh:1.273;--type-caption-2-ls:0.0311em;
+}
+.wds-display-1{font:700 var(--type-display-1-size)/var(--type-display-1-lh) var(--font-sans);letter-spacing:var(--type-display-1-ls)}
+.wds-display-2{font:700 var(--type-display-2-size)/var(--type-display-2-lh) var(--font-sans);letter-spacing:var(--type-display-2-ls)}
+.wds-display-3{font:700 var(--type-display-3-size)/var(--type-display-3-lh) var(--font-sans);letter-spacing:var(--type-display-3-ls)}
+.wds-title-1{font:700 var(--type-title-1-size)/var(--type-title-1-lh) var(--font-sans);letter-spacing:var(--type-title-1-ls)}
+.wds-title-2{font:700 var(--type-title-2-size)/var(--type-title-2-lh) var(--font-sans);letter-spacing:var(--type-title-2-ls)}
+.wds-title-3{font:700 var(--type-title-3-size)/var(--type-title-3-lh) var(--font-sans);letter-spacing:var(--type-title-3-ls)}
+.wds-heading-1{font:600 var(--type-heading-1-size)/var(--type-heading-1-lh) var(--font-sans);letter-spacing:var(--type-heading-1-ls)}
+.wds-heading-2{font:600 var(--type-heading-2-size)/var(--type-heading-2-lh) var(--font-sans);letter-spacing:var(--type-heading-2-ls)}
+.wds-headline-1{font:600 var(--type-headline-1-size)/var(--type-headline-1-lh) var(--font-sans);letter-spacing:var(--type-headline-1-ls)}
+.wds-headline-2{font:600 var(--type-headline-2-size)/var(--type-headline-2-lh) var(--font-sans);letter-spacing:var(--type-headline-2-ls)}
+.wds-body-1{font:500 var(--type-body-1-size)/var(--type-body-1-lh) var(--font-sans);letter-spacing:var(--type-body-1-ls)}
+.wds-body-1-reading{font:500 var(--type-body-1-size)/var(--type-body-1-reading-lh) var(--font-sans);letter-spacing:var(--type-body-1-ls)}
+.wds-body-2{font:500 var(--type-body-2-size)/var(--type-body-2-lh) var(--font-sans);letter-spacing:var(--type-body-2-ls)}
+.wds-body-2-reading{font:500 var(--type-body-2-size)/var(--type-body-2-reading-lh) var(--font-sans);letter-spacing:var(--type-body-2-ls)}
+.wds-label-1{font:500 var(--type-label-1-size)/var(--type-label-1-lh) var(--font-sans);letter-spacing:var(--type-label-1-ls)}
+.wds-label-1-reading{font:500 var(--type-label-1-size)/var(--type-label-1-reading-lh) var(--font-sans);letter-spacing:var(--type-label-1-ls)}
+.wds-label-2{font:500 var(--type-label-2-size)/var(--type-label-2-lh) var(--font-sans);letter-spacing:var(--type-label-2-ls)}
+.wds-caption-1{font:500 var(--type-caption-1-size)/var(--type-caption-1-lh) var(--font-sans);letter-spacing:var(--type-caption-1-ls)}
+.wds-caption-2{font:500 var(--type-caption-2-size)/var(--type-caption-2-lh) var(--font-sans);letter-spacing:var(--type-caption-2-ls)}

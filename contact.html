@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>1:1 문의하기 | IMPETVS</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fig-tokens.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/typography.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/semantic.css">
+<link rel="stylesheet" href="shop.css">
+<style>html,body{margin:0;background:#fff}</style>
+</head>
+<body>
+<div data-shp-header></div>
+<main class="shp-page" id="contact-root">
+  <div class="shp-doc">
+    <h1>1:1 문의하기</h1>
+    <div class="shp-banner" id="ct-banner" role="status"></div>
+    <form class="shp-form" id="ct-form" novalidate hidden>
+      <label class="shp-field"><span>문의 유형</span>
+        <select class="shp-in" id="ct-type">
+          <option value="">선택해 주세요</option><option>상품·향 문의</option><option>주문·결제</option><option>배송</option><option>교환·반품</option><option>회원 서비스</option><option>기타</option>
+        </select></label>
+      <label class="shp-field"><span>제목</span><input class="shp-in" id="ct-title" type="text" maxlength="100"></label>
+      <label class="shp-field"><span>내용</span><textarea class="shp-in shp-ta" id="ct-body" rows="7" maxlength="3000"></textarea></label>
+      <p class="shp-err" id="ct-err" role="alert" hidden></p>
+      <button type="submit" class="shp-btn main" id="ct-submit">문의 접수</button>
+    </form>
+    <section class="shp-hist" id="ct-hist" hidden><h2>내 문의와 답변</h2><div id="ct-list"></div></section>
+  </div>
+</main>
+<script src="config.js"></script>
+<script src="shop.js"></script>
+<script src="auth.js"></script>
+<script id="shp-js-contact">
+(function () {
+  var S = window.IMShop, A = window.IMAuth, $ = function (id) { return document.getElementById(id); };
+  var form = $('ct-form'), banner = $('ct-banner'), TEL = ' 고객센터 0507-1372-9152로 문의해 주세요.';
+  var fmt = function (iso) { var d = new Date(iso); return isNaN(d) ? '' : d.getFullYear() + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + String(d.getDate()).padStart(2, '0'); };
+  function err(m) { $('ct-err').hidden = false; $('ct-err').textContent = m; }
+  function loadList() {
+    $('ct-hist').hidden = false; $('ct-list').innerHTML = '<p class="shp-empty">불러오는 중…</p>';
+    // the server only returns the signed-in user's own inquiries (row-level security); admins see everything in the admin tools
+    A.rest.select('service_inquiries', 'select=id,type,title,content,status,answer,created_at&order=created_at.desc&limit=30', true).then(function (r) {
+      if (!r.ok) { $('ct-list').innerHTML = '<p class="shp-empty">문의 내역을 불러오지 못했습니다.</p>'; return; }
+      var rows = r.data || [];
+      $('ct-list').innerHTML = rows.length ? rows.map(function (q) {
+        return '<article class="shp-rv"><div class="shp-rv-h"><b>[' + S.esc(q.type) + '] ' + S.esc(q.title) + '</b><span>' + S.esc(fmt(q.created_at)) + '</span></div><p class="shp-rv-r">' + (q.answer ? '답변 완료' : '접수됨') + '</p><p class="shp-rv-t">' + S.esc(q.content) + '</p>' + (q.answer ? '<div class="shp-ans"><b>답변</b><p>' + S.esc(q.answer) + '</p></div>' : '') + '</article>';
+      }).join('') : '<p class="shp-empty">접수한 문의가 없습니다.</p>';
+    });
+  }
+  function setup() {
+    if (!A.backendReady()) { banner.textContent = '1:1 문의 접수 기능은 준비 중입니다. 문의 저장 서비스가 연결되기 전에는 접수할 수 없습니다.' + TEL; form.hidden = true; return; }
+    if (!A.legalReady()) { banner.textContent = '이용약관·개인정보처리방침 게시 후 접수할 수 있습니다.' + TEL; form.hidden = true; return; }
+    if (!A.loggedIn()) { banner.innerHTML = '1:1 문의는 로그인 후 접수할 수 있습니다. <a href="' + S.esc(S.links.login) + '" id="ct-login" style="text-decoration:underline">로그인하기</a>'; form.hidden = true; $('ct-hist').hidden = true; return; }
+    banner.textContent = '접수하신 문의는 로그인한 계정으로 저장되며, 본인과 관리자만 확인할 수 있습니다.'; form.hidden = false; loadList();
+  }
+  document.addEventListener('click', function (e) { if (e.target.closest('#ct-login')) A.needLogin(S.links.contact); });
+  form.addEventListener('submit', function (e) {
+    e.preventDefault(); $('ct-err').hidden = true;
+    var t = $('ct-type').value, ti = $('ct-title').value.trim(), c = $('ct-body').value.trim();
+    if (!t) return err('문의 유형을 선택해 주세요.'); if (!ti) return err('제목을 입력해 주세요.'); if (c.length < 5) return err('내용을 5자 이상 적어 주세요.');
+    var b = $('ct-submit'); b.disabled = true; b.textContent = '접수 중…';
+    A.rest.insert('service_inquiries', { type: t, title: ti, content: c }).then(function (r) {
+      b.disabled = false; b.textContent = '문의 접수';
+      if (!r.ok) return err('문의를 접수하지 못했습니다. ' + A.errorText(r) + ' (작성한 내용은 그대로 남아 있습니다.)');
+      $('ct-type').value = ''; $('ct-title').value = ''; $('ct-body').value = ''; S.toast('문의가 접수되었습니다.'); loadList();
+    });
+  });
+  A.onChange(setup); setup();
+})();
+</script>
+</body>
+</html>

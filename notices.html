@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>공지사항 | IMPETVS</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fig-tokens.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/typography.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/semantic.css">
+<link rel="stylesheet" href="shop.css">
+<style>html,body{margin:0;background:#fff}</style>
+</head>
+<body>
+<div data-shp-header></div>
+<main class="shp-page" id="notices-root">
+  <div class="shp-doc">
+    <h1>공지사항</h1>
+    <div id="nt-admin" class="shp-adm" hidden><button type="button" class="shp-btn line sm" id="nt-new">새 공지 작성</button></div>
+    <form class="shp-cform" id="nt-form" novalidate hidden>
+      <label class="shp-field"><span>제목</span><input class="shp-in" id="nt-title" type="text" maxlength="150"></label>
+      <label class="shp-field"><span>본문</span><textarea class="shp-in shp-ta" id="nt-body" rows="8" maxlength="10000"></textarea></label>
+      <p class="shp-err" id="nt-err" role="alert" hidden></p>
+      <div class="shp-cform-act"><button type="submit" class="shp-btn sm" id="nt-save">저장</button><button type="button" class="shp-btn line sm" id="nt-cancel">취소</button></div>
+    </form>
+    <div id="nt-list"><p class="shp-empty">등록된 공지사항이 없습니다.</p></div>
+    <div id="nt-detail" hidden></div>
+  </div>
+</main>
+<script src="config.js"></script>
+<script src="shop.js"></script>
+<script src="auth.js"></script>
+<script id="shp-js-notices">
+(function () {
+  var S = window.IMShop, A = window.IMAuth, $ = function (id) { return document.getElementById(id); };
+  var admin = false, rows = [], editing = null;
+  var fmt = function (iso) { var d = new Date(iso); return isNaN(d) ? '' : d.getFullYear() + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + String(d.getDate()).padStart(2, '0'); };
+  function list() {
+    $('nt-detail').hidden = true; $('nt-list').hidden = false;
+    $('nt-list').innerHTML = rows.length ? '<ul class="shp-nl">' + rows.map(function (n, i) { return '<li><button type="button" data-i="' + i + '">' + S.esc(n.title) + '<span>' + S.esc(fmt(n.published_at)) + '</span></button></li>'; }).join('') + '</ul>' : '<p class="shp-empty">등록된 공지사항이 없습니다.</p>';
+  }
+  function load() {
+    if (!A.backendReady()) return list(); // not connected: there is no data to show, so the plain empty text stays
+    A.rest.select('notices', 'select=id,title,body,published_at&order=published_at.desc&limit=50').then(function (r) {
+      if (!r.ok) { $('nt-list').innerHTML = '<p class="shp-empty">공지사항을 불러오지 못했습니다. <button type="button" class="shp-lk2" id="nt-retry">다시 시도</button></p>'; $('nt-retry').onclick = load; return; }
+      rows = r.data || []; list();
+    });
+  }
+  function detail(i) {
+    var n = rows[i]; if (!n) return;
+    $('nt-list').hidden = true; $('nt-detail').hidden = false;
+    $('nt-detail').innerHTML = '<div class="shp-ndetail"><h2>' + S.esc(n.title) + '</h2><time datetime="' + S.esc(n.published_at) + '">' + S.esc(fmt(n.published_at)) + '</time><div>' + S.esc(n.body) + '</div></div><div class="shp-adm" style="margin-top:20px"><button type="button" class="shp-btn line sm" data-back>목록으로</button>' +
+      (admin ? '<button type="button" class="shp-btn line sm" data-edit="' + i + '">수정</button><button type="button" class="shp-btn line sm" data-del="' + i + '">삭제</button>' : '') + '</div>';
+    var b = $('nt-detail').querySelector('[data-back]'); b && b.focus();
+  }
+  $('nt-list').addEventListener('click', function (e) { var b = e.target.closest('[data-i]'); if (b) detail(+b.dataset.i); });
+  $('nt-detail').addEventListener('click', function (e) {
+    if (e.target.closest('[data-back]')) return list();
+    var ed = e.target.closest('[data-edit]'), dl = e.target.closest('[data-del]');
+    if (ed) { editing = rows[+ed.dataset.edit]; $('nt-title').value = editing.title; $('nt-body').value = editing.body; $('nt-form').hidden = false; $('nt-title').focus(); }
+    if (dl) { var n = rows[+dl.dataset.del]; if (!confirm('이 공지를 삭제할까요?')) return;
+      // the server refuses this unless the signed-in user is an admin (row-level security)
+      A.rest.remove('notices', 'id=eq.' + encodeURIComponent(n.id)).then(function (r) { if (!r.ok) return S.toast('삭제하지 못했습니다. ' + A.errorText(r)); S.toast('공지가 삭제되었습니다.'); load(); }); }
+  });
+  function perm() {
+    A.isAdmin().then(function (a) { admin = !!a; $('nt-admin').hidden = !admin; if (!admin) $('nt-form').hidden = true; });
+  }
+  $('nt-new').addEventListener('click', function () { editing = null; $('nt-title').value = ''; $('nt-body').value = ''; $('nt-form').hidden = false; $('nt-title').focus(); });
+  $('nt-cancel').addEventListener('click', function () { $('nt-form').hidden = true; $('nt-err').hidden = true; });
+  $('nt-form').addEventListener('submit', function (e) {
+    e.preventDefault(); $('nt-err').hidden = true;
+    var t = $('nt-title').value.trim(), b = $('nt-body').value.trim(); if (!t || !b) { $('nt-err').hidden = false; $('nt-err').textContent = '제목과 본문을 입력해 주세요.'; return; }
+    var btn = $('nt-save'); btn.disabled = true; btn.textContent = '저장 중…';
+    var p = editing ? A.rest.update('notices', 'id=eq.' + encodeURIComponent(editing.id), { title: t, body: b }) : A.rest.insert('notices', { title: t, body: b });
+    p.then(function (r) {
+      btn.disabled = false; btn.textContent = '저장';
+      if (!r.ok) { $('nt-err').hidden = false; $('nt-err').textContent = '저장하지 못했습니다. ' + A.errorText(r) + ' (작성한 내용은 그대로 남아 있습니다.)'; return; }
+      $('nt-form').hidden = true; S.toast(editing ? '공지가 수정되었습니다.' : '공지가 등록되었습니다.'); load();
+    });
+  });
+  A.onChange(perm); perm(); load();
+})();
+</script>
+</body>
+</html>

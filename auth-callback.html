@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>로그인 처리 | IMPETVS</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fig-tokens.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/typography.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/semantic.css">
+<link rel="stylesheet" href="shop.css">
+<style>html,body{margin:0;background:#fff}</style>
+</head>
+<body>
+<div data-shp-header></div>
+<main class="shp-page" id="cb-root">
+  <div class="shp-auth">
+    <h1>로그인 처리</h1>
+    <div class="shp-form">
+      <p class="shp-note" id="cb-msg" role="status">로그인 정보를 확인하고 있습니다…</p>
+      <p class="shp-err" id="cb-err" role="alert" hidden></p>
+      <div class="shp-links" id="cb-back" hidden><a href="login.html">로그인 화면으로 돌아가기</a></div>
+    </div>
+  </div>
+</main>
+<script src="config.js"></script>
+<script src="shop.js"></script>
+<script src="auth.js"></script>
+<script>
+/* Callback for Kakao (Supabase puts the tokens in the URL fragment) and Naver (?code&state -> naver-login Edge Function).
+   A login is shown as successful only after the server really returned a session. */
+(function () {
+  var A = window.IMAuth, S = window.IMShop, $ = function (id) { return document.getElementById(id); };
+  var q = new URLSearchParams(location.search), h = location.hash;
+  function fail(m) { $('cb-msg').hidden = true; $('cb-err').hidden = false; $('cb-err').textContent = m; $('cb-back').hidden = false; }
+  function done() { $('cb-msg').textContent = '로그인되었습니다. 이동합니다…'; var n = A.takeNext(); location.replace(n || S.links.home); }
+  history.replaceState(null, '', location.pathname);
+  if (!A.backendReady()) return fail('회원 서비스 연결 전입니다.');
+  if (h && /access_token|error/.test(h)) { var r = A.finishFromHash(h); return r.ok ? done() : fail('소셜 로그인에 실패했습니다. ' + (r.message || '') + ' 다시 시도해 주세요.'); }
+  if (q.get('error')) return fail('소셜 로그인이 취소되었거나 실패했습니다.');
+  if (q.get('code')) return A.finishNaver(q.get('code'), q.get('state')).then(function (r) { r.ok ? done() : fail(r.message); });
+  fail('로그인 정보를 받지 못했습니다. 처음부터 다시 시도해 주세요.');
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+@import './tokens/fonts.css';
+@import './tokens/fig-tokens.css';
+@import './tokens/fig-typography.css';
+@import './tokens/typography.css';
+@import './tokens/semantic.css';
+@import './components/action/fig-assets.css';
+@import './components/selection/fig-assets.css';
+@import './components/content/fig-assets.css';
+@import './components/navigation/fig-assets.css';
+@import './components/feedback/fig-assets.css';
+@import './components/layout/fig-assets.css';
+@import './components/legacy/fig-assets.css';
+@import './components/extra/fig-assets.css';
+@import './components/logos/fig-assets.css';
+@import './components/system/fig-assets.css';

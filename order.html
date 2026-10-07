@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>주문하기 | IMPETVS</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fig-tokens.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/typography.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/semantic.css">
+<link rel="stylesheet" href="shop.css">
+<style>html,body{margin:0;background:#fff}</style>
+</head>
+<body>
+<div data-shp-header></div>
+<main class="shp-page" id="order-root">
+  <div class="shp-order">
+    <h1>주문하기</h1>
+    <div id="od-empty" hidden>
+      <div class="shp-cart-empty"><p>주문할 상품이 없습니다.</p></div>
+      <div class="shp-cart-go"><a class="shp-btn" href="product.html">상품 보러 가기</a></div>
+    </div>
+    <form id="od-form" novalidate>
+      <div class="shp-ogrid">
+        <div>
+          <section class="shp-box" aria-labelledby="od-h1">
+            <h2 id="od-h1">주문 상품</h2>
+            <ul class="shp-list" id="od-items"></ul>
+          </section>
+
+          <section class="shp-box" aria-labelledby="od-h2">
+            <h2 id="od-h2">주문자 정보</h2>
+            <label class="shp-field"><span>이름</span><input class="shp-in" id="od-buyer" type="text" autocomplete="name" maxlength="50"></label>
+            <label class="shp-field"><span>이메일 <small style="font-weight:400;color:rgba(55,56,60,.61)">(주문 확인·비회원 주문 조회에 사용)</small></span><input class="shp-in" id="od-email" type="email" autocomplete="email"></label>
+          </section>
+
+          <section class="shp-box" aria-labelledby="od-h3">
+            <h2 id="od-h3">배송지</h2>
+            <div class="shp-fgrid">
+              <label class="shp-field"><span>받는 분</span><input class="shp-in" id="od-rname" type="text" autocomplete="shipping name" maxlength="50"></label>
+              <label class="shp-field"><span>연락처</span><input class="shp-in" id="od-rphone" type="tel" autocomplete="shipping tel" inputmode="numeric" placeholder="숫자만 입력"></label>
+              <label class="shp-field"><span>우편번호</span><input class="shp-in" id="od-zip" type="text" autocomplete="shipping postal-code" inputmode="numeric" maxlength="6"></label>
+              <label class="shp-field"><span>주소</span><input class="shp-in" id="od-addr1" type="text" autocomplete="shipping address-line1"></label>
+              <label class="shp-field full"><span>상세 주소</span><input class="shp-in" id="od-addr2" type="text" autocomplete="shipping address-line2"></label>
+              <label class="shp-field full"><span>배송 요청사항 <small style="font-weight:400;color:rgba(55,56,60,.61)">(선택)</small></span><input class="shp-in" id="od-memo" type="text" maxlength="100"></label>
+            </div>
+          </section>
+
+          <section class="shp-box" aria-labelledby="od-h4">
+            <h2 id="od-h4">동의</h2>
+            <label class="shp-chk"><input type="checkbox" id="od-c1"><span>[필수] <a href="terms.html" target="_blank" rel="noopener">이용약관</a>에 동의합니다.</span></label>
+            <label class="shp-chk"><input type="checkbox" id="od-c2"><span>[필수] <a href="privacy.html" target="_blank" rel="noopener">개인정보 수집·이용</a>에 동의합니다.</span></label>
+          </section>
+        </div>
+
+        <aside class="shp-box" aria-labelledby="od-h5">
+          <h2 id="od-h5">결제 금액</h2>
+          <div class="shp-osum">
+            <div class="shp-orow"><span>상품금액 합계 <span class="muted" id="od-count"></span></span><b id="od-sub"></b></div>
+            <div class="shp-orow"><span>배송비</span><span class="muted">정책 확정 후 안내됩니다.</span></div>
+            <div class="shp-orow t"><span>상품금액 합계</span><b id="od-total"></b></div>
+          </div>
+          <p class="shp-err" id="od-err" role="alert" hidden></p>
+          <p class="shp-notice" id="od-notice" role="status"></p>
+          <button type="submit" class="shp-btn main" id="od-submit" style="margin-top:16px" aria-disabled="true">결제하기</button>
+        </aside>
+      </div>
+    </form>
+  </div>
+</main>
+<script src="config.js"></script>
+<script src="shop.js"></script>
+<script src="auth.js"></script>
+<script id="shp-js-order">
+(function () {
+  var S = window.IMShop, A = window.IMAuth, C = A.cfg, $ = function (id) { return document.getElementById(id); };
+  var src = null, lines = [];
+
+  function render() {
+    src = S.order.source();
+    lines = src.items;
+    $('od-empty').hidden = lines.length > 0; $('od-form').hidden = lines.length === 0;
+    if (!lines.length) return;
+    var sub = 0, cnt = 0;
+    $('od-items').innerHTML = lines.map(function (it) {
+      var p = S.products[it.id], unit = S.unit(it.id, it.option), line = unit * it.qty; sub += line; cnt += it.qty;
+      return '<li class="shp-item"><img src="' + S.esc(S.img(S.imgFor(it.id, it.option))) + '" width="96" height="128" alt="' + S.esc(p.name + ' ' + it.option) + '">' +
+        '<div><p class="shp-item-name">' + S.esc(p.name) + '</p><p class="shp-item-opt">용량: ' + S.esc(it.option) + '</p><p class="shp-item-unit">단가 ' + S.esc(S.money(unit)) + '</p><p class="shp-item-unit">수량 ' + it.qty + '개</p></div>' +
+        '<div class="shp-item-side"><b class="shp-item-amt" style="margin:0">' + S.esc(S.money(line)) + '</b></div></li>';
+    }).join('');
+    $('od-sub').textContent = S.money(sub); $('od-total').textContent = S.money(sub); $('od-count').textContent = '(총 ' + cnt + '개)';
+    $('od-form').setAttribute('data-total', sub);
+  }
+
+  // what is missing before an order can really be placed (listed to the visitor, never hidden)
+  function missing() {
+    var m = [];
+    if (!A.backendReady()) m.push('주문 서버(Supabase) 연결');
+    else if (!A.legalReady()) m.push('이용약관·개인정보처리방침 게시');
+    if (!(C.payment && C.payment.provider && S.payments && S.payments[C.payment.provider])) m.push('결제 서비스 연결');
+    return m;
+  }
+  var miss = missing(), canOrder = miss.length === 0;
+  var personal = ['od-buyer', 'od-email', 'od-rname', 'od-rphone', 'od-zip', 'od-addr1', 'od-addr2', 'od-memo', 'od-c1', 'od-c2'];
+  personal.forEach(function (id) { $(id).disabled = !A.legalReady(); }); // no personal data is taken before the 약관 / 방침 are live
+  $('od-submit').setAttribute('aria-disabled', canOrder ? 'false' : 'true');
+  $('od-notice').textContent = canOrder ? '입력하신 정보는 주문 처리를 위해 서버로 전송되며, 이 브라우저에는 저장되지 않습니다.'
+    : '주문·결제 연동 준비 중입니다. 아래 항목이 연결되기 전에는 주문할 수 없습니다: ' + miss.join(', ') + '. 장바구니의 상품은 그대로 유지됩니다. 문의: 고객센터 0507-1372-9152';
+  if (A.loggedIn()) A.profile().then(function (p) { if (p && p.email && !$('od-email').value) $('od-email').value = p.email; if (p && p.name && !$('od-buyer').value) $('od-buyer').value = p.name; });
+
+  function err(m) { $('od-err').hidden = false; $('od-err').textContent = m; }
+  $('od-form').addEventListener('submit', function (e) {
+    e.preventDefault(); $('od-err').hidden = true;
+    if (!canOrder) return err('주문·결제 연동 준비 중입니다. 지금은 주문할 수 없습니다.');
+    var b = {
+      name: $('od-buyer').value.trim(), email: $('od-email').value.trim(), rname: $('od-rname').value.trim(), rphone: $('od-rphone').value.replace(/\D/g, ''),
+      zip: $('od-zip').value.trim(), addr1: $('od-addr1').value.trim(), addr2: $('od-addr2').value.trim(), memo: $('od-memo').value.trim()
+    };
+    if (!b.name || !/^\S+@\S+\.\S+$/.test(b.email)) return err('주문자 이름과 이메일을 정확히 입력해 주세요.');
+    if (!b.rname || !/^01\d{8,9}$/.test(b.rphone) || !b.zip || !b.addr1) return err('받는 분, 연락처, 우편번호, 주소를 정확히 입력해 주세요.');
+    if (!$('od-c1').checked || !$('od-c2').checked) return err('필수 약관에 모두 동의해 주세요.');
+    var btn = $('od-submit'); btn.disabled = true; btn.textContent = '처리 중…';
+    // the server re-reads the real prices from its own table and re-checks quantities; the page's numbers are never trusted
+    A.fn('create-order', { items: lines.map(function (i) { return { product_id: i.id, option: i.option, qty: i.qty }; }), buyer: { name: b.name, email: b.email }, shipping: { name: b.rname, phone: b.rphone, zip: b.zip, addr1: b.addr1, addr2: b.addr2, memo: b.memo }, mode: src.mode }, A.loggedIn()).then(function (r) {
+      btn.disabled = false; btn.textContent = '결제하기';
+      if (!r.ok || !r.data || !r.data.order_no) return err('주문을 접수하지 못했습니다. ' + A.errorText(r) + ' (입력하신 내용은 그대로 남아 있습니다.)');
+      if (r.data.total !== +$('od-form').getAttribute('data-total')) return err('서버가 계산한 금액(' + S.money(r.data.total) + ')이 화면의 금액과 달라 결제를 진행하지 않았습니다. 장바구니를 다시 확인해 주세요.');
+      // hand over to the connected payment module; the cart is NOT emptied here (only after a verified payment on the server)
+      S.payments[C.payment.provider].start({ orderNo: r.data.order_no, total: r.data.total, buyer: b });
+    });
+  });
+  render();
+  window.addEventListener('hashchange', function () { if (location.hash === '#order-page') render(); }); // single-file build: this view is shown by hash, not by loading a page
+})();
+</script>
+</body>
+</html>

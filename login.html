@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>로그인 | IMPETVS</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fig-tokens.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/typography.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/semantic.css">
+<link rel="stylesheet" href="shop.css">
+<style>html,body{margin:0;background:#fff}</style>
+</head>
+<body>
+<div data-shp-header></div>
+<main class="shp-page" id="login-root">
+  <div class="shp-auth">
+    <!-- ① 로그인 -->
+    <section data-mode="login" aria-labelledby="lg-h">
+      <h1 id="lg-h">로그인</h1>
+      <form class="shp-form" id="lg-form" novalidate>
+        <input class="shp-in" type="email" id="lg-id" autocomplete="username" placeholder="아이디(이메일)" aria-label="아이디(이메일)">
+        <input class="shp-in" type="password" id="lg-pw" autocomplete="current-password" placeholder="비밀번호" aria-label="비밀번호">
+        <button type="submit" class="shp-btn main" id="lg-submit">로그인</button>
+        <div class="shp-links">
+          <button type="button" class="shp-lk" data-go="findid">아이디 찾기</button><i aria-hidden="true"></i>
+          <button type="button" class="shp-lk" data-go="reset">비밀번호 재설정</button><i aria-hidden="true"></i>
+          <a href="signup.html">회원가입</a>
+        </div>
+        <p class="shp-err" id="lg-err" role="alert" hidden></p>
+        <p class="shp-note" id="lg-note" role="status"></p>
+        <div class="shp-social">
+          <button type="button" class="shp-sbtn kakao" id="lg-kakao">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#191600" d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.8 5.3 4.6 6.7l-1 3.6c-.1.3.2.5.5.4l4.2-2.8c.5.1 1.1.1 1.7.1 5.5 0 10-3.6 10-8S17.5 3 12 3z"/></svg>카카오 로그인
+          </button>
+          <button type="button" class="shp-sbtn naver" id="lg-naver">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="M14.9 12.7 8.8 4H4v16h5.1v-8.7L15.2 20H20V4h-5.1z"/></svg>네이버 로그인
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ② 아이디 찾기: 이름 + 휴대폰 번호 + 문자 인증번호로 확인하고, 결과는 일부를 가린 이메일만 보여 줍니다 -->
+    <section data-mode="findid" aria-labelledby="fi-h" hidden>
+      <h1 id="fi-h">아이디 찾기</h1>
+      <form class="shp-form" id="fi-form" novalidate>
+        <p class="shp-note" style="margin:0 0 20px">가입할 때 입력한 이름과 휴대폰 번호로 본인 확인 후, 일부를 가린 아이디(이메일)를 알려 드립니다.</p>
+        <input class="shp-in" type="text" id="fi-name" autocomplete="name" placeholder="이름" aria-label="이름">
+        <input class="shp-in" type="tel" id="fi-phone" autocomplete="tel" placeholder="휴대폰 번호 (숫자만)" aria-label="휴대폰 번호" inputmode="numeric">
+        <button type="button" class="shp-btn main" id="fi-send">인증번호 받기</button>
+        <div id="fi-step2" hidden>
+          <input class="shp-in" type="text" id="fi-code" autocomplete="one-time-code" placeholder="인증번호 6자리" aria-label="인증번호" inputmode="numeric" maxlength="6" style="margin-top:8px">
+          <button type="submit" class="shp-btn main" id="fi-verify">확인</button>
+        </div>
+        <p class="shp-err" id="fi-err" role="alert" hidden></p>
+        <p class="shp-okmsg" id="fi-result" role="status" hidden></p>
+        <p class="shp-note" id="fi-note" role="status"></p>
+        <div class="shp-links"><button type="button" class="shp-lk" data-go="login">로그인으로 돌아가기</button></div>
+      </form>
+    </section>
+
+    <!-- ③ 비밀번호 재설정: 기존 비밀번호는 보여 주지 않고, 이메일로 재설정 링크를 보냅니다 -->
+    <section data-mode="reset" aria-labelledby="rs-h" hidden>
+      <h1 id="rs-h">비밀번호 재설정</h1>
+      <form class="shp-form" id="rs-form" novalidate>
+        <p class="shp-note" style="margin:0 0 20px">가입한 이메일을 입력하면 비밀번호를 새로 정할 수 있는 링크를 보내 드립니다. 기존 비밀번호는 알려 드리지 않습니다.</p>
+        <input class="shp-in" type="email" id="rs-email" autocomplete="email" placeholder="가입한 이메일" aria-label="가입한 이메일">
+        <button type="submit" class="shp-btn main" id="rs-submit">재설정 메일 보내기</button>
+        <p class="shp-err" id="rs-err" role="alert" hidden></p>
+        <p class="shp-okmsg" id="rs-ok" role="status" hidden></p>
+        <p class="shp-note" id="rs-note" role="status"></p>
+        <div class="shp-links"><button type="button" class="shp-lk" data-go="login">로그인으로 돌아가기</button></div>
+      </form>
+    </section>
+  </div>
+</main>
+<script src="config.js"></script>
+<script src="shop.js"></script>
+<script src="auth.js"></script>
+<script id="shp-js-login">
+(function () {
+  var root = document.getElementById('login-root'), S = window.IMShop, A = window.IMAuth, C = A.cfg;
+  var $ = function (id) { return document.getElementById(id); };
+  var OFF = '회원 서비스 연결 전입니다. 서버(Supabase) 설정이 끝나면 이용할 수 있습니다.';
+  var LEGAL = '이용약관·개인정보처리방침 게시 후 이용할 수 있습니다.';
+
+  function show(mode) {
+    [].forEach.call(root.querySelectorAll('[data-mode]'), function (s) { s.hidden = s.getAttribute('data-mode') !== mode; });
+    var h = root.querySelector('[data-mode="' + mode + '"] h1'); if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); }
+  }
+  [].forEach.call(root.querySelectorAll('[data-go]'), function (b) { b.addEventListener('click', function () { show(b.getAttribute('data-go')); }); });
+  function err(el, msg) { el.hidden = false; el.textContent = msg; }
+  function busy(btn, on, label) { btn.disabled = on; btn.textContent = on ? '처리 중…' : label; }
+
+  // what is switched off right now, and why (nothing is faked as "working")
+  var ready = A.backendReady();
+  [$('lg-id'), $('lg-pw'), $('fi-name'), $('fi-phone'), $('rs-email')].forEach(function (i) { i.disabled = !ready; });
+  $('lg-note').textContent = ready ? '' : OFF + ' 비밀번호 등 개인정보를 이 브라우저에 저장하지 않습니다.';
+  $('rs-note').textContent = ready ? '' : OFF;
+  $('fi-note').textContent = !ready ? OFF : (C.sms && C.sms.enabled ? '' : '아이디 찾기는 문자 인증 서비스 연결 후 이용할 수 있습니다.');
+  if (!ready) { $('lg-submit').setAttribute('aria-disabled', 'true'); }
+
+  function afterLogin() { var n = A.takeNext(); location.href = n || S.links.home; }
+
+  // ① login
+  $('lg-form').addEventListener('submit', function (e) {
+    e.preventDefault(); $('lg-err').hidden = true;
+    if (!ready) { err($('lg-err'), OFF); return; }
+    var em = $('lg-id').value.trim(), pw = $('lg-pw').value;
+    if (!em || !pw) return err($('lg-err'), '이메일과 비밀번호를 입력해 주세요.');
+    busy($('lg-submit'), true, '로그인');
+    A.signIn(em, pw).then(function (r) {
+      busy($('lg-submit'), false, '로그인');
+      if (r.ok) { $('lg-pw').value = ''; afterLogin(); } else { $('lg-pw').value = ''; err($('lg-err'), r.message); }
+    });
+  });
+  function social(btn, name, start, enabled) {
+    btn.addEventListener('click', function () {
+      $('lg-err').hidden = true;
+      if (!ready) return err($('lg-err'), OFF);
+      if (!enabled()) return err($('lg-err'), name + ' 로그인은 아직 연결되지 않았습니다. (앱 등록과 인증 키 설정이 필요합니다.)');
+      if (!A.legalReady()) return err($('lg-err'), LEGAL);
+      if (!start()) err($('lg-err'), name + ' 로그인을 시작하지 못했습니다.');
+    });
+  }
+  social($('lg-kakao'), '카카오', A.startKakao, function () { return !!(C.kakao && C.kakao.enabled); });
+  social($('lg-naver'), '네이버', A.startNaver, function () { return !!(C.naver && C.naver.enabled && C.naver.clientId); });
+
+  // ② find ID
+  var fiOn = ready && !!(C.sms && C.sms.enabled);
+  $('fi-send').addEventListener('click', function () {
+    $('fi-err').hidden = true; $('fi-result').hidden = true;
+    if (!fiOn) return err($('fi-err'), ready ? '문자 인증 서비스가 아직 연결되지 않아 아이디 찾기를 이용할 수 없습니다.' : OFF);
+    var n = $('fi-name').value.trim(), p = $('fi-phone').value.replace(/\D/g, '');
+    if (!n || p.length < 10) return err($('fi-err'), '이름과 휴대폰 번호를 정확히 입력해 주세요.');
+    busy($('fi-send'), true, '인증번호 받기');
+    A.findIdSend(n, p).then(function (r) {
+      busy($('fi-send'), false, '인증번호 받기');
+      if (!r.ok) return err($('fi-err'), r.message);
+      $('fi-step2').hidden = false; $('fi-note').textContent = '문자로 받은 인증번호를 입력해 주세요. 입력하신 정보가 가입 정보와 일치할 때만 문자가 발송됩니다.'; $('fi-code').focus();
+    });
+  });
+  $('fi-form').addEventListener('submit', function (e) {
+    e.preventDefault(); $('fi-err').hidden = true;
+    if (!fiOn) return err($('fi-err'), ready ? '문자 인증 서비스가 아직 연결되지 않았습니다.' : OFF);
+    var code = $('fi-code').value.trim(); if (!/^\d{6}$/.test(code)) return err($('fi-err'), '인증번호 6자리를 입력해 주세요.');
+    busy($('fi-verify'), true, '확인');
+    A.findIdVerify($('fi-name').value.trim(), $('fi-phone').value.replace(/\D/g, ''), code).then(function (r) {
+      busy($('fi-verify'), false, '확인');
+      if (!r.ok) return err($('fi-err'), r.message);
+      $('fi-result').hidden = false; $('fi-result').textContent = '가입하신 아이디(이메일)는 ' + r.masked + ' 입니다.';
+    });
+  });
+
+  // ③ password reset (the answer is the same whether or not the address has an account)
+  $('rs-form').addEventListener('submit', function (e) {
+    e.preventDefault(); $('rs-err').hidden = true; $('rs-ok').hidden = true;
+    if (!ready) return err($('rs-err'), OFF);
+    var em = $('rs-email').value.trim(); if (!/^\S+@\S+\.\S+$/.test(em)) return err($('rs-err'), '이메일 주소를 정확히 입력해 주세요.');
+    busy($('rs-submit'), true, '재설정 메일 보내기');
+    A.resetRequest(em).then(function (r) {
+      busy($('rs-submit'), false, '재설정 메일 보내기');
+      if (!r.ok) return err($('rs-err'), r.message);
+      $('rs-ok').hidden = false; $('rs-ok').textContent = '입력하신 주소로 가입된 계정이 있다면 비밀번호 재설정 안내 메일을 보냈습니다. 메일함(스팸함 포함)을 확인해 주세요.';
+    });
+  });
+
+  if (A.loggedIn()) $('lg-note').textContent = '이미 로그인되어 있습니다. 상단의 사람 아이콘에서 로그아웃할 수 있습니다.';
+})();
+</script>
+</body>
+</html>

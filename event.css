@@ -1,0 +1,43 @@
+/* Event page styles. Everything is scoped under .evt so the page can be embedded next to the home page. */
+.evt{--ease:cubic-bezier(.7,0,.2,1);min-height:100vh;background:var(--common-0);color:var(--label-neutral);font-family:var(--font-sans);-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:anywhere}
+.evt *{box-sizing:border-box}
+.evt a{color:inherit;text-decoration:none;cursor:pointer}
+.evt a:hover{opacity:.6}
+.evt img{display:block;max-width:100%}
+
+/* top bar: logo + 홈으로 */
+.evt-top{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:22px 40px;background:rgba(0,0,0,.72);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);color:#fff}
+.evt-logo{font-family:var(--font-brand);font-size:28px;line-height:1;letter-spacing:.02em}
+.evt-home{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+
+/* title + intro */
+.evt-hero{padding:96px 20px 0;text-align:center}
+.evt-title{margin:0;font-family:var(--font-brand);font-weight:400;font-size:clamp(32px,5.2vw,64px);line-height:1.1;letter-spacing:-.01em;text-transform:uppercase;text-wrap:balance;color:var(--label-strong)}
+.evt-rule{display:block;width:32px;height:1px;margin:28px auto;background:var(--line-normal-strong)}
+.evt-intro{max-width:720px;margin:0 auto;font-size:clamp(15px,1.6vw,18px);line-height:1.7;letter-spacing:-.02em;color:var(--label-neutral)}
+.evt-intro b{font-weight:700;color:var(--label-strong)}
+
+/* landing image: original ratio, never cropped */
+.evt-img{max-width:860px;margin:64px auto 0}
+.evt-img img{width:100%;height:auto;object-fit:contain}
+
+/* participate button */
+.evt-act{display:flex;justify-content:center;padding:56px 20px 0}
+.evt-cta{display:inline-flex;align-items:center;justify-content:center;height:56px;padding:0 40px;border:0;border-radius:999px;background:var(--common-100);color:var(--common-0);font:600 16px/1 var(--font-sans);letter-spacing:-.01em;cursor:pointer;transition:opacity .3s var(--ease)}
+.evt-cta:hover{opacity:.85}
+.evt-cta:focus-visible{outline:2px solid var(--common-100);outline-offset:3px}
+
+/* notice */
+.evt-note{max-width:860px;margin:96px auto 0;padding:0 20px 120px}
+.evt-note h2{margin:0 0 20px;font-size:20px;line-height:1.4;letter-spacing:-.03em;font-weight:700;color:var(--label-strong)}
+.evt-note ul{margin:0;padding:24px 0 0 18px;font-size:14px;line-height:1.9;color:var(--label-alternative);box-shadow:inset 0 1px 0 var(--line-normal-normal)}
+.evt-note li+li{margin-top:6px}
+
+@media (max-width:900px){
+.evt-top{padding:16px 20px}.evt-logo{font-size:24px}
+.evt-hero{padding-top:64px}
+.evt-rule{margin:22px auto}
+.evt-img{margin-top:44px}
+.evt-act{padding-top:44px}
+.evt-note{margin-top:72px;padding-bottom:88px}
+}

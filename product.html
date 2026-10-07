@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>임페투스 리치맨 | IMPETVS</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fig-tokens.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/typography.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/semantic.css">
+<link rel="stylesheet" href="shop.css">
+<style>html,body{margin:0;background:#fff;scroll-behavior:smooth}</style>
+</head>
+<body>
+<div data-shp-header></div>
+<main class="shp-page shp-has-bar" id="product-root">
+  <div class="shp-wrap">
+    <div class="shp-pd">
+      <!-- 상품 이미지: 구매 영역의 제 위치에 고정 배치(스크롤 따라가지 않음). 용량을 바꾸면 해당 용량 이미지로 교체 -->
+      <div class="shp-gallery">
+        <div class="shp-main"><img id="pd-img" src="opt/product-main.webp" width="1012" height="1350" alt="임페투스 리치맨 30ml 향수 병"></div>
+      </div>
+
+      <div class="shp-info">
+        <div class="shp-titlebar">
+          <h1 class="shp-title">임페투스 리치맨</h1>
+          <!-- 공유하기: 아이콘만 표시, 누르는 영역은 44px 이상 -->
+          <button type="button" class="shp-share" id="pd-share" aria-label="상품 공유하기" data-tip="상품 공유하기">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.5l6.8-4M8.6 13.5l6.8 4"/></svg>
+          </button>
+        </div>
+        <p class="shp-sub">섬유향수 · Eau De Perfume</p>
+        <p class="shp-intro">IMPETVS의 향과 디테일을 만나보세요.</p>
+
+        <div class="shp-accs">
+          <div class="shp-acc">
+            <button type="button" data-acc aria-expanded="false" aria-controls="acc-notes" id="acc-notes-b">향 노트</button>
+            <div class="shp-acc-p" id="acc-notes" role="region" aria-labelledby="acc-notes-b" hidden>
+              <dl class="shp-notes">
+                <div><dt>TOP</dt><dd>BERGAMOT, SICILIAN LEMON, BLACKCURRANT</dd></div>
+                <div><dt>MIDDLE</dt><dd>PINEAPPLE, PINK PEPPER, JASMINE</dd></div>
+                <div><dt>BASE</dt><dd>BIRCH, PATCHOULI, MUSK</dd></div>
+              </dl>
+            </div>
+          </div>
+          <div class="shp-acc">
+            <button type="button" data-acc aria-expanded="false" aria-controls="acc-ship" id="acc-ship-b">배송 안내</button>
+            <div class="shp-acc-p" id="acc-ship" role="region" aria-labelledby="acc-ship-b" hidden>
+              <p>배송 일정과 교환·반품 조건은 주문 전에 확인해 주세요.</p>
+              <p>배송비와 배송 기간 등 상세 안내는 준비 중입니다. 문의: 고객센터 0507-1372-9152</p>
+            </div>
+          </div>
+          <div class="shp-acc">
+            <button type="button" data-acc aria-expanded="false" aria-controls="acc-return" id="acc-return-b">교환·반품 안내</button>
+            <div class="shp-acc-p" id="acc-return" role="region" aria-labelledby="acc-return-b" hidden>
+              <p>품질보증기준: 본 제품에 이상이 있을 경우 공정거래위원회고시 소비자분쟁해결기준에 의거 보상해 드립니다.</p>
+              <p>교환·반품 상세 조건은 준비 중입니다. 문의: 고객센터 0507-1372-9152</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="shp-opt">
+          <p class="shp-opt-note">상품 이미지와 상세 정보를 확인한 후 옵션과 수량을 선택해 주세요.</p>
+          <fieldset class="shp-sizes">
+            <legend>용량</legend>
+            <div class="shp-sizes-in">
+              <label class="shp-size"><input type="radio" name="pd-size" value="30ml" checked><span>30ml</span></label>
+              <label class="shp-size"><input type="radio" name="pd-size" value="50ml"><span>50ml</span></label>
+            </div>
+          </fieldset>
+          <div class="shp-sel">
+            <div class="shp-sel-name">임페투스 리치맨<small id="pd-size-label">30ml</small></div>
+            <div class="shp-qty" role="group" aria-label="수량">
+              <button type="button" id="pd-minus" aria-label="수량 줄이기">−</button>
+              <input type="number" id="pd-qty" value="1" min="1" inputmode="numeric" aria-label="수량">
+              <button type="button" id="pd-plus" aria-label="수량 늘리기">+</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 가격은 여기(PC) 또는 모바일 하단 바에서만 표시 -->
+        <div class="shp-total"><span>총 상품금액</span><b id="pd-total" aria-live="polite">59,000원<small id="pd-count">(1개)</small></b></div>
+
+        <!-- 장바구니 / 바로 구매: 같은 행, 같은 높이 -->
+        <div class="shp-act2">
+          <button type="button" class="shp-btn line" id="pd-cart">장바구니</button>
+          <button type="button" class="shp-btn" id="pd-buy">바로 구매</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 상세 영역: 탭 바와 콘텐츠가 같은 최대 너비(860px) 중앙 열을 공유 -->
+  <div class="shp-dwrap">
+    <nav class="shp-tabs" aria-label="상품 상세 메뉴">
+      <ul>
+        <li><a href="#pd-detail" data-tab="pd-detail" aria-current="true">상품상세정보</a></li>
+        <li><a href="#pd-review" data-tab="pd-review">고객후기</a></li>
+        <li><a href="#pd-qna" data-tab="pd-qna">상품문의</a></li>
+        <li><a href="#pd-guide" data-tab="pd-guide">쇼핑가이드</a></li>
+      </ul>
+    </nav>
+
+    <section class="shp-sec" id="pd-detail" aria-label="상품상세정보">
+      <div class="shp-pad"><p class="shp-desc">한 번쯤 소장하고 싶었던 명품 향수의 깊고 매력적인 향,<br>그 고급스러운 향의 결부터 오래 머무는 여운까지 섬세하게 재현했습니다.<br>매일 부담 없이 즐길 수 있는 IMPETVS만의 퍼퓸을 만나보세요.</p></div>
+      <div class="shp-detail-img"><img src="opt/product-detail.webp" width="859" height="10478" alt="임페투스 리치맨 상품 상세 이미지" loading="lazy"></div>
+    </section>
+
+    <section class="shp-sec" id="pd-review" aria-label="고객후기">
+      <div class="shp-pad">
+        <div class="shp-sec-h"><h2>고객후기</h2><button type="button" class="shp-btn line sm" id="pd-review-write" aria-expanded="false" aria-controls="pd-review-form">후기 작성</button></div>
+        <p class="shp-notice" id="pd-review-note" role="status" hidden></p>
+        <form class="shp-cform" id="pd-review-form" hidden novalidate>
+          <fieldset class="shp-rate">
+            <legend>평점</legend>
+            <div class="shp-rate-in">
+              <label><input type="radio" name="pd-rate" value="1"><span>1점</span></label>
+              <label><input type="radio" name="pd-rate" value="2"><span>2점</span></label>
+              <label><input type="radio" name="pd-rate" value="3"><span>3점</span></label>
+              <label><input type="radio" name="pd-rate" value="4"><span>4점</span></label>
+              <label><input type="radio" name="pd-rate" value="5"><span>5점</span></label>
+            </div>
+          </fieldset>
+          <label class="shp-field"><span>후기 내용</span><textarea class="shp-in shp-ta" id="pd-review-text" rows="5" maxlength="2000" placeholder="상품을 사용해 본 경험을 10자 이상 적어 주세요."></textarea></label>
+          <p class="shp-err" id="pd-review-err" role="alert" hidden></p>
+          <div class="shp-cform-act"><button type="submit" class="shp-btn sm" id="pd-review-submit">등록</button><button type="button" class="shp-btn line sm" id="pd-review-cancel">취소</button></div>
+        </form>
+        <div id="pd-review-list"><p class="shp-empty">등록된 후기가 없습니다.</p></div>
+      </div>
+    </section>
+
+    <section class="shp-sec" id="pd-qna" aria-label="상품문의">
+      <div class="shp-pad">
+        <div class="shp-sec-h"><h2>상품문의</h2><button type="button" class="shp-btn line sm" id="pd-qna-write" aria-expanded="false" aria-controls="pd-qna-form">문의 작성</button></div>
+        <p class="shp-notice" id="pd-qna-note" role="status" hidden></p>
+        <form class="shp-cform" id="pd-qna-form" hidden novalidate>
+          <label class="shp-field"><span>제목</span><input class="shp-in" id="pd-qna-title" type="text" maxlength="100" placeholder="문의 제목"></label>
+          <label class="shp-field"><span>문의 내용</span><textarea class="shp-in shp-ta" id="pd-qna-text" rows="5" maxlength="2000" placeholder="문의 내용을 적어 주세요."></textarea></label>
+          <fieldset class="shp-rate">
+            <legend>공개 여부</legend>
+            <div class="shp-rate-in two">
+              <label><input type="radio" name="pd-qna-pub" value="public" checked><span>공개</span></label>
+              <label><input type="radio" name="pd-qna-pub" value="private"><span>비공개 (작성자와 관리자만 볼 수 있음)</span></label>
+            </div>
+          </fieldset>
+          <p class="shp-err" id="pd-qna-err" role="alert" hidden></p>
+          <div class="shp-cform-act"><button type="submit" class="shp-btn sm" id="pd-qna-submit">등록</button><button type="button" class="shp-btn line sm" id="pd-qna-cancel">취소</button></div>
+        </form>
+        <div id="pd-qna-list"><p class="shp-empty">등록된 문의가 없습니다.</p></div>
+      </div>
+    </section>
+
+    <section class="shp-sec" id="pd-guide" aria-label="쇼핑가이드">
+      <div class="shp-pad">
+        <h2>쇼핑가이드</h2>
+        <dl class="shp-guide">
+          <div><dt>배송 안내</dt><dd>배송 일정과 교환·반품 조건은 주문 전에 확인해 주세요.<br>배송비와 배송 기간 등 상세 안내는 준비 중입니다.</dd></div>
+          <div><dt>교환·반품 안내</dt><dd>본 제품에 이상이 있을 경우 공정거래위원회고시 소비자분쟁해결기준에 의거 보상해 드립니다.<br>교환·반품 상세 조건은 준비 중입니다.</dd></div>
+          <div><dt>고객센터</dt><dd>0507-1372-9152</dd></div>
+        </dl>
+      </div>
+    </section>
+  </div>
+
+  <!-- 모바일 하단 고정 바: 모바일의 총 상품금액 표시 + 위의 '바로 구매'와 같은 동작 -->
+  <div class="shp-bar">
+    <div class="shp-bar-t"><small>총 상품금액</small><b id="pd-bar-total">59,000원</b></div>
+    <button type="button" class="shp-btn" id="pd-bar-buy">바로 구매</button>
+  </div>
+</main>
+<script src="config.js"></script>
+<script src="shop.js"></script>
+<script src="auth.js"></script>
+<script id="shp-js-product">
+(function () {
+  var root = document.getElementById('product-root'), S = window.IMShop, A = window.IMAuth, P = S.products[S.PRODUCT_ID];
+  var $ = function (id) { return document.getElementById(id); };
+  var qtyEl = $('pd-qty'), minus = $('pd-minus'), plus = $('pd-plus'), imgEl = $('pd-img');
+  var size = P.defaultOption;
+  S.accordion(root);
+
+  function cap() { return typeof P.stock === 'number' ? P.stock : Infinity; }
+  function qty() { var n = Math.floor(Number(qtyEl.value)); return isFinite(n) && n >= 1 ? Math.min(n, cap()) : 1; }
+  function preload() { Object.keys(P.options).forEach(function (k) { var i = new Image(); i.src = S.img(P.options[k].img); }); }
+
+  function render() {
+    var q = qty(), o = P.options[size]; qtyEl.value = q;
+    minus.disabled = q <= 1; plus.disabled = q >= cap();
+    // image of the chosen capacity (same box + same ratio, so nothing around it moves)
+    var src = S.img(o.img); if (imgEl.getAttribute('src') !== src) imgEl.setAttribute('src', src);
+    imgEl.alt = o.alt;
+    $('pd-size-label').textContent = size;
+    var total = S.money(o.price * q);
+    $('pd-total').innerHTML = S.esc(total) + '<small id="pd-count">(' + q + '개)</small>';
+    $('pd-bar-total').textContent = total;
+    [].forEach.call(root.querySelectorAll('input[name="pd-size"]'), function (r) { r.checked = r.value === size; });
+  }
+  function setSize(s) { if (P.options[s]) { size = s; render(); } }
+  [].forEach.call(root.querySelectorAll('input[name="pd-size"]'), function (r) { r.addEventListener('change', function () { if (r.checked) setSize(r.value); }); });
+  minus.addEventListener('click', function () { qtyEl.value = qty() - 1; render(); });
+  plus.addEventListener('click', function () { qtyEl.value = qty() + 1; render(); });
+  qtyEl.addEventListener('input', function () { if (qtyEl.value !== '') render(); });
+  qtyEl.addEventListener('blur', render);
+  qtyEl.addEventListener('keydown', function (e) { if (e.key === 'e' || e.key === '-' || e.key === '+' || e.key === '.') e.preventDefault(); });
+
+  // 바로 구매: only the capacity + quantity chosen here go to the order page (the cart is not touched)
+  function buy() { S.order.buyNow(P.id, size, qty()); location.href = S.links.order; }
+  $('pd-buy').addEventListener('click', buy); $('pd-bar-buy').addEventListener('click', buy);
+
+  $('pd-cart').addEventListener('click', function () {
+    var now = S.cart.add(P.id, size, qty());
+    S.toast('장바구니에 담았습니다. (' + size + ' ' + now + '개)', { href: S.links.cart, label: '장바구니 보기' });
+  });
+  $('pd-share').addEventListener('click', function () { S.share('임페투스 리치맨 | IMPETVS'); });
+
+  /* ---------------- 후기 / 문의 (server-backed: Supabase tables reviews / product_inquiries) ---------------- */
+  var fmtDate = function (iso) { var d = new Date(iso); return isNaN(d) ? '' : d.getFullYear() + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + String(d.getDate()).padStart(2, '0'); };
+  function showNote(el, html) { el.hidden = false; el.innerHTML = html; }
+  function loginLink(label) { return '<a href="' + S.esc(S.links.login) + '" data-need-login>' + (label || '로그인') + '</a>'; }
+  root.addEventListener('click', function (e) { if (e.target.closest('[data-need-login]')) A.needLogin(S.links.product); });
+  // -> null when the user may write, otherwise {html} explaining what is missing
+  function gate(what) {
+    if (!A.backendReady()) return { html: what + ' 기능은 준비 중입니다. 저장 서비스가 연결되면 이용할 수 있습니다.' };
+    if (!A.loggedIn()) return { html: what + '은(는) ' + loginLink('로그인') + ' 후 작성할 수 있습니다.' };
+    return null;
+  }
+  function openForm(btn, form, note, what) {
+    var g = gate(what);
+    if (g) { form.hidden = true; btn.setAttribute('aria-expanded', 'false'); showNote(note, g.html); return false; }
+    note.hidden = true; form.hidden = !form.hidden; btn.setAttribute('aria-expanded', form.hidden ? 'false' : 'true');
+    if (!form.hidden) { var f = form.querySelector('input[type=text],textarea,input[type=radio]'); f && f.focus(); }
+    return true;
+  }
+  function failBox(el, msg) { el.hidden = false; el.textContent = msg; }
+  function listError(listEl, retry) { listEl.innerHTML = '<p class="shp-empty">목록을 불러오지 못했습니다. <button type="button" class="shp-lk2" data-retry>다시 시도</button></p>'; listEl.querySelector('[data-retry]').addEventListener('click', retry); }
+
+  // --- reviews
+  var rvList = $('pd-review-list'), rvForm = $('pd-review-form'), rvErr = $('pd-review-err');
+  function loadReviews() {
+    if (!A.backendReady()) return;
+    A.rest.select('reviews', 'select=id,rating,content,author_label,created_at&product_id=eq.' + encodeURIComponent(P.id) + '&order=created_at.desc&limit=30').then(function (r) {
+      if (!r.ok) return listError(rvList, loadReviews);
+      var rows = r.data || [];
+      rvList.innerHTML = rows.length ? rows.map(function (v) {
+        return '<article class="shp-rv"><div class="shp-rv-h"><b>' + S.esc(v.author_label || '') + '</b><span>' + S.esc(fmtDate(v.created_at)) + '</span></div><p class="shp-rv-r">평점 ' + S.esc(v.rating) + ' / 5</p><p class="shp-rv-t">' + S.esc(v.content) + '</p></article>';
+      }).join('') : '<p class="shp-empty">등록된 후기가 없습니다.</p>';
+    });
+  }
+  $('pd-review-write').addEventListener('click', function () { openForm(this, rvForm, $('pd-review-note'), '후기 작성'); });
+  $('pd-review-cancel').addEventListener('click', function () { rvForm.hidden = true; $('pd-review-write').setAttribute('aria-expanded', 'false'); rvErr.hidden = true; });
+  rvForm.addEventListener('submit', function (e) {
+    e.preventDefault(); rvErr.hidden = true;
+    var rate = rvForm.querySelector('input[name="pd-rate"]:checked'), text = $('pd-review-text').value.trim();
+    if (!rate) return failBox(rvErr, '평점을 선택해 주세요.');
+    if (text.length < 10) return failBox(rvErr, '후기는 10자 이상 적어 주세요.');
+    var btn = $('pd-review-submit'); btn.disabled = true; btn.textContent = '등록 중…';
+    // user_id / author_label are filled in by the server from the login; the server's row-level-security decides if this is allowed
+    A.rest.insert('reviews', { product_id: P.id, rating: +rate.value, content: text }).then(function (r) {
+      btn.disabled = false; btn.textContent = '등록';
+      if (!r.ok) return failBox(rvErr, '후기를 등록하지 못했습니다. ' + A.errorText(r) + ' (작성한 내용은 그대로 남아 있습니다.)');
+      $('pd-review-text').value = ''; rate.checked = false; rvForm.hidden = true; $('pd-review-write').setAttribute('aria-expanded', 'false');
+      S.toast('후기가 등록되었습니다.'); loadReviews();
+    });
+  });
+
+  // --- inquiries (public, or private = only the author and admins can read it: enforced by the server)
+  var qList = $('pd-qna-list'), qForm = $('pd-qna-form'), qErr = $('pd-qna-err');
+  function loadInquiries() {
+    if (!A.backendReady()) return;
+    A.rest.select('product_inquiries', 'select=id,title,content,is_public,answer,answered_at,author_label,created_at&product_id=eq.' + encodeURIComponent(P.id) + '&order=created_at.desc&limit=30', true).then(function (r) {
+      if (!r.ok) return listError(qList, loadInquiries);
+      var rows = r.data || [];
+      qList.innerHTML = rows.length ? rows.map(function (q) {
+        return '<article class="shp-rv"><div class="shp-rv-h"><b>' + (q.is_public ? '' : '<em class="shp-lock">비공개</em> ') + S.esc(q.title) + '</b><span>' + S.esc(q.author_label || '') + ' · ' + S.esc(fmtDate(q.created_at)) + '</span></div><p class="shp-rv-t">' + S.esc(q.content) + '</p>' +
+          (q.answer ? '<div class="shp-ans"><b>답변</b><p>' + S.esc(q.answer) + '</p></div>' : '') + '</article>';
+      }).join('') : '<p class="shp-empty">등록된 문의가 없습니다.</p>';
+    });
+  }
+  $('pd-qna-write').addEventListener('click', function () { openForm(this, qForm, $('pd-qna-note'), '문의 작성'); });
+  $('pd-qna-cancel').addEventListener('click', function () { qForm.hidden = true; $('pd-qna-write').setAttribute('aria-expanded', 'false'); qErr.hidden = true; });
+  qForm.addEventListener('submit', function (e) {
+    e.preventDefault(); qErr.hidden = true;
+    var t = $('pd-qna-title').value.trim(), c = $('pd-qna-text').value.trim(), pub = qForm.querySelector('input[name="pd-qna-pub"]:checked').value === 'public';
+    if (!t) return failBox(qErr, '제목을 입력해 주세요.');
+    if (c.length < 5) return failBox(qErr, '문의 내용을 5자 이상 적어 주세요.');
+    var btn = $('pd-qna-submit'); btn.disabled = true; btn.textContent = '등록 중…';
+    A.rest.insert('product_inquiries', { product_id: P.id, title: t, content: c, is_public: pub }).then(function (r) {
+      btn.disabled = false; btn.textContent = '등록';
+      if (!r.ok) return failBox(qErr, '문의를 등록하지 못했습니다. ' + A.errorText(r) + ' (작성한 내용은 그대로 남아 있습니다.)');
+      $('pd-qna-title').value = ''; $('pd-qna-text').value = ''; qForm.hidden = true; $('pd-qna-write').setAttribute('aria-expanded', 'false');
+      S.toast('문의가 등록되었습니다.'); loadInquiries();
+    });
+  });
+  A.onChange(function () { loadInquiries(); });
+
+  // tabs: scroll to the section (no hash change) and mark the current one
+  var tabs = [].slice.call(root.querySelectorAll('[data-tab]'));
+  function mark(id) { tabs.forEach(function (a) { if (a.dataset.tab === id) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current'); }); }
+  var locked = null; // the clicked tab stays marked until the visitor scrolls by hand (the last sections can't reach the top of the page)
+  ['wheel', 'touchstart', 'keydown'].forEach(function (ev) { window.addEventListener(ev, function () { locked = null; }, { passive: true }); });
+  tabs.forEach(function (a) {
+    a.addEventListener('click', function (e) { e.preventDefault(); $(a.dataset.tab).scrollIntoView({ behavior: 'smooth', block: 'start' }); mark(a.dataset.tab); locked = a.dataset.tab; });
+  });
+  var ticking = false;
+  function spy() {
+    ticking = false;
+    if (locked) return;
+    if (!root.getClientRects().length) return;
+    var bar = document.querySelector('.shp-tabs'), line = (bar ? bar.getBoundingClientRect().bottom : 0) + 24, cur = 'pd-detail';
+    tabs.forEach(function (a) { if ($(a.dataset.tab).getBoundingClientRect().top <= line) cur = a.dataset.tab; });
+    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) cur = tabs[tabs.length - 1].dataset.tab;
+    mark(cur);
+  }
+  window.addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(spy); } }, { passive: true });
+
+  render(); preload(); loadReviews(); loadInquiries();
+})();
+</script>
+</body>
+</html>

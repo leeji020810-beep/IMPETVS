@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IMPETVS TESTER EVENT</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fig-tokens.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/typography.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/semantic.css">
+<link rel="stylesheet" href="shop.css">
+<link rel="stylesheet" href="event.css">
+<style>html,body{margin:0;background:#000}</style>
+</head>
+<body>
+<main class="evt dark" id="event-root">
+  <div data-shp-header></div>
+
+  <section class="evt-hero">
+    <h1 class="evt-title">IMPETVS TESTER EVENT</h1>
+    <span class="evt-rule" aria-hidden="true"></span>
+    <p class="evt-intro"><b>IMPETVS RICH MAN</b>을 가장 먼저 경험 해보세요</p>
+  </section>
+
+  <section class="evt-img">
+    <img src="opt/event-landing.webp" width="859" height="3582" alt="임페투스 리치맨 샘플 키트 체험단 모집 — 정식 출시 전 단 100명 한정. 모집 인원 총 100인(선착순), 신청 방법 신청서 작성 > 배송료 결제 > 수령, 배송 기간 2~3일 이내 발송. 제공 제품: 임페투스 리치맨 3ml 샘플 패키지 키트">
+  </section>
+
+  <div class="evt-act">
+    <button type="button" class="evt-cta" id="evt-apply">신청서 작성하러 가기</button>
+  </div>
+
+  <section class="evt-note">
+    <h2>유의사항</h2>
+    <ul>
+      <li>정식 출시 전 선착순 100인 한정으로 진행되며, 선착순 마감 시 종료됩니다.</li>
+      <li>참여는 신청서 작성 &gt; 배송료 결제 &gt; 수령 순서로 진행됩니다.</li>
+      <li>배송 기간은 2~3일 이내 발송입니다.</li>
+    </ul>
+  </section>
+</main>
+<script src="config.js"></script>
+<script src="shop.js"></script>
+<script src="auth.js"></script>
+<script id="evt-js">
+/* 신청서 주소를 아직 받지 못해 비워 두었습니다. 주소가 정해지면 아래 값에 넣으면 버튼이 연결됩니다. */
+var APPLY_URL = '';
+document.getElementById('evt-apply').addEventListener('click', function () { if (APPLY_URL) window.location.href = APPLY_URL; });
+</script>
+</body>
+</html>

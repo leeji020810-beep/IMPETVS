@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>비회원 주문 조회 | IMPETVS</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fig-tokens.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/typography.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/semantic.css">
+<link rel="stylesheet" href="shop.css">
+<style>html,body{margin:0;background:#fff}</style>
+</head>
+<body>
+<div data-shp-header></div>
+<main class="shp-page" id="guest-order-root">
+  <div class="shp-doc">
+    <h1>비회원 주문 조회</h1>
+    <div class="shp-banner" id="go-banner" role="status"></div>
+    <form class="shp-form" id="go-form" novalidate>
+      <label class="shp-field"><span>주문번호</span><input class="shp-in" id="go-no" type="text" autocomplete="off" maxlength="40"></label>
+      <label class="shp-field"><span>주문 시 사용한 이메일</span><input class="shp-in" id="go-email" type="email" autocomplete="off"></label>
+      <p class="shp-err" id="go-err" role="alert" hidden></p>
+      <button type="submit" class="shp-btn main" id="go-submit" style="margin-top:8px">주문 조회</button>
+    </form>
+    <div id="go-result" class="shp-hist" hidden></div>
+  </div>
+</main>
+<script src="config.js"></script>
+<script src="shop.js"></script>
+<script src="auth.js"></script>
+<script id="shp-js-guest-order">
+(function () {
+  var S = window.IMShop, A = window.IMAuth, $ = function (id) { return document.getElementById(id); };
+  // lookups need the server (order number + e-mail must match, repeated tries are rate-limited there) and collect an e-mail address
+  var on = A.legalReady();
+  $('go-no').disabled = $('go-email').disabled = !on;
+  $('go-submit').setAttribute('aria-disabled', on ? 'false' : 'true');
+  $('go-banner').textContent = on ? '주문번호와 주문 시 사용한 이메일을 입력해 주세요. 입력하신 정보는 이 브라우저에 저장되지 않습니다.'
+    : (A.backendReady() ? '비회원 주문 조회 기능은 준비 중입니다. 이용약관·개인정보처리방침 게시 후 이용할 수 있습니다.' : '비회원 주문 조회 기능은 준비 중입니다.');
+  function err(m) { $('go-err').hidden = false; $('go-err').textContent = m; }
+  $('go-form').addEventListener('submit', function (e) {
+    e.preventDefault(); $('go-err').hidden = true; $('go-result').hidden = true;
+    if (!on) return err('비회원 주문 조회 기능은 준비 중입니다.');
+    var no = $('go-no').value.trim(), em = $('go-email').value.trim();
+    if (!no || !/^\S+@\S+\.\S+$/.test(em)) return err('주문번호와 이메일을 정확히 입력해 주세요.');
+    var b = $('go-submit'); b.disabled = true; b.textContent = '조회 중…';
+    A.fn('guest-order-lookup', { order_no: no, email: em }, false).then(function (r) {
+      b.disabled = false; b.textContent = '주문 조회';
+      if (r.status === 429) return err('조회 시도가 너무 많습니다. 잠시 후 다시 시도해 주세요.');
+      if (r.status === 404) return err('일치하는 주문을 찾을 수 없습니다. 주문번호와 이메일을 다시 확인해 주세요.');
+      if (!r.ok || !r.data) return err('주문을 조회하지 못했습니다. ' + A.errorText(r));
+      var o = r.data, rows = (o.items || []).map(function (i) { return '<li>' + S.esc(i.name) + ' ' + S.esc(i.option) + ' × ' + S.esc(i.qty) + '개 — ' + S.esc(S.money(i.line_total)) + '</li>'; }).join('');
+      $('go-result').hidden = false;
+      $('go-result').innerHTML = '<h2>주문 내역</h2><p>주문번호 ' + S.esc(o.order_no) + '<br>상태 ' + S.esc(o.status_label || o.status) + '<br>주문일 ' + S.esc((o.created_at || '').slice(0, 10)) + '</p><ul>' + rows + '</ul><p><b>상품금액 합계 ' + S.esc(S.money(o.total)) + '</b></p>';
+    });
+  });
+})();
+</script>
+</body>
+</html>
