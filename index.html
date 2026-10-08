@@ -128,7 +128,7 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
 }/*EDITMODE-END*/;
 
 const IMGS = [['p00','스톤 · 기울어진 바틀'],['p01','쇼핑백 · 패키지'],['p02','프로스티드 · 빛'],['p03','스톤 · 다크'],['p04','플루티드 글라스'],['p05','프로스티드 B'],['p06','데스크 · 수트'],['p07','프로스티드 A'],['p08','절벽 · 화이트'],['p09','스모크'],['p10','차량 · 매거진'],['p11','페이퍼 · 로고'],['p12','분사'],['p13','패키지 박스'],['p14','스톤 · 웜'],['p15','시트러스'],['p16','포토 프린트'],['p17','마블 · 프레임'],['p18','박스 · 오픈'],['p19','박스 · 화이트'],['p20','추가 이미지'],['p21','노트 TOP'],['p22','노트 MIDDLE'],['p23','노트 BASE'],['p24','프레즌스'],['p25','히어로'],['p26','히어로 가로'],['p27','사용법'],['p28','사용법 B'],['p29','룩북 2'],['p30','룩북 3'],['p31','룩북 4'],['p32','룩북 5'],['p33','노트 MIDDLE (신규)'],['p34','노트 BASE (신규)']].map(([value,label])=>({value,label:value.slice(1)+' '+label}));
-const PANELS = [['global','전체 스타일'],['motion','모션'],['nav','내비 · 버튼'],['hero','01 히어로'],['story','02 스토리 · 04 무드 · 띠'],['notes','03 노트 · 아코디언'],['kp','05 키포인트'],['care','06 피부 테스트 · 07 리뷰'],['pres','08 프레즌스 · 09 사용법'],['tail','10 룩북 · 정보 · 푸터']].map(([value,label])=>({value,label}));
+const PANELS = [['global','전체 스타일'],['motion','모션'],['nav','내비 · 버튼'],['hero','01 히어로'],['story','02 스토리 · 04 무드 · 띠'],['notes','03 노트 · 아코디언'],['kp','05 키포인트'],['care','06 제품 안전 · 07 리뷰'],['pres','08 프레즌스 · 09 사용법'],['tail','10 룩북 · 정보 · 푸터']].map(([value,label])=>({value,label}));
 
 function App() {
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
@@ -240,10 +240,8 @@ function App() {
           {Im('03 이미지', 'kpImg3')}
         </>}
         {P === 'care' && <>
-          <TweakSection label="피부 테스트" />
+          <TweakSection label="제품 안전" />
           {R('배경', 'careBg', [['alt', '그레이'], ['lite', '화이트'], ['dark', '블랙']])}
-          {R('제목 정렬', 'careAlign', [['center', '가운데'], ['left', '왼쪽']])}
-          {Tg('번호 표시', 'careNum')}
           <TweakSection label="리뷰" />
           {R('레이아웃', 'revLayout', [['rows', '행'], ['cards', '카드']])}
           {Tg('호버 반전', 'revHover')}

@@ -333,3 +333,21 @@ select.shp-in{appearance:auto}
 .shp-cform{padding:16px}
 .shp-share{margin-right:-10px}
 }
+
+/* ---- shared footer for every shop / info page (same look as the home footer .pf) ---- */
+.shp-ft{background:#000;color:rgba(255,255,255,.6);font-family:var(--font-sans);padding:80px 20px 0}
+.shp-ft *{box-sizing:border-box}
+.shp-ft a{color:inherit;text-decoration:none}.shp-ft a:hover{color:#fff}
+.shp-ft-top{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:32px 20px;font-size:13px;line-height:1.8;padding-bottom:56px;max-width:1440px;margin:0 auto}
+.shp-ft-top>div:nth-child(1),.shp-ft-top>div:nth-child(2),.shp-ft-top>div:nth-child(5){grid-column:1/-1}
+.shp-ft-top>div{min-width:0;overflow-wrap:anywhere}
+.shp-ft-l{display:block;margin-bottom:8px;color:#fff;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+.shp-ft ul{margin:0;padding:0;list-style:none}.shp-ft li a{display:inline-block;padding:2px 0}
+.shp-ft-bot{display:flex;flex-direction:column;gap:6px;justify-content:space-between;padding:20px 0 28px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;box-shadow:inset 0 1px 0 rgba(255,255,255,.18);max-width:1440px;margin:0 auto}
+@media (min-width:901px){
+.shp-ft{padding:120px 40px 0}
+.shp-ft-top{grid-template-columns:repeat(5,auto);justify-content:center;column-gap:clamp(32px,4.5vw,88px);font-size:12px;padding-bottom:64px}
+.shp-ft-top>div:nth-child(1),.shp-ft-top>div:nth-child(2),.shp-ft-top>div:nth-child(5){grid-column:auto}
+.shp-ft-bot{flex-direction:row}
+}
+@media (max-width:900px){#product-root~.shp-ft{padding-bottom:calc(88px + env(safe-area-inset-bottom))}}

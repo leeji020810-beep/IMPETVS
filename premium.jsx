@@ -1,4 +1,4 @@
-const PIDX = [['intro', 'INTRO'], ['story', 'STORY'], ['notes', 'NOTES'], ['mood', 'MOOD'], ['keypoint', 'KEY POINT'], ['care', 'SKIN CARE'], ['review', 'REAL REVIEW'], ['presence', 'PRESENCE'], ['howto', 'HOW TO USE'], ['lookbook', 'LOOKBOOK'], ['info', 'INFORMATION']];
+const PIDX = [['intro', 'INTRO'], ['story', 'STORY'], ['notes', 'NOTES'], ['mood', 'MOOD'], ['keypoint', 'KEY POINT'], ['care', 'PRODUCT SAFETY'], ['review', 'REAL REVIEW'], ['presence', 'PRESENCE'], ['howto', 'HOW TO USE'], ['lookbook', 'LOOKBOOK'], ['info', 'INFORMATION']];
 
 function useScrollFX(motion) {
   React.useEffect(() => {
@@ -192,11 +192,57 @@ function PKeyPoint({ t }) {
   );
 }
 
+// PRODUCT SAFETY: the 안전기준 적합확인 신고증명서 and what it says, nothing more (no skin / cosmetics claim, no "government guaranteed")
+function SafetyViewer({ s, onClose }) {
+  const [zoom, setZoom] = React.useState(false);
+  const closeRef = React.useRef(null), boxRef = React.useRef(null);
+  React.useEffect(() => {
+    const prev = document.activeElement, ov = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    closeRef.current && closeRef.current.focus();
+    const key = e => {
+      if (e.key === 'Escape') { e.preventDefault(); onClose(); return; }
+      if (e.key !== 'Tab') return;
+      const f = [...boxRef.current.querySelectorAll('button,[tabindex="0"]')], i = f.indexOf(document.activeElement);
+      if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
+    };
+    document.addEventListener('keydown', key);
+    return () => { document.removeEventListener('keydown', key); document.body.style.overflow = ov; prev && prev.focus && prev.focus(); };
+  }, []);
+  const src = (window.__A && window.__A[s.img]) || s.img;
+  return ReactDOM.createPortal(
+    <div className="safe-ov" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="safe-dlg" ref={boxRef} role="dialog" aria-modal="true" aria-label="안전기준 적합확인 신고증명서 크게 보기">
+        <div className="safe-bar">
+          <span className="lbl">Product Safety</span>
+          <span className="safe-btns">
+            <button type="button" onClick={() => setZoom(z => !z)} aria-pressed={zoom}>{zoom ? '화면에 맞추기' : '더 크게'}</button>
+            <button type="button" ref={closeRef} onClick={onClose} aria-label="닫기">닫기 ✕</button>
+          </span>
+        </div>
+        <div className={cx('safe-scroll', zoom && 'zoom')} tabIndex={0} aria-label="신고증명서 이미지 (방향키로 스크롤)"><img src={src} alt={s.alt} width={s.imgW} height={s.imgH} /></div>
+      </div>
+    </div>, document.body);
+}
 function PCare({ t }) {
+  const s = IM.safety, [open, setOpen] = React.useState(false), btnRef = React.useRef(null);
+  const src = (window.__A && window.__A[s.img]) || s.img;
   return (
-    <section id="care" className={cx('ps care', t.careBg, t.careAlign === 'left' && 'left', !t.careNum && 'nonum')} data-screen-label="06 Skin Care">
-      <h2 className="care-h rv"><span className="l">{IM.testHead[0]}</span><span>{IM.testHead[1]}</span></h2>
-      <div className="care-g">{[0, 1, 2].map(i => <article key={i} className="care-c rv" style={{ transitionDelay: `${i * .12}s` }}><span className="no">0{i + 1}</span><h4><DIc n="SquareCheck" size={22} color="var(--label-strong)" />{IM.test.title}</h4><p><Ln a={IM.test.lines} /></p></article>)}</div>
+    <section id="care" className={cx('ps care safe', t.careBg)} data-screen-label="06 Product Safety">
+      <div className="safe-in">
+        <div className="safe-tx">
+          <span className="lbl rv safe-lbl">{s.name}</span>
+          <h2 className="care-h rv"><span className="l">{s.head[0]}</span><span>{s.head[1]}</span></h2>
+          <p className="safe-desc rv">{s.desc}</p>
+          <p className="safe-note rv">{s.note}</p>
+          <button type="button" className="safe-open rv" ref={btnRef} onClick={() => setOpen(true)} aria-haspopup="dialog">신고 자료 크게 보기</button>
+        </div>
+        <figure className="safe-doc rv">
+          <button type="button" className="safe-pic" onClick={() => setOpen(true)} aria-label="신고증명서를 크게 보기"><img src={src} alt={s.alt} width={s.imgW} height={s.imgH} loading="lazy" /></button>
+          <figcaption>{s.cap}</figcaption>
+        </figure>
+      </div>
+      {open && <SafetyViewer s={s} onClose={() => { setOpen(false); setTimeout(() => btnRef.current && btnRef.current.focus(), 0); }} />}
     </section>
   );
 }
@@ -204,7 +250,7 @@ function PCare({ t }) {
 function PReview({ t }) {
   return (
     <section id="review" className="ps dark" data-screen-label="07 Review">
-      <div className="sh rv"><h2 className="gx">Real Review</h2><div className="side"><b><span className="l">{IM.revHead[0]}</span><br />{IM.revHead[1]}</b></div></div>
+      <div className="sh rv"><h2 className="gx">Real Review</h2></div>
       <div className={cx('rev-rows', t.revLayout === 'cards' && 'rev-cards', !t.revHover && 'nohover')}>{IM.reviews.map(r => <article key={r.n} className="rev-r rv"><span className="serif">Review {r.n}</span><span className="who">{r.who}</span><p><Ln a={r.lines} /></p></article>)}</div>
     </section>
   );
@@ -247,7 +293,7 @@ function PLook({ t }) {
 function PInfo({ t }) {
   return (
     <section id="info" className={cx('ps info', t.infoBg, t.infoLayout === 'stack' && 'stack')} data-screen-label="11 Info">
-      <h2>상품 정보 제공고시</h2>
+      <div className="info-h"><h2>상품 정보 제공고시</h2><p className="info-note">{IM.infoNote}</p></div>
       <dl>{IM.info.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
     </section>
   );
@@ -259,8 +305,8 @@ function PFoot({ t }) {
   return (
     <footer className={cx('ps dark pf', !t.footRise && 'norise', !t.footMeta && 'nometa')} data-p="through" data-screen-label="Footer">
       <div className="pf-top">
-        <div><span className="lbl">Company</span><Ln a={[IM.company[0], `대표자 ${IM.ceo}`, `사업자등록번호 ${IM.biz}`]} /></div>
-        <div><span className="lbl">Contact</span>{IM.company[1]}</div>
+        <div><span className="lbl">Company</span><Ln a={[IM.co.name, IM.co.hosting, IM.co.address, `대표자 ${IM.co.ceo}`, `사업자등록번호 ${IM.co.biz}`, `통신판매업신고번호 ${IM.co.mailOrder}`]} /></div>
+        <div><span className="lbl">Contact</span>고객센터 {IM.co.tel}<br /><a href={`mailto:${IM.co.email}`}>{IM.co.email}</a></div>
         <div><span className="lbl">고객 서비스</span><ul className="pf-links">{IM.footService.map(([l, h]) => <li key={h}><a href={h}>{l}</a></li>)}</ul></div>
         <div><span className="lbl">법적 고지</span><ul className="pf-links">{IM.footLegal.map(([l, h]) => <li key={h}><a href={h}>{l}</a></li>)}</ul></div>
         <div><span className="lbl">SNS</span><a href="https://www.instagram.com/impetvs.official/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" style={{ display: 'inline-flex' }}><DIc n="LogoInstagram" size={24} color="var(--common-100)" /></a></div>

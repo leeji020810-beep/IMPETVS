@@ -162,15 +162,35 @@
       '<a class="hd-ic hd-cart" href="' + LINKS.cart + '" aria-label="장바구니, 총 0개" data-tip="장바구니">' + ICONS.bag + '<b data-cart-count>0</b></a>' +
       '</div></nav></div></header>';
   }
+  /* ------------------------------------------------------------------ business info + footer (single source for every page, home included) */
+  // Public business details. Wording follows the owner's instruction; the exact legal company name is still to be confirmed (see drafts/needed-info.md).
+  var COMPANY = {
+    name: '(주)열정의시간', hosting: 'Hosting by (주)열정의시간', address: '서울 강남구 압구정로10길 30-12 2F',
+    ceo: '한동남', biz: '822-27-01430', mailOrder: '2026-강원원주-01929', tel: '0507-1372-9152', email: 'otu_company@naver.com'
+  };
+  var FOOT_SERVICE = [['비회원 주문 조회', LINKS.guestOrder], ['교환 및 반품', LINKS.returns], ['자주 묻는 질문', LINKS.faq], ['1:1 문의하기', LINKS.contact]];
+  var FOOT_LEGAL = [['공지사항', LINKS.notices], ['이용약관', LINKS.terms], ['개인정보처리방침', LINKS.privacy]];
+  function footerHTML() {
+    var li = function (a) { return a.map(function (x) { return '<li><a href="' + x[1] + '">' + x[0] + '</a></li>'; }).join(''); };
+    return '<footer class="shp-ft"><div class="shp-ft-top">' +
+      '<div><span class="shp-ft-l">Company</span>' + [COMPANY.name, COMPANY.hosting, COMPANY.address, '대표자 ' + COMPANY.ceo, '사업자등록번호 ' + COMPANY.biz, '통신판매업신고번호 ' + COMPANY.mailOrder].map(esc).join('<br>') + '</div>' +
+      '<div><span class="shp-ft-l">Contact</span>고객센터 ' + esc(COMPANY.tel) + '<br><a href="mailto:' + COMPANY.email + '">' + esc(COMPANY.email) + '</a></div>' +
+      '<div><span class="shp-ft-l">고객 서비스</span><ul>' + li(FOOT_SERVICE) + '</ul></div>' +
+      '<div><span class="shp-ft-l">법적 고지</span><ul>' + li(FOOT_LEGAL) + '</ul></div>' +
+      '<div><span class="shp-ft-l">SNS</span><a href="https://www.instagram.com/impetvs.official/" target="_blank" rel="noopener noreferrer">Instagram</a></div>' +
+      '</div><div class="shp-ft-bot"><span>IMPETVS RICH MAN</span><span>Eau De Perfume | 30ml</span></div></footer>';
+  }
   function mountHeaders() {
     [].forEach.call(document.querySelectorAll('[data-shp-header]'), function (el) { if (!el.firstChild) el.innerHTML = headerHTML(); });
+    // the footer goes right after each page's <main>; the home page has its own copy of the same footer (premium.jsx), fed by the same COMPANY data
+    [].forEach.call(document.querySelectorAll('main[id$="-root"]'), function (m) { var n = m.nextElementSibling; if (!(n && n.classList.contains('shp-ft'))) m.insertAdjacentHTML('afterend', footerHTML()); });
     emit();
     if (window.IMAuth) window.IMAuth.paintHeader();
   }
 
   /* ----------------------------------------------------------------- exports */
   window.IMShop = {
-    PRODUCT_ID: PRODUCT_ID, products: PRODUCTS, payments: {}, links: LINKS, cart: cart, order: order,
+    PRODUCT_ID: PRODUCT_ID, products: PRODUCTS, payments: {}, links: LINKS, cart: cart, order: order, company: COMPANY,
     unit: unit, imgFor: imgFor, img: img, money: money, esc: esc, toast: toast, share: share, emit: emit, mountHeaders: mountHeaders, icons: ICONS,
     subscribe: function (f) { subs.push(f); return function () { subs = subs.filter(function (x) { return x !== f; }); }; },
     // accordion: <button data-acc aria-expanded aria-controls=id> + <div id hidden>
