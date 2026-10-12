@@ -3,6 +3,9 @@ const PIDX = [['intro', 'INTRO'], ['story', 'STORY'], ['notes', 'NOTES'], ['mood
 function useScrollFX(motion) {
   React.useEffect(() => {
     let raf;
+    // Scroll-linked ZOOM of the hero picture is a wide-screen effect only. On phones (<= 900px) its variable (--pz) is never updated: no per-frame zoom maths,
+    // nothing to re-apply after scrolling away and back, rotating the phone or the address bar collapsing. (--p keeps driving the non-zoom effects.)
+    const phone = window.matchMedia('(max-width: 900px)');
     const tick = () => {
       const vh = window.innerHeight;
       document.querySelectorAll('[data-p]').forEach(el => {
@@ -11,6 +14,7 @@ function useScrollFX(motion) {
         let p = m === 'sticky' ? -r.top / Math.max(1, r.height - vh) : m === 'exit' ? -r.top / r.height : (vh - r.top) / (vh + r.height);
         p = Math.max(0, Math.min(1, p));
         el.style.setProperty('--p', p.toFixed(4));
+        if (el.hasAttribute('data-zoom')) el.style.setProperty('--pz', phone.matches ? '0' : p.toFixed(4));
         if (el.dataset.steps) {
           const n = +el.dataset.steps, a = String(Math.min(n - 1, Math.floor(p * n)));
           if (el.dataset.active !== a) el.dataset.active = a;
@@ -119,7 +123,7 @@ function PIndex({ active, t }) {
 function PHero({ t }) {
   const word = t.heroWord === 'richman' ? 'RICH MAN' : 'IMPETVS';
   return (
-    <section id="intro" className={cx('ps hero', `w-${t.heroWordPos}`, !t.heroMeta && 'nometa')} data-p="exit" data-screen-label="01 Intro">
+    <section id="intro" className={cx('ps hero', `w-${t.heroWordPos}`, !t.heroMeta && 'nometa')} data-p="exit" data-zoom data-screen-label="01 Intro">
       <div className="hero-bg" style={{ left: 1, top: 0 }}><img src={`opt/p/${t.heroImg}.webp`} alt="임페투스 리치맨" style={{ objectFit: 'cover', position: 'static', objectPosition: `50% ${t.heroPosY}%` }} /></div>
       <div className="hero-meta lbl"><span><b>{IM.tag}</b>{IM.edp}</span><span style={{ textAlign: 'right' }}><b>Quiet confidence</b>Deep, refined, unshaken.</span></div>
       <div className="hero-mid">

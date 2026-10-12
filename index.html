@@ -21,9 +21,9 @@
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/components/logos/fig-assets.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/components/system/fig-assets.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/styles.css">
-<link rel="stylesheet" href="premium.css?v=20261016b">
-<link rel="stylesheet" href="premium-tweaks.css?v=20261016b">
-<link rel="stylesheet" href="shop.css?v=20261016b">
+<link rel="stylesheet" href="premium.css?v=20261016e">
+<link rel="stylesheet" href="premium-tweaks.css?v=20261016e">
+<link rel="stylesheet" href="shop.css?v=20261016e">
 </head>
 <body>
 <div id="app"></div>
@@ -31,16 +31,16 @@
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 <script src="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/_ds_bundle.js"></script>
-<script src="config.js?v=20261016b"></script>
-<script src="shop.js?v=20261016b"></script>
-<script src="auth.js?v=20261016b"></script>
-<script type="text/babel" src="tweaks-panel.jsx?v=20261016b"></script>
-<script type="text/babel" src="content.jsx?v=20261016b"></script>
-<script type="text/babel" src="tilt-card.jsx?v=20261016b"></script>
-<script type="text/babel" src="event-popup.jsx?v=20261016b"></script>
-<script type="text/babel" src="shimmer-text.jsx?v=20261016b"></script>
-<script type="text/babel" src="flip-links.jsx?v=20261016b"></script>
-<script type="text/babel" src="premium.jsx?v=20261016b"></script>
+<script src="config.js?v=20261016e"></script>
+<script src="shop.js?v=20261016e"></script>
+<script src="auth.js?v=20261016e"></script>
+<script type="text/babel" src="tweaks-panel.jsx?v=20261016e"></script>
+<script type="text/babel" src="content.jsx?v=20261016e"></script>
+<script type="text/babel" src="tilt-card.jsx?v=20261016e"></script>
+<script type="text/babel" src="event-popup.jsx?v=20261016e"></script>
+<script type="text/babel" src="shimmer-text.jsx?v=20261016e"></script>
+<script type="text/babel" src="flip-links.jsx?v=20261016e"></script>
+<script type="text/babel" src="premium.jsx?v=20261016e"></script>
 <script type="text/babel">
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "panel": "pres",
@@ -115,7 +115,7 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "revHover": true,
   "presSide": "left",
   "presImg": "p24",
-  "howImg": "p28",
+  "howImg": "p35",
   "howWord": true,
   "howPos": "br",
   "howCard": "solid",
@@ -127,7 +127,7 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "footMeta": true
 }/*EDITMODE-END*/;
 
-const IMGS = [['p00','스톤 · 기울어진 바틀'],['p01','쇼핑백 · 패키지'],['p02','프로스티드 · 빛'],['p03','스톤 · 다크'],['p04','플루티드 글라스'],['p05','프로스티드 B'],['p06','데스크 · 수트'],['p07','프로스티드 A'],['p08','절벽 · 화이트'],['p09','스모크'],['p10','차량 · 매거진'],['p11','페이퍼 · 로고'],['p12','분사'],['p13','패키지 박스'],['p14','스톤 · 웜'],['p15','시트러스'],['p16','포토 프린트'],['p17','마블 · 프레임'],['p18','박스 · 오픈'],['p19','박스 · 화이트'],['p20','추가 이미지'],['p21','노트 TOP'],['p22','노트 MIDDLE'],['p23','노트 BASE'],['p24','프레즌스'],['p25','히어로'],['p26','히어로 가로'],['p27','사용법'],['p28','사용법 B'],['p29','룩북 2'],['p30','룩북 3'],['p31','룩북 4'],['p32','룩북 5'],['p33','노트 MIDDLE (신규)'],['p34','노트 BASE (신규)']].map(([value,label])=>({value,label:value.slice(1)+' '+label}));
+const IMGS = [['p00','스톤 · 기울어진 바틀'],['p01','쇼핑백 · 패키지'],['p02','프로스티드 · 빛'],['p03','스톤 · 다크'],['p04','플루티드 글라스'],['p05','프로스티드 B'],['p06','데스크 · 수트'],['p07','프로스티드 A'],['p08','절벽 · 화이트'],['p09','스모크'],['p10','차량 · 매거진'],['p11','페이퍼 · 로고'],['p12','분사'],['p13','패키지 박스'],['p14','스톤 · 웜'],['p15','시트러스'],['p16','포토 프린트'],['p17','마블 · 프레임'],['p18','박스 · 오픈'],['p19','박스 · 화이트'],['p20','추가 이미지'],['p21','노트 TOP'],['p22','노트 MIDDLE'],['p23','노트 BASE'],['p24','프레즌스'],['p25','히어로'],['p26','히어로 가로'],['p27','사용법'],['p28','사용법 B'],['p29','룩북 2'],['p30','룩북 3'],['p31','룩북 4'],['p32','룩북 5'],['p33','노트 MIDDLE (신규)'],['p34','노트 BASE (신규)'],['p35','사용법 C (분사 연출컷)']].map(([value,label])=>({value,label:value.slice(1)+' '+label}));
 const PANELS = [['global','전체 스타일'],['motion','모션'],['nav','내비 · 버튼'],['hero','01 히어로'],['story','02 스토리 · 04 무드 · 띠'],['notes','03 노트 · 아코디언'],['kp','05 키포인트'],['care','06 제품 안전 · 07 리뷰'],['pres','08 프레즌스 · 09 사용법'],['tail','10 룩북 · 정보 · 푸터']].map(([value,label])=>({value,label}));
 
 function App() {

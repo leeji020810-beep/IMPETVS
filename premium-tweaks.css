@@ -27,7 +27,7 @@
 .pidx.hov:not(:hover) a.on span{opacity:0}
 /* hero */
 .hero-bg::after{background:linear-gradient(180deg,rgba(0,0,0,calc(.35*var(--hd))) 0%,rgba(0,0,0,0) 30%,rgba(0,0,0,calc(.2*var(--hd))) 60%,rgba(0,0,0,calc(.78*var(--hd))) 100%)}
-.m-rich .hero-bg img{transform:scale(calc(1.04 + var(--p,0)*var(--hz)))}
+.m-rich .hero-bg img{transform:scale(calc(1.04 + var(--pz,0)*var(--hz)))}
 .hero-word{font-size:calc(var(--hw)*1vw)}
 .hero-word.long{font-size:calc(var(--hw)*.72vw)}
 .hero-mid{bottom:calc(var(--hw)*.9vw + 56px)}
@@ -270,7 +270,7 @@
 @media (max-width:900px){
   .pr{--m-gut:20px}
   /* hero: the picture keeps its first size and framing while scrolling (no scroll-linked zoom); the PC zoom is untouched (it lives outside this query) */
-  .m-rich .hero-bg img{transform:none}
+  .m-rich .hero-bg img{transform:scale(1.04)}   /* the picture's first size / framing, fixed */
   /* hero top line: only the product line, centred on the screen, clear of the header (92px top) */
   .hero-meta{left:var(--m-gut);right:var(--m-gut);top:92px;align-items:center;text-align:center}
   .hero-meta>span{text-align:center!important}
@@ -284,6 +284,8 @@
   /* rows inside those sections start on the section's own line (no extra 4px) */
   .care-c{padding-left:0;padding-right:0}
   .rev-r{padding-left:0;padding-right:0}
+  /* REAL REVIEW title: one line. It is 6.33 x its font size wide, so it only shrinks (never below what fits) on screens narrower than 56px*6.33 + the two side margins */
+  #review .sh h2{white-space:nowrap;font-size:min(var(--t-disp-section),calc((100vw - 2 * var(--m-gut)) / 6.4))}
   .safe-in,.safe-tx{min-width:0}
   .safe-doc{margin-left:auto;margin-right:auto}
   .safe-doc figcaption{text-wrap:balance}
@@ -297,3 +299,9 @@
   .how-word{white-space:normal;left:var(--m-gut,20px);right:var(--m-gut,20px);line-height:.95}
   .m-rich .how-word{transform:none}
 }
+
+/* HOW TO USE background: the picture is never stretched (object-fit: cover); only WHICH part of it is shown is set here, per device.
+   Goal: the bottle + IMPETVS label stay clear of the big title (top) and of the white card (bottom right on PC / bottom on phones).
+   PC: the picture is wider than its box, 72% shifts the bottle left, away from the card.  Phones: the box is very tall and narrow, 45% centres the label. */
+.how-bg img{object-position:72% 50%}
+@media (max-width:900px){.how-bg img{object-position:45% 50%}}

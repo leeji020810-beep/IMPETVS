@@ -26,19 +26,35 @@
   // Never promise same-day shipping or a delivery date. Remote areas / islands: a surcharge MAY apply but the amount/areas are NOT decided (owner, 2026-10-12);
   // the server has NO surcharge calculation, so real payment must stay closed until that is decided (backend/TOSS-RESUME.md).
   var SHIPPING = {
-    carrier: '우체국택배', fee: 3000, freeFrom: 50000, returnAddress: '경기도 하남시 미사대로 540, 현대지식산업센터 한강미사2차 B-905',
-    lines: [
-      ['배송 방법', '택배(우체국택배)'],
-      ['배송 지역', '전국'],
-      ['배송 비용', '3,000원'],
-      ['무료 배송', '상품금액 50,000원 이상 구매 시 기본 배송비 무료'],
-      ['출고', '평일 16시 이전 결제 완료 시 당일 출고 (주문량 폭주 시 출고가 지연될 수 있습니다.)'],
-      ['배송 기간', '결제 확인 후 영업일 기준 2~5일']
-    ],
-    cartNote: ['배송비: 3,000원 (상품금액 50,000원 이상 구매 시 무료)', '평일 16시 이전 결제 완료 시 당일 출고', '(주문량 폭주 시 출고가 지연될 수 있습니다.)'],   // the short text under the cart total
-    note: '택배(우체국택배) · 전국 · 배송비 3,000원 (상품금액 50,000원 이상 구매 시 기본 배송비 무료) · 평일 16시 이전 결제 완료 시 당일 출고(주문량 폭주 시 지연될 수 있음, 당일 도착이 아님) · 배송 기간 결제 확인 후 영업일 기준 2~5일 · 산간벽지나 도서지방은 지역에 따라 추가 배송비가 발생할 수 있으며, 추가 비용이 있는 경우 결제 전에 안내합니다.',
+    carrier: '우체국택배', fee: 3000, freeFrom: 50000, returnAddress: '서울 강남구 압구정로10길 30-12 2F',
+    dispatch: '평일 16시 이전 결제 완료 시 당일 출고', busy: '주문량 폭주 시 출고가 지연될 수 있습니다.', period: '결제 확인 후 영업일 기준 2~5일',
+    surcharge: '제주·도서산간은 추가 배송비가 발생할 수 있으며, 발생 시 결제 전에 안내합니다.',
     calc: function (subtotal) { return typeof subtotal !== 'number' || subtotal <= 0 ? null : (subtotal >= SHIPPING.freeFrom ? 0 : SHIPPING.fee); }
   };
+  // Every shipping text on every page is built from the values above (product accordion, shopping guide, returns page, FAQ, cart, order).
+  // Pages only carry an empty [data-ship="..."] / [data-return-addr] slot, so the wording can never drift apart again.
+  (function () {
+    var f = function (n) { return n.toLocaleString('ko-KR') + '원'; };
+    SHIPPING.lines = [
+      ['배송업체', SHIPPING.carrier],
+      ['기본 배송비', f(SHIPPING.fee) + ' (할인 적용 후 상품금액 ' + f(SHIPPING.freeFrom) + ' 이상 구매 시 무료)'],
+      ['제주·도서산간', '추가 배송비가 발생할 수 있으며, 발생 시 결제 전에 안내합니다.'],
+      ['당일 출고', SHIPPING.dispatch + ' (' + SHIPPING.busy + ')'],
+      ['예상 배송 기간', SHIPPING.period + ' (당일 출고는 당일 도착을 뜻하지 않습니다.)']
+    ];
+    SHIPPING.cartNote = ['배송비: ' + f(SHIPPING.fee) + ' (상품금액 ' + f(SHIPPING.freeFrom) + ' 이상 구매 시 무료)', SHIPPING.dispatch, '(' + SHIPPING.busy + ')'];
+    SHIPPING.note = SHIPPING.lines.map(function (l) { return l[0] + ': ' + l[1]; }).join(' · ');
+    SHIPPING.text = {
+      order: SHIPPING.surcharge,
+      returns: SHIPPING.lines.map(function (l) { return l[0] + ': ' + l[1]; }).join(' · '),
+      guide: SHIPPING.lines.map(function (l) { return l[0] + ': ' + l[1]; }).join('\n'),
+      acc: SHIPPING.lines.map(function (l) { return l[0] + ': ' + l[1]; }).join('\n'),
+      'faq-carrier': SHIPPING.carrier + '로 발송합니다.',
+      'faq-fee': '배송업체는 ' + SHIPPING.carrier + '이며 기본 배송비는 ' + f(SHIPPING.fee) + '입니다. 할인 적용 후 상품금액 ' + f(SHIPPING.freeFrom) + ' 이상 구매 시 기본 배송비는 무료입니다(30ml ' + f(59000) + ', 50ml ' + f(99000) + '은 1개부터 해당). ' + SHIPPING.surcharge,
+      'faq-surcharge': SHIPPING.surcharge + ' 지역별 추가 금액은 아직 확정되지 않았으며, 확정되면 이 페이지와 상품 페이지에서 안내합니다.',
+      'faq-when': SHIPPING.dispatch + '(' + SHIPPING.busy + ') 당일 출고와 도착은 다르며, 예상 배송 기간은 ' + SHIPPING.period + '입니다. 16시 이후 결제나 주말·공휴일 주문의 출고 시점은 확정된 기준이 없어 안내해 드릴 수 없습니다. 현재 결제 서비스 준비 중입니다.'
+    };
+  })();
   var LEGACY_IDS ={ 'impetvs-rich-man-30ml': PRODUCT_ID }; // ids written by earlier versions of the cart
 
   var LINKS = {
@@ -201,8 +217,8 @@
   };
   // seller information shown where the customer buys (order page, product page): the same data as the footer
   function sellerHTML() {
-    return ['상호 ' + COMPANY.name, '대표자 ' + COMPANY.ceo, '사업자 주소 ' + COMPANY.address, '고객센터 ' + COMPANY.tel, '이메일 ' + COMPANY.email,
-      '사업자등록번호 ' + COMPANY.biz, '통신판매업신고번호 ' + COMPANY.mailOrder].map(esc).join('<br>');
+    return ['상호: ' + COMPANY.name, '대표자: ' + COMPANY.ceo, '사업자 주소: ' + COMPANY.address, '고객센터: ' + COMPANY.tel, '이메일: ' + COMPANY.email,
+      '사업자등록번호: ' + COMPANY.biz, '통신판매업신고번호: ' + COMPANY.mailOrder].map(esc).join('<br>');
   }
   var FOOT_SERVICE = [['비회원 주문 조회', LINKS.guestOrder], ['교환 및 반품', LINKS.returns], ['자주 묻는 질문', LINKS.faq], ['1:1 문의하기', LINKS.contact]];
   var FOOT_LEGAL = [['공지사항', LINKS.notices], ['이용약관', LINKS.terms], ['개인정보처리방침', LINKS.privacy]];
@@ -223,6 +239,11 @@
     // the footer goes right after each page's <main>; the home page has its own copy of the same footer (premium.jsx), fed by the same COMPANY data
     [].forEach.call(document.querySelectorAll('main[id$="-root"]'), function (m) { var n = m.nextElementSibling; if (!(n && n.classList.contains('shp-ft'))) m.insertAdjacentHTML('afterend', footerHTML()); });
     [].forEach.call(document.querySelectorAll('[data-seller]'), function (el) { el.innerHTML = sellerHTML(); });
+    [].forEach.call(document.querySelectorAll('[data-ship]'), function (el) {
+      var s = SHIPPING.text[el.getAttribute('data-ship')]; if (s == null) return;
+      el.innerHTML = el.hasAttribute('data-ship-p') ? s.split('\n').map(function (x) { return '<p>' + esc(x) + '</p>'; }).join('') : esc(s).replace(/\n/g, '<br>');
+    });
+    [].forEach.call(document.querySelectorAll('[data-return-addr]'), function (el) { el.textContent = SHIPPING.returnAddress; });
     emit();
     if (window.IMAuth) window.IMAuth.paintHeader();
   }
