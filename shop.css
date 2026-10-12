@@ -372,3 +372,10 @@ select.shp-in{appearance:auto}
 .shp-kv div{display:grid;grid-template-columns:140px minmax(0,1fr);gap:16px;padding:14px 0;border-bottom:1px solid rgba(112,115,124,.22);font-size:15px}
 .shp-kv dt{font-weight:700}.shp-kv dd{margin:0;word-break:break-all}
 @media (max-width:520px){.shp-kv div{grid-template-columns:minmax(0,1fr);gap:4px}}
+
+/* ---- footer (shop pages): business info column ---- */
+@media (min-width:901px){.shp-ft-top{grid-template-columns:minmax(0,2.3fr) repeat(4,auto);justify-content:stretch;column-gap:clamp(28px,3.6vw,72px)}}
+
+.shp-ft-co{word-break:keep-all;overflow-wrap:anywhere}
+.shp-ft-co p{margin:0}.shp-ft-co p+p{margin-top:2px}
+.shp-ft-co .shp-ft-legal{margin-top:var(--pf-legal-gap,28px)}   /* the gap is CSS spacing, not blank lines */

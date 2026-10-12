@@ -274,8 +274,10 @@ function PFoot({ t }) {
   return (
     <footer className={cx('ps dark pf', !t.footRise && 'norise', !t.footMeta && 'nometa')} data-p="through" data-screen-label="Footer">
       <div className="pf-top">
-        <div><span className="lbl">Company</span><Ln a={[IM.co.name, IM.co.hosting, IM.co.address, `대표자 ${IM.co.ceo}`, `사업자등록번호 ${IM.co.biz}`, `통신판매업신고번호 ${IM.co.mailOrder}`]} /></div>
-        <div><span className="lbl">Contact</span>고객센터 {IM.co.tel}<br /><a href={`mailto:${IM.co.email}`}>{IM.co.email}</a><br />사업자 연락처 {IM.co.bizPhone}</div>
+        <div className="pf-co"><span className="lbl">Company</span>
+          <p>{IM.co.name}</p><p>대표자 {IM.co.ceo} / {IM.co.address}</p><p>사업자등록번호 {IM.co.biz}</p><p>통신판매업신고번호 {IM.co.mailOrder}</p>
+          <p className="pf-legal">© IMPETVS. All rights reserved.<br />Hosted by {IM.co.hostedBy}</p></div>
+        <div><span className="lbl">Contact</span>고객센터 {IM.co.tel}<br /><a href={`mailto:${IM.co.email}`}>{IM.co.email}</a></div>
         <div><span className="lbl">고객 서비스</span><ul className="pf-links">{IM.footService.map(([l, h]) => <li key={h}><a href={h}>{l}</a></li>)}</ul></div>
         <div><span className="lbl">법적 고지</span><ul className="pf-links">{IM.footLegal.map(([l, h]) => <li key={h}><a href={h}>{l}</a></li>)}</ul></div>
         <div><span className="lbl">SNS</span><a href="https://www.instagram.com/impetvs.official/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" style={{ display: 'inline-flex' }}><DIc n="LogoInstagram" size={24} color="var(--common-100)" /></a></div>

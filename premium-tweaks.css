@@ -151,19 +151,18 @@
 /* ---- PRODUCT SAFETY (06) ---- */
 .safe-in{display:grid;grid-template-columns:minmax(0,1fr);gap:48px;align-items:center;max-width:1280px;margin:0 auto}
 .safe-tx .care-h{margin:20px 0 28px;text-align:left}
-.safe-tx .care-h span{font-size:clamp(30px,8vw,40px)}
 .safe-lbl{display:block;color:var(--label-alternative)}
-.safe-note{margin:0;font-size:clamp(15px,4vw,17px);line-height:1.8;color:var(--label-strong);word-break:keep-all;overflow-wrap:anywhere}
-.safe-doc{margin:0;width:100%;max-width:520px;justify-self:center}
-.safe-card{position:relative;container-type:inline-size;aspect-ratio:498/633;overflow:hidden;background-color:#ececec;background-image:radial-gradient(120% 90% at 50% 40%,rgba(255,255,255,.7),rgba(255,255,255,0) 70%),url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='900'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012 .02' numOctaves='4' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 .3 0 0 0 0 .3 0 0 0 0 .3 0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23b)' opacity='.5'/%3E%3C/svg%3E"),url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='360'%3E%3Cfilter id='a'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .45 0 0 0 0 .45 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23a)' opacity='.55'/%3E%3C/svg%3E")}
-.safe-card>img{position:absolute;left:10%;top:4.7%;width:80%;height:auto;display:block;background:#fff;box-shadow:0 .9cqw 3.4cqw rgba(0,0,0,.3),0 0 0 .2cqw rgba(0,0,0,.08)}
-.safe-badge{position:absolute;left:5%;right:3.6%;top:45.8%;margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.6em;min-height:17%;padding:3.2cqw 4cqw;box-sizing:border-box;background:#fff;border:.45cqw solid #111;box-shadow:0 1.6cqw 0 rgba(0,0,0,.62),0 3.4cqw 4.4cqw rgba(0,0,0,.28);color:#111;text-align:center;font-size:clamp(14px,4.3cqw,19px);line-height:1.5;letter-spacing:-.02em;word-break:keep-all;overflow-wrap:anywhere;text-wrap:balance}
+.safe-note{margin:0;color:var(--label-strong)}
+.safe-doc{margin:0;width:100%;max-width:560px;justify-self:center}
+/* the picture (transparent PNG -> WebP, 609x747) is shown whole; the text sits in the picture's own white rectangle: x 4..564 / y 378..505 of 609x747 */
+.safe-card{position:relative;container-type:inline-size;aspect-ratio:609/747}
+.safe-card>img{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:contain}
+.safe-badge{position:absolute;left:.66%;width:92.1%;top:50.6%;height:17.1%;margin:0;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.35em;padding:0 6%;text-align:center;color:#111;font-size:clamp(13.5px,4cqw,18px);line-height:1.45;letter-spacing:-.02em;word-break:keep-all;overflow-wrap:anywhere;text-wrap:balance}
 .safe-badge b{font-weight:800}
 .safe-doc figcaption{margin-top:14px;font-size:12px;line-height:1.7;word-break:keep-all;overflow-wrap:anywhere}
 @media (min-width:901px){
 .safe-in{grid-template-columns:minmax(0,6fr) minmax(0,5fr);gap:clamp(48px,7vw,128px)}
-.safe-tx .care-h span{font-size:clamp(36px,3.6vw,52px)}
-.safe-badge{font-size:3.05cqw;gap:.35em}
+.safe-badge{font-size:3.2cqw;gap:.3em}
 }
 /* ---- real review: natural wrapping on every width ---- */
 .rev-r p,.rev-r .who{word-break:keep-all;overflow-wrap:anywhere}
@@ -176,3 +175,89 @@
 @media (max-width:900px){.info-h{position:static}}
 /* ---- footer: new lines must wrap, never overflow ---- */
 .pf-top>div{min-width:0;overflow-wrap:anywhere}.pf-top a{color:inherit;text-decoration:none}.pf-top a:hover{color:#fff}
+
+/* ---- footer: business info column (2026-10-16) ---- */
+.pf-co p,.shp-ft-co p{margin:0}
+.pf-co p+p,.shp-ft-co p+p{margin-top:2px}
+.pf-co .pf-legal,.shp-ft-co .shp-ft-legal{margin-top:var(--pf-legal-gap,28px)}
+.pf-co,.shp-ft-co{word-break:keep-all;overflow-wrap:anywhere}
+@media (min-width:901px){
+.pf-top,.pr.gut .pf-top{grid-template-columns:minmax(0,2.3fr) repeat(4,auto);justify-content:stretch;column-gap:clamp(28px,3.6vw,72px)}
+}
+
+/* =====================================================================================================================================
+   TYPOGRAPHY SYSTEM (home page, 2026-10-16) - one variable per ROLE; PC = default, mobile (<=900px) = override.
+   Fonts are unchanged: Gloock (display only, ONLY weight 400 exists -> never bold, no synthetic bold) + Pretendard JP (variable, 45-920).
+   ROLE                         PC               mobile           weight  line-height  letter-spacing   used by
+   display / brand wordmark     482px            22.4vw           400     .9           -.02em           footer IMPETVS wordmark
+   display / HOW TO USE         = section giant 9.6vw (138 @1440)  56px   400   .84   -.02em   how-word (shares the section-giant variable)
+   display / section giant      9.6vw (<=168)    56px             400     .84          -.02em           Notes, Real Review
+   display / band               = list head 6vw (86 @1440)         44px   400   .84   -.02em   marquee strip (shares the Notes list-title variable)
+   display / list head          6vw (<=96)       44px             400     .84          -.02em           TOP / MIDDLE / BASE
+   display / number             = section giant 9.6vw (138)        56px   400   .8    0        Key Point 01-03 (shares the section-giant variable)
+   sub-display (Gloock)         3.4vw (<=52)     30px             400     1 .. 1.15    0                Review 01-03, Lookbook quote
+   hero headline                3.4vw (28..52)   28px             700/400 1.2          -.035em          hero h1
+   section title (KR)           3.4vw (28..52)   28px             400+700 1.25         -.035em          Key Point, PRODUCT SAFETY, Presence
+   statement (KR)               = headline 3.4vw (49 @1440)        28px   600   1.42  -.035em  Story / Mood paragraphs
+   card sub-title (KR)          36px             24px             700     1.3          -.03em           Key Point cards, info title
+   body large                   20px             16px             400     1.75         0                reviews, Presence, How to use card
+   body                         16px             16px             400     1.85         0                Key Point text, PRODUCT SAFETY note
+   spec text                    16px             16px             400/700 1.8          0                info table (dt bold / dd regular)
+   list emphasis                20px             16px             600     1.3          .04em            Notes lists
+   meta                         16px             14px             400-600 1.6          .04em            hero meta, lookbook caption, review author
+   small / caption              12px             12px             400     1.6          0                info note, image caption
+   section tag (label)          12px             12px             600     1.8          .08em  UPPER     ( Story ), tags, footer labels
+   footer text                  12px             12px             400     1.8          0                footer info
+   button                       16px             16px             400     -            -                design-system button (touch area >= 44px)
+   ===================================================================================================================================== */
+:root{
+  --t-disp-brand:482px;--t-disp-section:clamp(56px,9.6vw,168px);--t-disp-list:clamp(44px,6vw,96px);
+  --t-disp-how:var(--t-disp-section);--t-disp-num:var(--t-disp-section);--t-disp-band:var(--t-disp-list);   /* HOW TO USE + Key Point numbers share the section-giant size; the band shares the Notes list-title size */
+  --t-subdisp:clamp(30px,3.4vw,52px);
+  --t-headline:clamp(28px,3.4vw,52px);--t-statement:var(--t-headline);--t-sub:36px;   /* story sentences use the same 49px / 28px as the headline-size titles */
+  --t-body-lg:20px;--t-body:16px;--t-spec:16px;--t-list:20px;--t-meta:16px;--t-small:12px;--t-tag:12px;--t-foot:12px;
+  --lh-body-lg:1.75;--lh-body:1.85;--lh-spec:1.8;--lh-sub:1.3;--lh-title:1.25;
+}
+@media (max-width:900px){
+  :root{--t-disp-brand:22.4vw;--t-disp-section:56px;--t-disp-list:44px;--t-subdisp:30px;
+    --t-headline:28px;--t-sub:24px;--t-body-lg:16px;--t-body:16px;--t-list:16px;--t-meta:14px;--t-tag:12px;--t-foot:12px}
+}
+/* Gloock has one weight (400): never ask for more, never let the browser fake it */
+.gx,.serif,.sh h2,.pf-word,.how-word,.kp-n,.acc-c .big,.band-strip .mq span,.look-q p,.rev-r .serif{font-weight:400;font-synthesis:none}
+/* display roles: the values are the ones the design already had, now managed in one place */
+.sh h2{font-size:var(--t-disp-section)}
+.band-strip .mq span{font-size:var(--t-disp-band)}
+.acc-c .big,#notes .acc-c .big{font-size:var(--t-disp-list)}
+.kp-n,.kp-b .kp-n{font-size:var(--t-disp-num)}
+.how-word{font-size:var(--t-disp-how)}
+.pf-word{font-size:var(--t-disp-brand)}
+@media (max-width:900px){.how-word{font-size:var(--t-disp-how)}}
+.rev-r .serif,.look-q .serif,.look-q p{font-size:var(--t-subdisp)}
+/* headline / section titles: same size on the same screen */
+.hero-mid h1,.kp-h span,.care-h span,.pres-tx h2{font-size:var(--t-headline)}
+.kp-h span,.care-h span,.pres-tx h2{line-height:var(--lh-title);letter-spacing:-.035em}
+.kp-h span:not(.l),.care-h span:not(.l){font-weight:700}
+.kp-h .l,.care-h .l{font-weight:400}
+.story-t{font-size:var(--t-statement)}
+/* card sub-titles */
+.kp-b h3,.info h2,.info .info-h h2{font-size:var(--t-sub);line-height:var(--lh-sub);letter-spacing:-.03em;font-weight:700}
+/* body copy (the tweak panel's body-size factor --bs still applies) */
+.rev-r p,.pres-tx p,.how-card p{font-size:calc(var(--t-body-lg) * var(--bs,1));line-height:var(--lh-body-lg)}
+.kp-b p,#keypoint .kp-b[data-i] p,.safe-note{font-size:calc(var(--t-body) * var(--bs,1));line-height:var(--lh-body)}
+.info dd,.info dt{font-size:var(--t-spec);line-height:var(--lh-spec)}
+.info dt{font-weight:700}.info dd{font-weight:400}
+#notes .acc-c ul li{font-size:var(--t-list)}
+/* meta / small / tag / footer */
+.hero-meta>span,.hero-meta>span b,.acc-cap,#lookbook .acc-cap,.rev-r .who,#review .rev-r .who{font-size:var(--t-meta)}
+.info-note,.safe-doc figcaption{font-size:var(--t-small);line-height:1.6}
+.lbl,.acc-k,.acc-v,.pf-bot,.pf-top .lbl{font-size:var(--t-tag);line-height:1.8;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+.pf-top>div:not(.cta),.pf-top>div:not(.cta) a,.pf-legal{font-size:var(--t-foot);line-height:1.8}
+.pf-top .lbl{font-size:var(--t-tag)}
+/* buttons: one text size, touch area >= 44px */
+.btn-w{min-height:44px}
+
+/* design-system button text: one size (inline sizes of the component are overridden) */
+.btn-w,.btn-w *{font-size:16px!important}
+
+/* HOW TO USE is 56px on phones: on the narrowest screens the parallax drift is reduced so the word stays inside the screen */
+@media (max-width:380px){.m-rich .how-word{transform:translateX(calc((var(--p,0) - .5)*-4%))}}

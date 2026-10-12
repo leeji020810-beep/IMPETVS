@@ -189,18 +189,18 @@
   /* ------------------------------------------------------------------ business info + footer (single source for every page, home included) */
   // Public business details. Wording follows the owner's instruction; the exact legal company name is still to be confirmed (see drafts/needed-info.md).
   var COMPANY = {
-    // 확정(2026-10-15, 운영자): 법적 상호, 사업자 주소, 사업자 연락처.
-    name: '주식회사 열정의사람들', address: '강원특별자치도 원주시 입춘로 4, 비동 10층 06호, 07호, 08호 디154(반곡동, 엔터비즈타워)', bizPhone: '010-5208-9152',
-    // 고객센터는 따로 유지: 고객센터 번호와 이메일.
+    // 확정(2026-10-15, 운영자): 법적 상호, 사업자등록번호, 통신판매업신고번호, 대표자, 사업자 주소.
+    // (사업자 연락처는 공개 화면에 표시하지 않습니다. 내부 기록: backend/BUSINESS-INTERNAL.md)
+    name: '주식회사 열정의사람들', ceo: '한동남', address: '강원특별자치도 원주시 입춘로 4, 비동 10층 06호, 07호, 08호 디154(반곡동, 엔터비즈타워)',
+    biz: '822-27-01430', mailOrder: '2026-강원원주-01929',
+    // 고객센터(전화·이메일)는 별도로 유지.
     tel: '0507-1372-9152', email: 'otu_company@naver.com',
-    // 확정(2026-10-15, 운영자 확인): 사업자등록번호, 통신판매업신고번호, 대표자 — 모두 '주식회사 열정의사람들'의 정보.
-    ceo: '한동남', biz: '822-27-01430', mailOrder: '2026-강원원주-01929',
-    // 실제 호스팅 제공자 기준으로 확인 전(현재 사이트는 GitHub Pages / Supabase 사용).
-    hosting: 'Hosting by (주)열정의시간'
+    // 정적 파일 호스팅: GitHub Pages (배포 주소 https://<id>.github.io/IMPETVS). 회원·인증 데이터는 Supabase(호스팅 표기가 아님).
+    hostedBy: 'GitHub Pages'
   };
   // seller information shown where the customer buys (order page, product page): the same data as the footer
   function sellerHTML() {
-    return ['상호 ' + COMPANY.name, '대표자 ' + COMPANY.ceo, '사업자 주소 ' + COMPANY.address, '고객센터 ' + COMPANY.tel, '사업자 연락처 ' + COMPANY.bizPhone, '이메일 ' + COMPANY.email,
+    return ['상호 ' + COMPANY.name, '대표자 ' + COMPANY.ceo, '사업자 주소 ' + COMPANY.address, '고객센터 ' + COMPANY.tel, '이메일 ' + COMPANY.email,
       '사업자등록번호 ' + COMPANY.biz, '통신판매업신고번호 ' + COMPANY.mailOrder].map(esc).join('<br>');
   }
   var FOOT_SERVICE = [['비회원 주문 조회', LINKS.guestOrder], ['교환 및 반품', LINKS.returns], ['자주 묻는 질문', LINKS.faq], ['1:1 문의하기', LINKS.contact]];
@@ -208,8 +208,10 @@
   function footerHTML() {
     var li = function (a) { return a.map(function (x) { return '<li><a href="' + x[1] + '">' + x[0] + '</a></li>'; }).join(''); };
     return '<footer class="shp-ft"><div class="shp-ft-top">' +
-      '<div><span class="shp-ft-l">Company</span>' + [COMPANY.name, COMPANY.hosting, COMPANY.address, '대표자 ' + COMPANY.ceo, '사업자등록번호 ' + COMPANY.biz, '통신판매업신고번호 ' + COMPANY.mailOrder].map(esc).join('<br>') + '</div>' +
-      '<div><span class="shp-ft-l">Contact</span>고객센터 ' + esc(COMPANY.tel) + '<br><a href="mailto:' + COMPANY.email + '">' + esc(COMPANY.email) + '</a><br>사업자 연락처 ' + esc(COMPANY.bizPhone) + '</div>' +
+      '<div class="shp-ft-co"><span class="shp-ft-l">Company</span>' +
+        '<p>' + esc(COMPANY.name) + '</p><p>대표자 ' + esc(COMPANY.ceo) + ' / ' + esc(COMPANY.address) + '</p><p>사업자등록번호 ' + esc(COMPANY.biz) + '</p><p>통신판매업신고번호 ' + esc(COMPANY.mailOrder) + '</p>' +
+        '<p class="shp-ft-legal">© IMPETVS. All rights reserved.<br>Hosted by ' + esc(COMPANY.hostedBy) + '</p></div>' +
+      '<div><span class="shp-ft-l">Contact</span>고객센터 ' + esc(COMPANY.tel) + '<br><a href="mailto:' + COMPANY.email + '">' + esc(COMPANY.email) + '</a></div>' +
       '<div><span class="shp-ft-l">고객 서비스</span><ul>' + li(FOOT_SERVICE) + '</ul></div>' +
       '<div><span class="shp-ft-l">법적 고지</span><ul>' + li(FOOT_LEGAL) + '</ul></div>' +
       '<div><span class="shp-ft-l">SNS</span><a href="https://www.instagram.com/impetvs.official/" target="_blank" rel="noopener noreferrer">Instagram</a></div>' +

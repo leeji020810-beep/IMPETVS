@@ -14,7 +14,7 @@ const IM = {
     note: '사용 전 제품에 표시된 사용방법과 주의사항을 확인하고 준수해 주세요.',
     // text inside the white box on the certificate card: only the bold part is the 신고 완료 statement
     badge: ['임페투스 리치맨은', '안전기준 적합확인 신고를 완료한', ' 실내·섬유용 방향제입니다.'],
-    img: 'opt/safety-report.webp', imgW: 738, imgH: 1040,
+    img: 'opt/safety-report.webp', imgW: 609, imgH: 747,
     alt: '안전기준 적합확인 신고증명서. 신고번호 HB26-12-0386, 제품명 임페투스 리치맨(IMPETVS RICH MAN), 품목 방향제, 2026년 10월 02일 한국환경산업기술원 발급',
     cap: '신고번호 HB26-12-0386 · 담당자 개인 연락처는 가림 처리했습니다.',
   },
