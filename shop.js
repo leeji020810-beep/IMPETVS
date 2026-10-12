@@ -23,19 +23,20 @@
   // IMPETVS operating standard for shipping (owner decision, 2026-10-12) — an internal operating policy, NOT a contract rate and not a guarantee.
   // The fee is based on the subtotal AFTER discounts (there are no discounts yet, so it is the product subtotal). Mirrored on the server in
   // backend/supabase/functions/_shared/util.ts (the server computes the real amount; this copy only displays it).
-  // Never promise same-day shipping or a delivery date. Remote areas / islands: no surcharge for the customer (the seller bears it).
+  // Never promise same-day shipping or a delivery date. Remote areas / islands: a surcharge MAY apply but the amount/areas are NOT decided (owner, 2026-10-12);
+  // the server has NO surcharge calculation, so real payment must stay closed until that is decided (backend/TOSS-RESUME.md).
   var SHIPPING = {
-    carrier: '우체국택배', fee: 3000, freeFrom: 50000, returnAddress: '서울 강남구 압구정로10길 30-12 2F',
+    carrier: '우체국택배', fee: 3000, freeFrom: 50000, returnAddress: '경기도 하남시 미사대로 540, 현대지식산업센터 한강미사2차 B-905',
     lines: [
-      ['택배사', '우체국택배'],
-      ['배송비', '일반 배송비 3,000원 · 할인 적용 후 상품금액 합계가 50,000원 이상이면 무료'],
-      ['발송', '결제 완료 다음 영업일부터 1~2영업일 이내 발송을 목표로 합니다.'],
-      ['예상 수령', '결제 완료 다음 영업일부터 3~5영업일 (토요일·일요일·공휴일 제외)'],
-      ['제주·도서산간', '추가 배송비는 받지 않습니다. 배송이 어려운 지역으로 확인되면 결제 전에 안내해 드립니다.'],
-      ['지연 안내', '물량 증가, 기상 상황, 도서 지역 등으로 배송이 지연될 수 있으며, 지연이 확인되면 안내해 드립니다.'],
-      ['별도 일정', '예약판매 등 별도 일정이 있는 상품은 구매 전에 해당 일정을 안내합니다.']
+      ['배송 방법', '택배(우체국택배)'],
+      ['배송 지역', '전국'],
+      ['배송 비용', '3,000원'],
+      ['무료 배송', '상품금액 50,000원 이상 구매 시 기본 배송비 무료'],
+      ['출고', '평일 16시 이전 결제 완료 시 당일 출고 (주문량 폭주 시 출고가 지연될 수 있습니다.)'],
+      ['배송 기간', '결제 확인 후 영업일 기준 2~5일']
     ],
-    note: '우체국택배 · 일반 배송비 3,000원 (할인 적용 후 상품금액 50,000원 이상 무료, 제주·도서산간 추가 배송비 없음) · 결제 완료 다음 영업일부터 1~2영업일 이내 발송 목표 · 예상 수령 3~5영업일 (토·일·공휴일 제외)',
+    cartNote: ['배송비: 3,000원 (상품금액 50,000원 이상 구매 시 무료)', '평일 16시 이전 결제 완료 시 당일 출고', '(주문량 폭주 시 출고가 지연될 수 있습니다.)'],   // the short text under the cart total
+    note: '택배(우체국택배) · 전국 · 배송비 3,000원 (상품금액 50,000원 이상 구매 시 기본 배송비 무료) · 평일 16시 이전 결제 완료 시 당일 출고(주문량 폭주 시 지연될 수 있음, 당일 도착이 아님) · 배송 기간 결제 확인 후 영업일 기준 2~5일 · 산간벽지나 도서지방은 지역에 따라 추가 배송비가 발생할 수 있으며, 추가 비용이 있는 경우 결제 전에 안내합니다.',
     calc: function (subtotal) { return typeof subtotal !== 'number' || subtotal <= 0 ? null : (subtotal >= SHIPPING.freeFrom ? 0 : SHIPPING.fee); }
   };
   var LEGACY_IDS ={ 'impetvs-rich-man-30ml': PRODUCT_ID }; // ids written by earlier versions of the cart

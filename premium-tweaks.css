@@ -159,7 +159,10 @@
 .safe-card>img{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:contain}
 .safe-badge{position:absolute;left:.66%;width:92.1%;top:50.6%;height:17.1%;margin:0;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.35em;padding:0 6%;text-align:center;color:#111;font-size:clamp(13.5px,4cqw,18px);line-height:1.45;letter-spacing:-.02em;word-break:keep-all;overflow-wrap:anywhere;text-wrap:balance}
 .safe-badge b{font-weight:800}
-.safe-doc figcaption{margin-top:14px;font-size:12px;line-height:1.7;word-break:keep-all;overflow-wrap:anywhere}
+/* caption: same container as the picture, centred on the picture, 12px below the VISIBLE picture. The webp has 19px (of 747) of transparent margin at the bottom
+   (shadow fade-out excluded, alpha < 25%), so that margin is pulled back: 12px - 19/609 of the picture width. */
+.safe-doc{container-type:inline-size}
+.safe-doc figcaption{margin:calc(12px - 19 / 609 * 100cqw) 0 0;text-align:center;font-size:12px;line-height:1.7;word-break:keep-all;overflow-wrap:anywhere}
 @media (min-width:901px){
 .safe-in{grid-template-columns:minmax(0,6fr) minmax(0,5fr);gap:clamp(48px,7vw,128px)}
 .safe-badge{font-size:3.2cqw;gap:.3em}
@@ -261,3 +264,36 @@
 
 /* HOW TO USE is 56px on phones: on the narrowest screens the parallax drift is reduced so the word stays inside the screen */
 @media (max-width:380px){.m-rich .how-word{transform:translateX(calc((var(--p,0) - .5)*-4%))}}
+
+/* ===== phone layout (<= 900px) =====
+   --m-gut is THE side margin of the phone layout (the one KEY POINT measured: 20px). Every section reads it, so the left start line is the same everywhere. */
+@media (max-width:900px){
+  .pr{--m-gut:20px}
+  /* hero: the picture keeps its first size and framing while scrolling (no scroll-linked zoom); the PC zoom is untouched (it lives outside this query) */
+  .m-rich .hero-bg img{transform:none}
+  /* hero top line: only the product line, centred on the screen, clear of the header (92px top) */
+  .hero-meta{left:var(--m-gut);right:var(--m-gut);top:92px;align-items:center;text-align:center}
+  .hero-meta>span{text-align:center!important}
+  .hero-meta>span:last-child{display:none}
+  /* KEY POINT: the desktop scroll-length height (--kph svh) must not clip the stacked cards on a phone: the section grows with its content */
+  .kp{height:auto}
+  .kp-txt{padding-left:var(--m-gut);padding-right:var(--m-gut)}
+  /* the "gutter" tweak (136px on PC) must not collapse to 0 on the left only: same margin both sides */
+  .pr.gut .sh,.pr.gut .acc,.pr.gut .care,.pr.gut .rev-rows,.pr.gut .look-q,.pr.gut .info,.pr.gut .pf-top,
+  .sh,.acc,.care,.rev-rows,.look-q,.info,.pf{padding-left:var(--m-gut);padding-right:var(--m-gut)}
+  /* rows inside those sections start on the section's own line (no extra 4px) */
+  .care-c{padding-left:0;padding-right:0}
+  .rev-r{padding-left:0;padding-right:0}
+  .safe-in,.safe-tx{min-width:0}
+  .safe-doc{margin-left:auto;margin-right:auto}
+  .safe-doc figcaption{text-wrap:balance}
+  /* line breaks: sentences flow with the screen width (the PC line breaks inside review text become spaces); no short orphan lines */
+  .rev-r p{white-space:normal}
+  :is(.story-t,.disc p,.kp-b p,.care-c p,.safe-note,.pres-tx p,.how-card p,.rev-r p,.info dd,.info-note,.look-q p,.acc-c p,.pf-top p){text-wrap:pretty}
+  :is(.kp-h,.care-h,.pres-tx h2,.kp-b h3,.info h2){text-wrap:balance}
+}
+/* HOW TO USE (56px) is 340px wide: on screens narrower than that it breaks into two lines instead of being cut or shrunk */
+@media (max-width:380px){
+  .how-word{white-space:normal;left:var(--m-gut,20px);right:var(--m-gut,20px);line-height:.95}
+  .m-rich .how-word{transform:none}
+}

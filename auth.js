@@ -178,6 +178,8 @@
     update: function (table, query, row) { return req('/rest/v1/' + table + '?' + query, { auth: true, method: 'PATCH', body: row, headers: { Prefer: 'return=representation' } }); },
     remove: function (table, query) { return req('/rest/v1/' + table + '?' + query, { auth: true, method: 'DELETE', headers: { Prefer: 'return=representation' } }); }
   };
+  // database functions (the server decides; e.g. submit_review checks the purchase). Always signed in: the member comes from the token, never from the body.
+  function rpc(name, body) { return req('/rest/v1/rpc/' + name, { auth: true, method: 'POST', body: body || {} }); }
   function fn(name, body, auth) { return req('/functions/v1/' + name, { auth: !!auth, method: 'POST', body: body }); }
 
   /* ------------------------------------------------------------------ header */
@@ -224,7 +226,7 @@
     cfg: C, backendReady: backendReady, legalReady: legalReady, loggedIn: loggedIn, profile: profile, isAdmin: isAdmin, onChange: function (f) { listeners.push(f); },
     signUp: signUp, signIn: signIn, signOut: signOut, resetRequest: resetRequest, updatePassword: updatePassword,
     startKakao: startKakao, startNaver: startNaver, finishFromHash: finishFromHash, finishNaver: finishNaver, parseHash: parseHash,
-    findIdSend: findIdSend, findIdVerify: findIdVerify, rest: rest, fn: fn, errorText: errorText, NOT_READY: NOT_READY,
+    findIdSend: findIdSend, findIdVerify: findIdVerify, rest: rest, rpc: rpc, fn: fn, errorText: errorText, NOT_READY: NOT_READY,
     setNext: setNext, takeNext: takeNext, needLogin: needLogin, paintHeader: paintHeader, siteBase: siteBase
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', paintHeader); else paintHeader();

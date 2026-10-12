@@ -82,6 +82,7 @@
 .shp-acc-p{padding:0 0 20px;font-size:14px;line-height:1.8;color:rgba(46,47,51,.88)}
 .shp-acc-p[hidden]{display:none}
 .shp-acc-p p{margin:0}.shp-acc-p p+p{margin-top:8px}
+.shp-acc-p ul{margin:4px 0 0;padding-left:18px}.shp-acc-p li{margin:2px 0}.shp-acc-p p+ul,.shp-acc-p ul+p{margin-top:8px}
 .shp-notes{display:grid;gap:10px;margin:0}
 .shp-notes div{display:grid;grid-template-columns:72px minmax(0,1fr);gap:12px}
 .shp-notes dt{font-weight:700;color:#000;letter-spacing:.04em}
@@ -293,6 +294,13 @@ select.shp-in{appearance:auto}
 .shp-doc .shp-field{margin:0 0 20px}
 .shp-faqcat{margin:48px 0 0}
 .shp-faqcat h2{margin:0 0 12px}
+.shp-faqcat{margin:0}
+.shp-faq .sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.shp-ftabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 24px}
+.shp-ftabs button{flex:0 0 auto;min-height:44px;padding:0 18px;border:1px solid rgba(112,115,124,.32);border-radius:22px;background:#fff;font:inherit;font-size:15px;color:#171719;cursor:pointer}
+.shp-ftabs button[aria-selected="true"]{background:#171719;border-color:#171719;color:#fff;font-weight:700}
+.shp-ftabs button:focus-visible{outline:2px solid #171719;outline-offset:2px}
+@media (max-width:480px){.shp-ftabs{gap:6px}.shp-ftabs button{padding:0 14px;font-size:14px}}
 .shp-faq .shp-acc>button{font-size:16px;line-height:1.5;padding:14px 0}
 .shp-faq .shp-acc-p{font-size:15px;line-height:1.9}
 .shp-nl{margin:0;padding:0;list-style:none;border-top:1px solid #171719}
@@ -379,3 +387,13 @@ select.shp-in{appearance:auto}
 .shp-ft-co{word-break:keep-all;overflow-wrap:anywhere}
 .shp-ft-co p{margin:0}.shp-ft-co p+p{margin-top:2px}
 .shp-ft-co .shp-ft-legal{margin-top:var(--pf-legal-gap,28px)}   /* the gap is CSS spacing, not blank lines */
+/* cart: short shipping note under the total; >= 24px before the order button */
+.shp-cartnote{margin:16px 0 24px}
+#cart-pay-note{margin-bottom:24px}
+/* phone line breaks: balanced / no orphan words; PC forced breaks become spaces; long addresses and e-mails wrap inside the screen */
+@media (max-width:640px){
+  .shp-desc br{display:none}
+  .shp-page :is(p,li,dd,td,.shp-note,.shp-notice){text-wrap:pretty}
+  .shp-page :is(h1,h2,h3){text-wrap:balance}
+  .shp-page :is(a,dd,td,li,p){overflow-wrap:anywhere}
+}
