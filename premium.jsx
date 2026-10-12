@@ -192,40 +192,10 @@ function PKeyPoint({ t }) {
   );
 }
 
-// PRODUCT SAFETY: the 안전기준 적합확인 신고증명서 and what it says, nothing more (no skin / cosmetics claim, no "government guaranteed")
-function SafetyViewer({ s, onClose }) {
-  const [zoom, setZoom] = React.useState(false);
-  const closeRef = React.useRef(null), boxRef = React.useRef(null);
-  React.useEffect(() => {
-    const prev = document.activeElement, ov = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    closeRef.current && closeRef.current.focus();
-    const key = e => {
-      if (e.key === 'Escape') { e.preventDefault(); onClose(); return; }
-      if (e.key !== 'Tab') return;
-      const f = [...boxRef.current.querySelectorAll('button,[tabindex="0"]')], i = f.indexOf(document.activeElement);
-      if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
-    };
-    document.addEventListener('keydown', key);
-    return () => { document.removeEventListener('keydown', key); document.body.style.overflow = ov; prev && prev.focus && prev.focus(); };
-  }, []);
-  const src = (window.__A && window.__A[s.img]) || s.img;
-  return ReactDOM.createPortal(
-    <div className="safe-ov" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="safe-dlg" ref={boxRef} role="dialog" aria-modal="true" aria-label="안전기준 적합확인 신고증명서 크게 보기">
-        <div className="safe-bar">
-          <span className="lbl">Product Safety</span>
-          <span className="safe-btns">
-            <button type="button" onClick={() => setZoom(z => !z)} aria-pressed={zoom}>{zoom ? '화면에 맞추기' : '더 크게'}</button>
-            <button type="button" ref={closeRef} onClick={onClose} aria-label="닫기">닫기 ✕</button>
-          </span>
-        </div>
-        <div className={cx('safe-scroll', zoom && 'zoom')} tabIndex={0} aria-label="신고증명서 이미지 (방향키로 스크롤)"><img src={src} alt={s.alt} width={s.imgW} height={s.imgH} /></div>
-      </div>
-    </div>, document.body);
-}
+// PRODUCT SAFETY: the 안전기준 적합확인 신고증명서 and what it says, nothing more (no skin / cosmetics claim, no "government guaranteed").
+// The white box over the certificate is HTML (real text, not part of the image); the image is the certificate itself at its original size.
 function PCare({ t }) {
-  const s = IM.safety, [open, setOpen] = React.useState(false), btnRef = React.useRef(null);
+  const s = IM.safety;
   const src = (window.__A && window.__A[s.img]) || s.img;
   return (
     <section id="care" className={cx('ps care safe', t.careBg)} data-screen-label="06 Product Safety">
@@ -233,20 +203,19 @@ function PCare({ t }) {
         <div className="safe-tx">
           <span className="lbl rv safe-lbl">{s.name}</span>
           <h2 className="care-h rv"><span className="l">{s.head[0]}</span><span>{s.head[1]}</span></h2>
-          <p className="safe-desc rv">{s.desc}</p>
           <p className="safe-note rv">{s.note}</p>
-          <button type="button" className="safe-open rv" ref={btnRef} onClick={() => setOpen(true)} aria-haspopup="dialog">신고 자료 크게 보기</button>
         </div>
         <figure className="safe-doc rv">
-          <button type="button" className="safe-pic" onClick={() => setOpen(true)} aria-label="신고증명서를 크게 보기"><img src={src} alt={s.alt} width={s.imgW} height={s.imgH} loading="lazy" /></button>
+          <div className="safe-card">
+            <img src={src} alt={s.alt} width={s.imgW} height={s.imgH} loading="lazy" />
+            <p className="safe-badge"><span>{s.badge[0]}</span><span><b>{s.badge[1]}</b>{s.badge[2]}</span></p>
+          </div>
           <figcaption>{s.cap}</figcaption>
         </figure>
       </div>
-      {open && <SafetyViewer s={s} onClose={() => { setOpen(false); setTimeout(() => btnRef.current && btnRef.current.focus(), 0); }} />}
     </section>
   );
 }
-
 function PReview({ t }) {
   return (
     <section id="review" className="ps dark" data-screen-label="07 Review">
@@ -272,7 +241,7 @@ function PPresence({ t }) {
 function PHow({ t }) {
   return (
     <section id="howto" className={cx('ps how', !t.howWord && 'noword')} data-p="through" data-screen-label="09 How to use">
-      <div className="how-bg"><img src={`opt/p/${t.howImg}.webp`} alt="향수를 분사하는 모습" /></div>
+      <div className="how-bg"><img src={`opt/p/${t.howImg}.webp`} alt="임페투스 리치맨을 분사하는 모습" /></div>
       <h2 className="how-word gx">How to use</h2>
       <TiltCard className={cx('how-card tilt-ui rv', t.howPos, t.howCard)} enabled={t.motion !== 'off'}><span className="lbl">( How to use )</span>{IM.how.map((p, i) => <HowP key={i} p={p} />)}</TiltCard>
     </section>
@@ -306,7 +275,7 @@ function PFoot({ t }) {
     <footer className={cx('ps dark pf', !t.footRise && 'norise', !t.footMeta && 'nometa')} data-p="through" data-screen-label="Footer">
       <div className="pf-top">
         <div><span className="lbl">Company</span><Ln a={[IM.co.name, IM.co.hosting, IM.co.address, `대표자 ${IM.co.ceo}`, `사업자등록번호 ${IM.co.biz}`, `통신판매업신고번호 ${IM.co.mailOrder}`]} /></div>
-        <div><span className="lbl">Contact</span>고객센터 {IM.co.tel}<br /><a href={`mailto:${IM.co.email}`}>{IM.co.email}</a></div>
+        <div><span className="lbl">Contact</span>고객센터 {IM.co.tel}<br /><a href={`mailto:${IM.co.email}`}>{IM.co.email}</a><br />사업자 연락처 {IM.co.bizPhone}</div>
         <div><span className="lbl">고객 서비스</span><ul className="pf-links">{IM.footService.map(([l, h]) => <li key={h}><a href={h}>{l}</a></li>)}</ul></div>
         <div><span className="lbl">법적 고지</span><ul className="pf-links">{IM.footLegal.map(([l, h]) => <li key={h}><a href={h}>{l}</a></li>)}</ul></div>
         <div><span className="lbl">SNS</span><a href="https://www.instagram.com/impetvs.official/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" style={{ display: 'inline-flex' }}><DIc n="LogoInstagram" size={24} color="var(--common-100)" /></a></div>

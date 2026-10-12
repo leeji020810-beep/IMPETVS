@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>결제 실패 | IMPETVS</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fig-tokens.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/typography.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/semantic.css">
+<link rel="stylesheet" href="shop.css">
+<style>html,body{margin:0;background:#fff}</style>
+</head>
+<body>
+<div data-shp-header></div>
+<main class="shp-page" id="payment-fail-root">
+  <div class="shp-doc">
+    <h1>결제가 완료되지 않았습니다</h1>
+    <div class="shp-banner" id="pf-banner" role="status">결제가 완료되지 않았습니다.</div>
+    <p id="pf-detail"></p>
+    <p>결제는 이루어지지 않았고 장바구니의 상품은 그대로 유지됩니다. 문의: 고객센터 0507-1372-9152</p>
+    <p><a class="shp-btn main" href="order.html" style="display:inline-flex;max-width:240px">주문 페이지로 돌아가기</a> <a class="shp-btn line" href="cart.html" style="display:inline-flex;max-width:240px">장바구니</a></p>
+  </div>
+</main>
+<script src="config.js"></script>
+<script src="shop.js"></script>
+<script src="auth.js"></script>
+<script id="shp-js-payment-fail">
+(function () {
+  var q = new URLSearchParams(location.search), code = q.get('code') || '', $ = function (id) { return document.getElementById(id); };
+  // our own wording for the codes the Toss docs name; the provider's raw text is not shown
+  var M = {
+    PAY_PROCESS_CANCELED: '결제를 취소하셨습니다.', PAY_PROCESS_ABORTED: '결제 진행 중 문제가 생겨 결제가 완료되지 않았습니다.',
+    REJECT_CARD_COMPANY: '카드사에서 결제를 거절했습니다. 다른 카드로 시도하거나 카드사에 문의해 주세요.', REJECT_CARD_PAYMENT: '카드 한도 초과 또는 잔액 부족으로 결제가 거절되었습니다.'
+  };
+  $('pf-banner').textContent = M[code] || '결제를 완료하지 못했습니다. 다시 시도해 주세요.';
+  if (code && !M[code]) $('pf-detail').textContent = '오류 코드: ' + code.replace(/[^A-Za-z0-9_]/g, '').slice(0, 60);
+  try { history.replaceState(null, '', location.pathname); } catch (e) {}
+})();
+</script>
+</body></html>

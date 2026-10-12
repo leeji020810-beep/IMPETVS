@@ -26,6 +26,14 @@
 <script id="shp-js-cart">
 (function () {
   var S = window.IMShop, body = document.getElementById('cart-body');
+  // 상품금액 / 배송비 / 최종 합계 are shown separately; the shipping fee follows the product subtotal (free from 50,000원)
+  function sumHTML() {
+    var sub = S.cart.total(), fee = S.shipping.calc(sub), ok = typeof sub === 'number' && fee !== null;
+    return '<div class="shp-osum shp-cartsum">' +
+      '<div class="shp-orow"><span>상품금액 합계 <span class="muted">(총 ' + S.cart.count() + '개)</span></span><b id="cart-sub">' + S.esc(S.money(sub)) + '</b></div>' +
+      '<div class="shp-orow"><span>배송비</span><span id="cart-ship">' + (ok ? (fee === 0 ? '무료' : S.esc(S.money(fee))) : '-') + '</span></div>' +
+      '<div class="shp-orow t"><span>최종 합계</span><b id="cart-total">' + (ok ? S.esc(S.money(sub + fee)) : '-') + '</b></div></div>';
+  }
   function render() {
     var list = S.cart.items();
     if (!list.length) {
@@ -47,7 +55,9 @@
         '<button type="button" class="shp-rm" data-act="rm" aria-label="' + S.esc(p.name + ' ' + it.option) + ' 삭제">삭제</button></div></li>';
     }).join('');
     body.innerHTML = '<ul class="shp-list">' + rows + '</ul>' +
-      '<div class="shp-sum"><span>상품금액 합계 <small style="font-weight:400;color:rgba(55,56,60,.61)">(총 ' + S.cart.count() + '개)</small></span><b id="cart-total">' + S.esc(S.money(S.cart.total())) + '</b></div>' +
+      sumHTML() +
+      '<p class="shp-shipnote">' + S.esc(S.shipping.note) + '</p>' +
+      '<p class="shp-notice" id="cart-pay-note" role="status" hidden>' + S.PAY_NOT_READY + ' 담아 두신 상품은 그대로 유지됩니다.</p>' +
       '<a class="shp-btn" id="cart-order" href="' + S.links.order + '">주문하기</a>';
   }
   function refocus(i, act) {
@@ -56,7 +66,10 @@
   }
   // 주문하기: the whole cart (product / capacity / quantity) goes to the order page; nothing is removed from the cart here
   body.addEventListener('click', function (e) {
-    if (e.target.closest('#cart-order')) { S.order.fromCart(); return; }
+    if (e.target.closest('#cart-order')) {
+      if (!S.paymentReady()) { e.preventDefault(); var n = document.getElementById('cart-pay-note'); if (n) n.hidden = false; S.toast(S.PAY_NOT_READY); return; }   // nothing is started while payment is not connected
+      S.order.fromCart(); return;
+    }
     var b = e.target.closest('[data-act]'); if (!b) return;
     var i = +b.closest('.shp-item').dataset.i, it = S.cart.items()[i]; if (!it) return;
     if (b.dataset.act === 'minus') S.cart.setQty(i, it.qty - 1);

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>결제 확인 | IMPETVS</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fig-tokens.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/typography.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/semantic.css">
+<link rel="stylesheet" href="shop.css">
+<style>html,body{margin:0;background:#fff}</style>
+</head>
+<body>
+<div data-shp-header></div>
+<main class="shp-page" id="payment-success-root">
+  <div class="shp-doc">
+    <h1>결제 확인</h1>
+    <div class="shp-banner" id="ps-banner" role="status" aria-live="polite">결제 결과를 확인하고 있습니다. 이 화면을 닫거나 새로고침하지 마세요…</div>
+    <div id="ps-test" class="shp-notice" hidden>테스트 결제입니다. 실제 결제·청구가 이루어지지 않았습니다.</div>
+    <dl class="shp-kv" id="ps-detail" hidden></dl>
+    <p id="ps-help" hidden></p>
+    <p><button type="button" class="shp-btn main" id="ps-retry" hidden style="max-width:280px">다시 확인</button></p>
+    <p id="ps-links" hidden><a class="shp-btn line" href="index.html" style="display:inline-flex;max-width:240px">쇼핑 계속하기</a> <a class="shp-btn line" href="guest-order.html" style="display:inline-flex;max-width:240px">비회원 주문 조회</a></p>
+  </div>
+</main>
+<script src="config.js"></script>
+<script src="shop.js"></script>
+<script src="auth.js"></script>
+<script id="shp-js-payment-success">
+(function () {
+  var S = window.IMShop, A = window.IMAuth, $ = function (id) { return document.getElementById(id); };
+  var q = new URLSearchParams(location.search), orderId = q.get('orderId'), paymentKey = q.get('paymentKey'), amount = Number(q.get('amount')), tries = 0;
+  function banner(t, cls) { var b = $('ps-banner'); b.textContent = t; b.className = 'shp-banner' + (cls ? ' ' + cls : ''); }
+  function row(k, v) { return '<div><dt>' + S.esc(k) + '</dt><dd>' + S.esc(v) + '</dd></div>'; }
+  function fail(msg, retry) {
+    banner(msg); $('ps-test').hidden = true; $('ps-retry').hidden = !retry; $('ps-links').hidden = false;
+    $('ps-help').hidden = false; $('ps-help').textContent = '결제는 확정되지 않았습니다. 장바구니는 그대로 유지됩니다. 문의: 고객센터 0507-1372-9152';
+  }
+  function confirm() {
+    $('ps-retry').hidden = true; banner('결제 결과를 확인하고 있습니다. 이 화면을 닫거나 새로고침하지 마세요…');
+    // the three values in the address are only CLAIMS: the server compares them with the order it stored and asks Toss itself
+    A.fn('payment-confirm', { orderId: orderId, paymentKey: paymentKey, amount: amount }, false).then(function (r) {
+      var d = r.data || {};
+      if (r.ok && d.ok && d.order && (d.order.status === 'paid' || d.order.status === 'shipped' || d.order.status === 'delivered')) {
+        var o = d.order;
+        banner('결제가 확인되었습니다.', 'ok');
+        $('ps-test').hidden = !o.test_mode;
+        $('ps-detail').hidden = false;
+        $('ps-detail').innerHTML = row('주문번호', o.order_no) + row('결제 금액', S.money(o.total)) + (o.method ? row('결제수단', o.method) : '') + (o.test_mode ? row('구분', '테스트 결제 (실제 청구 없음)') : '');
+        $('ps-links').hidden = false; $('ps-help').hidden = false;
+        $('ps-help').textContent = '주문 내역은 주문번호와 주문 시 입력한 이메일로 ‘비회원 주문 조회’에서 확인할 수 있습니다. 주문번호를 보관해 주세요.';
+        if (o.source_mode === 'cart') S.cart.removePaid(o.items);          // only the lines that were really paid, only now
+        try { sessionStorage.removeItem('impetvs-checkout-idem'); sessionStorage.removeItem('impetvs-order-src'); } catch (e) {}
+        try { history.replaceState(null, '', location.pathname); } catch (e) {}   // the payment key leaves the address bar
+        return;
+      }
+      var code = d.code || '';
+      if (code === 'IN_PROGRESS' && tries++ < 5) { banner('결제 확인이 진행 중입니다. 잠시 후 다시 확인합니다…'); return setTimeout(confirm, 2500); }
+      fail(d.message || '결제를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.', code === 'RETRY_LATER' || code === 'IN_PROGRESS' || r.status === 0);
+    });
+  }
+  $('ps-retry').addEventListener('click', function () { tries = 0; confirm(); });
+  if (!orderId || !paymentKey || !(amount > 0)) { fail('결제 정보가 없습니다. 주문 페이지에서 다시 진행해 주세요.', false); $('ps-help').textContent = '이 페이지는 결제창에서 돌아올 때만 사용할 수 있습니다. 이미 결제를 마치셨다면 ‘비회원 주문 조회’에서 확인해 주세요.'; }
+  else if (!A.backendReady()) fail('결제 서버에 연결되어 있지 않습니다.', false);
+  else confirm();
+})();
+</script>
+</body></html>

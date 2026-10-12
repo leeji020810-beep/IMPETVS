@@ -53,7 +53,7 @@
       if (!r.ok || !r.data) return err('주문을 조회하지 못했습니다. ' + A.errorText(r));
       var o = r.data, rows = (o.items || []).map(function (i) { return '<li>' + S.esc(i.name) + ' ' + S.esc(i.option) + ' × ' + S.esc(i.qty) + '개 — ' + S.esc(S.money(i.line_total)) + '</li>'; }).join('');
       $('go-result').hidden = false;
-      $('go-result').innerHTML = '<h2>주문 내역</h2><p>주문번호 ' + S.esc(o.order_no) + '<br>상태 ' + S.esc(o.status_label || o.status) + '<br>주문일 ' + S.esc((o.created_at || '').slice(0, 10)) + '</p><ul>' + rows + '</ul><p><b>상품금액 합계 ' + S.esc(S.money(o.total)) + '</b></p>';
+      $('go-result').innerHTML = '<h2>주문 내역</h2><p>주문번호 ' + S.esc(o.order_no) + '<br>상태 ' + S.esc(o.status_label || o.status) + '<br>주문일 ' + S.esc((o.created_at || '').slice(0, 10)) + '</p><ul>' + rows + '</ul><p>상품금액 ' + S.esc(S.money(o.subtotal)) + '<br>배송비 ' + (o.shipping_fee === 0 ? '무료' : S.esc(S.money(o.shipping_fee))) + '<br><b>최종 결제 금액 ' + S.esc(S.money(o.total)) + '</b>' + (o.payment_method ? '<br>결제수단 ' + S.esc(o.payment_method) : '') + (o.refunded_amount > 0 ? '<br>환불 금액 ' + S.esc(S.money(o.refunded_amount)) : '') + (o.test_mode ? '<br><i>테스트 주문입니다. 실제 결제·청구가 없었습니다.</i>' : '') + '</p>';
     });
   });
 })();

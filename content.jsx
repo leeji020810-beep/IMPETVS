@@ -10,12 +10,13 @@ const IM = {
     ['03', '존재감을 완성하는 퍼퓸', '단순히 좋은 향을 머무르게 하는 것을 넘어 나만의 이미지와 분위기를 자연스럽게 표현해 오래 기억되는 존재감을 완성합니다.']],
   // PRODUCT SAFETY: only what the 안전기준 적합확인 신고증명서 (신고번호 HB26-12-0386) states. Not a skin / cosmetics certification and not a government guarantee of safety.
   safety: {
-    name: 'Product Safety', head: ['일상에 더하는 향,', '믿고 쓰실 수 있도록'],
-    desc: '임페투스 리치맨은 안전기준 적합확인 신고를 완료한 실내·섬유용 방향제입니다.',
+    name: '( PRODUCT SAFETY )', head: ['일상에 더하는 향,', '믿고 쓰실 수 있도록'],
     note: '사용 전 제품에 표시된 사용방법과 주의사항을 확인하고 준수해 주세요.',
-    img: 'opt/safety-report.webp', imgW: 1476, imgH: 2080,
+    // text inside the white box on the certificate card: only the bold part is the 신고 완료 statement
+    badge: ['임페투스 리치맨은', '안전기준 적합확인 신고를 완료한', ' 실내·섬유용 방향제입니다.'],
+    img: 'opt/safety-report.webp', imgW: 738, imgH: 1040,
     alt: '안전기준 적합확인 신고증명서. 신고번호 HB26-12-0386, 제품명 임페투스 리치맨(IMPETVS RICH MAN), 품목 방향제, 2026년 10월 02일 한국환경산업기술원 발급',
-    cap: '안전기준 적합확인 신고증명서 (신고번호 HB26-12-0386) · 담당자 개인 연락처는 가림 처리했습니다.',
+    cap: '신고번호 HB26-12-0386 · 담당자 개인 연락처는 가림 처리했습니다.',
   },
   // Home-page intro reviews supplied by the brand. They are NOT member reviews from the database (those live on the product page) and carry no purchase proof, rating or date.
   reviews: [
@@ -25,7 +26,8 @@ const IM = {
   ],
   stmtHead: ['향으로 완성되는', '당신의 존재감'],
   stmt: [['IMPETVS는 향을 넘어,'], ['당신만의 분위기와 인상을 완성합니다.', 1], null, ['조용히 스며들지만'], ['쉽게 잊히지 않는 깊은 여운으로'], ['평범한 일상에도'], ['당신만의 특별한 존재감을 더해보세요.', 1], null, ['이제,'], ['IMPETVS로 오래 기억 될', 1], ['당신의 향을 만나보세요.', 1]],
-  how: [[['귀 뒤와 손목처럼'], ['체온이 느껴지는 곳에', 1], ['가볍게 분사', 1, '해주세요.']], [['헤어 끝에도 은은하게 더하면,', 1], ['IMPETVS의 깊은 잔향을'], ['더욱 오래 느낄 수 있습니다.']]],
+  // HOW TO USE: the 상품 정보 제공고시 사용방법 only ("의류 및 섬유에 20~30cm 정도 거리를 두고 적당량 분사하여 사용하십시오."), split over the two cards. No counts, durations or skin claims.
+  how: [[['의류 및 섬유에'], ['20~30cm 정도', 1, ' 거리를 두고']], [['적당량 분사하여', 1, ' 사용하십시오.']]],
   quotes: [['THE SCENT OF QUIET CONFIDENCE.', 'DEEP, REFINED, UNSHAKEN.', 'MADE FOR A MAN OF PRESENCE.'], ['NEVER LOUD. ALWAYS NOTICED.', 'DEEP WOODS, SOFTENED BY SMOKE.', 'THE ESSENCE OF QUIET LUXURY.']],
   // 상품 정보 제공고시: the owner's 30ml notice, verbatim. It is NOT stated for the 50ml option (no 50ml data supplied yet).
   infoNote: '※ 아래 고시는 30ml 제품 기준입니다.',

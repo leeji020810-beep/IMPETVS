@@ -24,6 +24,8 @@
       <label class="shp-field"><span>휴대폰 번호 <small style="font-weight:400;color:rgba(55,56,60,.61)">(선택 · 아이디 찾기에 사용)</small></span><input class="shp-in" type="tel" id="su-phone" autocomplete="tel" inputmode="numeric" placeholder="숫자만 입력"></label>
       <label class="shp-field"><span>비밀번호 <small style="font-weight:400;color:rgba(55,56,60,.61)">(8자 이상)</small></span><input class="shp-in" type="password" id="su-pw" autocomplete="new-password"></label>
       <label class="shp-field"><span>비밀번호 확인</span><input class="shp-in" type="password" id="su-pw2" autocomplete="new-password"></label>
+      <label class="shp-chk"><input type="checkbox" id="su-c0"><span>[필수] 만 14세 이상입니다.</span></label>
+      <p class="shp-note" style="margin:-4px 0 12px;font-size:13px">만 14세 미만은 회원가입을 할 수 없습니다. 생년월일이나 신분증 등 별도의 연령 인증은 하지 않으며, 위 확인 항목으로 대신합니다.</p>
       <label class="shp-chk"><input type="checkbox" id="su-c1"><span>[필수] <a href="terms.html" target="_blank" rel="noopener">이용약관</a>에 동의합니다.</span></label>
       <label class="shp-chk"><input type="checkbox" id="su-c2"><span>[필수] <a href="privacy.html" target="_blank" rel="noopener">개인정보 수집·이용</a>에 동의합니다.</span></label>
       <p class="shp-err" id="su-err" role="alert" hidden></p>
@@ -39,7 +41,7 @@
 <script id="shp-js-signup">
 (function () {
   var S = window.IMShop, A = window.IMAuth, $ = function (id) { return document.getElementById(id); };
-  var fields = ['su-name', 'su-email', 'su-phone', 'su-pw', 'su-pw2', 'su-c1', 'su-c2'];
+  var fields = ['su-name', 'su-email', 'su-phone', 'su-pw', 'su-pw2', 'su-c0', 'su-c1', 'su-c2'];
   // personal data is only collected when the server is connected AND the approved 이용약관 / 개인정보처리방침 are published
   var on = A.legalReady();
   fields.forEach(function (id) { $(id).disabled = !on; });
@@ -52,6 +54,7 @@
     e.preventDefault(); $('su-err').hidden = true; $('su-ok').hidden = true;
     if (!on) return err(n.textContent || '지금은 가입할 수 없습니다.');
     var name = $('su-name').value.trim(), email = $('su-email').value.trim(), phone = $('su-phone').value.replace(/\D/g, ''), pw = $('su-pw').value;
+    if (!$('su-c0').checked) return err('만 14세 이상만 회원가입을 할 수 있습니다. ‘만 14세 이상입니다’를 확인해 주세요.');
     if (!name) return err('이름을 입력해 주세요.');
     if (!/^\S+@\S+\.\S+$/.test(email)) return err('이메일 주소를 정확히 입력해 주세요.');
     if (phone && !/^01\d{8,9}$/.test(phone)) return err('휴대폰 번호를 정확히 입력하거나 비워 두세요.');
@@ -59,7 +62,7 @@
     if (pw !== $('su-pw2').value) return err('비밀번호 확인이 일치하지 않습니다.');
     if (!$('su-c1').checked || !$('su-c2').checked) return err('필수 약관에 모두 동의해 주세요.');
     var b = $('su-submit'); b.disabled = true; b.textContent = '처리 중…';
-    A.signUp({ name: name, email: email, phone: phone, password: pw }).then(function (r) {
+    A.signUp({ name: name, email: email, phone: phone, password: pw, age14: true }).then(function (r) {
       b.disabled = false; b.textContent = '회원가입';
       if (!r.ok) return err(r.message); // the form keeps what was typed (only the passwords are cleared below on success)
       $('su-pw').value = ''; $('su-pw2').value = '';

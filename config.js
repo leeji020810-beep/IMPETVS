@@ -12,6 +12,6 @@ window.IMPETVS_CONFIG = {
   kakao: { enabled: false },               // true after the Kakao provider is switched on in Supabase Auth
   naver: { enabled: false, clientId: '' }, // true + Naver Client ID after the naver-login Edge Function is deployed
   sms: { enabled: false },                 // true after an SMS provider is connected to the find-id Edge Function
-  payment: { provider: '' },               // 'toss' | 'portone' ... once a payment module is connected (see order.html)
+  payment: { provider: 'toss', clientKey: '', live: false }, // Toss Payments. clientKey = the PUBLIC client key (test_gck_… for tests). live: true ONLY after contract, review and live keys are done (see backend/TOSS-SETUP.md). The SECRET key never goes here.
   legalReady: false                        // true ONLY after 이용약관 / 개인정보처리방침 are approved and published
 };

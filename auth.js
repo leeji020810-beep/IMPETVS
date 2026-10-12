@@ -87,7 +87,7 @@
 
   /* ----------------------------------------------------------------- account */
   function signUp(f) {
-    return raw('/auth/v1/signup?redirect_to=' + encodeURIComponent(siteBase() + '/login.html'), { method: 'POST', body: { email: f.email, password: f.password, data: { name: f.name, phone: f.phone || '', consent_terms: true, consent_privacy: true, consent_at: new Date().toISOString() } } })
+    return raw('/auth/v1/signup?redirect_to=' + encodeURIComponent(siteBase() + '/login.html'), { method: 'POST', body: { email: f.email, password: f.password, data: { name: f.name, phone: f.phone || '', consent_terms: true, consent_privacy: true, consent_age14: f.age14 === true, consent_at: new Date().toISOString() } } })
       .then(function (r) {
         if (!r.ok) return { ok: false, message: errorText(r) };
         if (r.data && r.data.access_token) { writeSession(r.data); return { ok: true, loggedIn: true }; }
@@ -190,7 +190,7 @@
     menuEl = document.createElement('div'); menuEl.className = 'hd-menu'; menuEl.setAttribute('role', 'menu');
     var r = a.getBoundingClientRect();
     menuEl.style.top = Math.round(r.bottom + 6) + 'px'; menuEl.style.right = Math.max(8, Math.round(document.documentElement.clientWidth - r.right)) + 'px';
-    menuEl.innerHTML = '<p class="hd-menu-n" id="hd-menu-n">내 계정</p><a role="menuitem" href="' + esc(L.contact || 'contact.html') + '">1:1 문의</a><button type="button" role="menuitem" data-logout>로그아웃</button>';
+    menuEl.innerHTML = '<p class="hd-menu-n" id="hd-menu-n">내 계정</p><a role="menuitem" href="' + esc(L.contact || 'contact.html') + '">1:1 문의</a><a role="menuitem" href="' + esc(L.withdraw || 'withdraw.html') + '">회원 탈퇴 요청</a><button type="button" role="menuitem" data-logout>로그아웃</button>';
     document.body.appendChild(menuEl);
     profile().then(function (p) { var n = document.getElementById('hd-menu-n'); if (n && p) n.textContent = (p.name || p.email || '내 계정') + (p.name ? '님' : ''); });
     var f = menuEl.querySelector('a'); if (f) f.focus();
