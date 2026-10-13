@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fig-tokens.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/typography.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/semantic.css">
-<link rel="stylesheet" href="shop.css?v=20261016w">
+<link rel="stylesheet" href="shop.css?v=20261016y">
 <style>html,body{margin:0;background:#fff}</style>
 </head>
 <body>
@@ -27,16 +27,15 @@
         </select></label>
       <label class="shp-field"><span>제목</span><input class="shp-in" id="ct-title" type="text" maxlength="100"></label>
       <label class="shp-field"><span>내용</span><textarea class="shp-in shp-ta" id="ct-body" rows="7" maxlength="3000"></textarea></label>
-      <p class="shp-note" style="margin:0 0 12px;font-size:13px">보관 기준(IMPETVS 운영 기준): 단순 상품·이용 안내 문의는 답변 완료 후 90일 이내에 삭제합니다. 소비자 불만·분쟁 처리에 해당하는 문의는 처리 완료일부터 3년, 거래·청약철회 기록에 해당하는 부분은 법정 보존기간 동안 보관합니다. 문의에 불필요한 개인정보(주민등록번호, 비밀번호 등)는 적지 마세요.</p>
       <p class="shp-err" id="ct-err" role="alert" hidden></p>
       <button type="submit" class="shp-btn main" id="ct-submit">문의 접수</button>
     </form>
-    <section class="shp-hist" id="ct-hist" hidden><h2 id="ct-hist-h">내 문의와 답변</h2><div id="ct-list"></div></section>
+    <section class="shp-hist" id="ct-hist" hidden><h2 id="ct-hist-h">문의 내역</h2><div id="ct-list"></div></section>
   </div>
 </main>
-<script src="config.js?v=20261016w"></script>
-<script src="shop.js?v=20261016w"></script>
-<script src="auth.js?v=20261016w"></script>
+<script src="config.js?v=20261016y"></script>
+<script src="shop.js?v=20261016y"></script>
+<script src="auth.js?v=20261016y"></script>
 <script id="shp-js-contact">
 (function () {
   var S = window.IMShop, A = window.IMAuth, $ = function (id) { return document.getElementById(id); };
@@ -45,7 +44,7 @@
   var KINDS = [['guidance', '단순 상품·이용 안내 (답변 후 90일 보관)'], ['complaint', '소비자 불만·분쟁 (처리 후 3년 보관)'], ['transaction', '거래·청약철회 관련 (5년 보관)']];
   function err(m) { $('ct-err').hidden = false; $('ct-err').textContent = m; }
   function loadList() {
-    $('ct-hist').hidden = false; $('ct-hist-h').textContent = isAdmin ? '접수된 문의 (관리자)' : '내 문의와 답변'; $('ct-list').innerHTML = '<p class="shp-empty">불러오는 중…</p>';
+    $('ct-hist').hidden = false; $('ct-hist-h').textContent = isAdmin ? '접수된 문의 (관리자)' : '문의 내역'; $('ct-list').innerHTML = '<p class="shp-empty">불러오는 중…</p>';
     // the SERVER decides who sees what (row-level security): a member gets only their own inquiries, the administrator gets all of them
     A.rest.select('service_inquiries', 'select=id,user_id,type,title,content,status,kind,answer,answered_at,created_at&order=created_at.desc&limit=50', true).then(function (r) {
       if (!r.ok) { $('ct-list').innerHTML = '<p class="shp-empty">문의 내역을 불러오지 못했습니다. <button type="button" class="shp-lk2" id="ct-retry">다시 시도</button></p>'; $('ct-retry').onclick = loadList; return; }
@@ -84,7 +83,7 @@
     if (!A.backendReady()) { banner.textContent = '1:1 문의 접수 기능은 준비 중입니다. 문의 저장 서비스가 연결되기 전에는 접수할 수 없습니다.' + TEL; form.hidden = true; return; }
     if (!A.inquiryReady()) { banner.textContent = '1:1 문의 접수는 아직 열려 있지 않습니다.' + TEL; form.hidden = true; return; }
     if (!A.loggedIn()) { banner.innerHTML = '1:1 문의는 로그인 후 접수할 수 있습니다. <a href="' + S.esc(S.links.login) + '" id="ct-login" style="text-decoration:underline">로그인하기</a>'; form.hidden = true; $('ct-hist').hidden = true; return; }
-    banner.textContent = '접수하신 문의는 로그인한 계정으로 저장되며, 본인과 관리자만 확인할 수 있습니다. 답변은 이 페이지의 ‘내 문의와 답변’에서 확인할 수 있습니다(답변 알림 메일은 보내지 않습니다).'; form.hidden = false;
+    banner.textContent = ''; banner.hidden = true; form.hidden = false;   // nothing to explain here: the form speaks for itself
     A.isAdmin().then(function (a) { isAdmin = !!a; loadList(); });
   }
   document.addEventListener('click', function (e) { if (e.target.closest('#ct-login')) A.needLogin(S.links.contact); });

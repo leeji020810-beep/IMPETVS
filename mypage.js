@@ -6,10 +6,10 @@
   var S = window.IMShop, A = window.IMAuth, esc = S.esc;
   var HOME = 'mypage.html';
   var P = {
-    orders: ['mypage-orders.html', '주문 내역'], claims: ['mypage-claims.html', '취소/교환/반품 내역'], address: ['mypage-address.html', '배송지 관리'], pay: ['mypage-pay.html', '결제수단 관리'],
+    orders: ['mypage-orders.html', '주문 내역'], address: ['mypage-address.html', '배송지 관리'], pay: ['mypage-pay.html', '결제수단 관리'],
     reviews: ['mypage-reviews.html', '리뷰 관리'], inq: ['mypage-inquiries.html', '나의 문의 내역'], profile: ['mypage-profile.html', '회원 정보 수정']
   };
-  var GROUPS = [['나의 쇼핑 정보', ['orders', 'claims', 'address', 'pay']], ['나의 활동 정보', ['reviews', 'inq']], ['나의 정보', ['profile']]];
+  var GROUPS = [['나의 쇼핑 정보', ['orders', 'address', 'pay']], ['나의 활동 정보', ['reviews', 'inq']], ['나의 정보', ['profile']]];
   var OFF = '회원 서비스 연결 전입니다. 서버(Supabase) 설정이 끝나면 이용할 수 있습니다.';
   // the statuses that really exist on the server (orders_status_check in schema.sql)
   var STATUS = { pending_payment: '결제 대기', confirming: '결제 확인 중', payment_failed: '결제 실패', paid: '결제 완료', shipped: '배송 중', delivered: '배송 완료', cancelled: '취소됨', refunded: '환불 완료' };
@@ -28,7 +28,7 @@
   function thumb(i) { var p = S.imgFor(i.product_id, i.option); return p ? '<img src="' + esc(S.img(p)) + '" alt="" width="64" height="64" loading="lazy">' : '<span class="my-ph"></span>'; }
   function stLabel(o) { return o.status === 'refunded' ? '환불 완료' : (o.refunded_amount > 0 && o.status !== 'cancelled') ? '일부 환불' : (STATUS[o.status] || o.status); }
   function empty(t) { return '<p class="shp-empty my-empty">' + t + '</p>'; }
-  function head(t) { return '<h2 class="my-t">' + t + '</h2>'; }
+  function head(t, keep) { return '<h2 class="my-t' + (keep ? '' : ' my-t-main') + '">' + t + '</h2>'; }   // the main title is hidden on phones (the page header shows it); 'keep' titles (e.g. 주문 상세) stay
   function fmtMobile(v) { v = String(v || ''); return v.length === 11 ? v.slice(0, 3) + '-' + v.slice(3, 7) + '-' + v.slice(7) : v.length === 10 ? v.slice(0, 3) + '-' + v.slice(3, 6) + '-' + v.slice(6) : v; }
   function fmtHome(v) { v = String(v || ''); if (!v) return '-'; var a = v.indexOf('02') === 0 ? 2 : 3; return v.length > a + 4 ? v.slice(0, a) + '-' + v.slice(a, v.length - 4) + '-' + v.slice(-4) : v; }
 
@@ -55,12 +55,15 @@
     function paint(my, html) { if (my === seq) main().innerHTML = html; return my === seq; }
 
     /* ---- page skeleton (the same on every 마이쇼핑 page) ---- */
+    var solo = cv === 'profile' && !home;       // 회원 정보 수정 has its own page without the 마이쇼핑 menu
     function skeleton() {
       var nav = GROUPS.map(function (g) {
         return '<div class="my-g"><h2>' + g[0] + '</h2>' + g[1].map(function (k) { return '<a href="' + P[k][0] + '"' + (k === cv ? ' aria-current="page"' : '') + '>' + P[k][1] + '</a>'; }).join('') + '</div>';
       }).join('');
-      root.innerHTML = '<div class="shp-doc shp-my ' + (home ? 'my-home' : 'my-page') + '"><p class="shp-note" id="my-gate" role="status" hidden></p><div id="my-app" hidden>' +
-        '<h1 class="my-title" id="my-h">마이쇼핑</h1>' + (home ? '' : '<a class="my-back" href="' + HOME + '"><span aria-hidden="true">‹</span> 마이쇼핑</a>') +
+      var CHEV = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';
+      root.innerHTML = '<div class="shp-doc shp-my ' + (home ? 'my-home' : 'my-page') + (solo ? ' my-solo' : '') + '"><p class="shp-note" id="my-gate" role="status" hidden></p><div id="my-app" hidden>' +
+        '<h1 class="my-title" id="my-h">' + (solo ? P[cv][1] : '마이쇼핑') + '</h1>' +
+        (home ? '' : '<div class="my-bar"><a class="my-back" href="' + HOME + '" aria-label="마이쇼핑으로 돌아가기">' + CHEV + '</a><p class="my-bt" role="heading" aria-level="1">' + P[cv][1] + '</p><span class="my-bs" aria-hidden="true"></span></div>') +
         '<div class="my-grid"><nav class="my-nav" aria-label="마이쇼핑 메뉴">' + nav + '<button type="button" class="my-logout" id="my-logout">로그아웃</button></nav><section class="my-main" id="my-main" tabindex="-1" aria-live="polite"></section></div></div></div>';
       $('my-logout').addEventListener('click', function () { A.signOut().then(function () { S.toast('로그아웃되었습니다.'); setTimeout(function () { location.href = S.links.home; }, 600); }); });
     }
@@ -81,15 +84,22 @@
     }
     function boot() { if (!gate()) return; if (home && mq.matches) { main().innerHTML = ''; return; } run(); }   // the phone landing page is only the menu: no content is loaded there
 
-    /* ---- orders / claims: tabs, status filter, date range ---- */
+    /* ---- 주문 내역: two wide buttons (주문내역조회 / 취소/교환/반품 내역), status filter, date range ---- */
+    var claimsTab = !home && cv === 'orders' && /[?&]tab=claims(&|$)/.test(location.search);
+    var SEARCH = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>';
     function rangeBox(statuses) {
-      var tabs = '<div class="mt-tabs" role="tablist">' + ['orders', 'claims'].map(function (k) { return '<a role="tab" href="' + P[k][0] + '" aria-selected="' + (k === cv ? 'true' : 'false') + '">' + (k === 'orders' ? '주문내역조회' : '취소/교환/반품') + '</a>'; }).join('') + '</div>';
-      var sel = '<select id="rg-st" class="my-sel" aria-label="주문처리상태"><option value="">전체 주문처리상태</option>' + statuses.map(function (s) { return '<option value="' + s + '"' + (rg.st === s ? ' selected' : '') + '>' + (STATUS[s] || s) + '</option>'; }).join('') + (cv === 'claims' ? '<option value="partial"' + (rg.st === 'partial' ? ' selected' : '') + '>일부 환불</option>' : '') + '</select>';
-      return tabs + '<div class="my-rg">' + sel + '<div class="my-chips" role="group" aria-label="조회 기간">' + RANGES.map(function (r) { return '<button type="button" data-days="' + r[1] + '" aria-pressed="' + (rg.days === r[1] ? 'true' : 'false') + '">' + r[0] + '</button>'; }).join('') + '</div>' +
-        '<div class="my-dates"><input type="date" id="rg-from" value="' + esc(rg.from) + '" aria-label="시작일"><span aria-hidden="true">~</span><input type="date" id="rg-to" value="' + esc(rg.to) + '" aria-label="종료일"><button type="button" class="shp-btn line sm" id="rg-go">조회</button></div><p class="shp-err" id="rg-err" role="alert" hidden></p></div>';
+      var tabs = '<div class="ot-tabs" role="tablist" aria-label="주문 조회 구분"><button type="button" role="tab" class="ot-tab" data-tab="orders" aria-selected="' + (!claimsTab) + '"><span class="ot-l">주문내역조회</span><span class="ot-n" id="ot-n-orders"></span></button><button type="button" role="tab" class="ot-tab" data-tab="claims" aria-selected="' + claimsTab + '"><span class="ot-l">취소/교환/반품 내역</span><span class="ot-n" id="ot-n-claims"></span></button></div>';
+      var sel = '<select id="rg-st" class="my-sel" aria-label="주문처리상태"><option value="">전체 주문처리상태</option>' + statuses.map(function (s) { return '<option value="' + s + '"' + (rg.st === s ? ' selected' : '') + '>' + (STATUS[s] || s) + '</option>'; }).join('') + (claimsTab ? '<option value="partial"' + (rg.st === 'partial' ? ' selected' : '') + '>일부 환불</option>' : '') + '</select>';
+      return tabs + '<div class="ot-box">' + sel + '<div class="ot-line"><div class="my-chips" role="group" aria-label="조회 기간">' + RANGES.map(function (r) { return '<button type="button" data-days="' + r[1] + '" aria-pressed="' + (rg.days === r[1] ? 'true' : 'false') + '">' + r[0] + '</button>'; }).join('') + '</div>' +
+        '<div class="ot-dates"><input type="date" id="rg-from" value="' + esc(rg.from) + '" aria-label="시작일"><span aria-hidden="true">~</span><input type="date" id="rg-to" value="' + esc(rg.to) + '" aria-label="종료일"><button type="button" class="ot-go" id="rg-go" aria-label="조회">' + SEARCH + '</button></div></div><p class="shp-err" id="rg-err" role="alert" hidden></p></div>';
     }
     function bindRange(reload) {
       [].forEach.call(main().querySelectorAll('[data-days]'), function (b) { b.addEventListener('click', function () { rg.st = $('rg-st').value; setDays(+b.getAttribute('data-days')); reload(); }); });
+      [].forEach.call(main().querySelectorAll('[data-tab]'), function (b) { b.addEventListener('click', function () {
+        var c2 = b.getAttribute('data-tab') === 'claims'; if (c2 === claimsTab) return; claimsTab = c2; rg.st = '';
+        try { if (!location.hash) history.replaceState(null, '', location.pathname + (c2 ? '?tab=claims' : '')); } catch (e) {}      // reload / back keep the chosen button
+        reload();
+      }); });
       $('rg-st').addEventListener('change', function () { rg.st = this.value; reload(); });
       $('rg-go').addEventListener('click', function () {
         var f = $('rg-from').value, t = $('rg-to').value, e = $('rg-err');
@@ -98,11 +108,12 @@
         rg.days = -1; rg.from = f; rg.to = t; rg.st = $('rg-st').value; reload();
       });
     }
-    function fetchOrders(p) {
-      var from = new Date(rg.from + 'T00:00:00'), to = new Date(rg.to + 'T23:59:59'), flt = '';
-      if (rg.st === 'partial') flt = '&refunded_amount=gt.0&status=not.in.(refunded,cancelled)';
-      else if (rg.st) flt = '&status=eq.' + encodeURIComponent(rg.st);
-      else if (cv === 'claims') flt = '&or=(status.in.(cancelled,refunded),refunded_amount.gt.0)';
+    // claims = true: only cancelled / refunded / partly refunded orders. useStatus: the chosen status filter applies to the CURRENT button only.
+    function fetchOrders(p, claims, useStatus) {
+      var from = new Date(rg.from + 'T00:00:00'), to = new Date(rg.to + 'T23:59:59'), flt = '', st = useStatus ? rg.st : '';
+      if (st === 'partial') flt = '&refunded_amount=gt.0&status=not.in.(refunded,cancelled)';
+      else if (st) flt = '&status=eq.' + encodeURIComponent(st);
+      else if (claims) flt = '&or=(status.in.(cancelled,refunded),refunded_amount.gt.0)';
       var q = 'select=order_no,created_at,status,items,subtotal,shipping_fee,total_amount,payment_method,refunded_amount&user_id=eq.' + encodeURIComponent(p.id) + '&created_at=gte.' + encodeURIComponent(from.toISOString()) + '&created_at=lte.' + encodeURIComponent(to.toISOString()) + flt + '&order=created_at.desc&limit=100';
       return A.rest.select('orders', q, true);
     }
@@ -117,16 +128,20 @@
     }
     function listView(my, p) {
       function load() {
-        var m2 = ++seq; var claims = cv === 'claims';
-        main().innerHTML = head(claims ? '취소/교환/반품 내역' : '주문 내역') + rangeBox(claims ? CLAIM_FILTER : ORDER_FILTER) + '<div id="my-list"><p class="shp-note">불러오는 중…</p></div>' +
+        var m2 = ++seq, claims = claimsTab;
+        main().innerHTML = head('주문 내역') + rangeBox(claims ? CLAIM_FILTER : ORDER_FILTER) + '<div id="my-list"><p class="shp-note">불러오는 중…</p></div>' +
           (claims ? '<p class="shp-note my-nt">취소·환불 내역은 주문 정보에 실제로 기록된 처리 상태만 표시합니다. 교환·반품 요청을 접수하고 진행 상태를 저장하는 기능은 아직 연결되지 않았습니다. 교환·반품은 <a href="' + esc(S.links.contact) + '" style="text-decoration:underline">1:1 문의</a>로 접수해 주세요(문의를 보낸 것만으로 교환·반품이 완료되지는 않습니다).</p>' : '');
         bindRange(load);
-        fetchOrders(p).then(function (r) {
+        function count(id, n) { var el = $(id); if (el && n > 0) el.textContent = ' (' + (n >= 100 ? '100+' : n) + ')'; }     // a number only when there really are orders in the chosen period
+        fetchOrders(p, claims, true).then(function (r) {
           if (m2 !== seq) return; var box = $('my-list'); if (!box) return;
           if (!r.ok) { box.innerHTML = empty(failText(r)); return; }
-          box.innerHTML = orderRows(r.data || [], claims ? '취소·교환·반품 내역이 없습니다.' : '주문 내역이 없습니다.');
+          var list = r.data || [];
+          box.innerHTML = orderRows(list, claims ? '취소·교환·반품 내역이 없습니다.' : '주문 내역이 없습니다.');
+          if (!rg.st) count(claims ? 'ot-n-claims' : 'ot-n-orders', list.length);
           [].forEach.call(box.querySelectorAll('[data-order]'), function (b) { b.addEventListener('click', function () { detail(b.getAttribute('data-order'), p, load); }); });
         });
+        fetchOrders(p, !claims, false).then(function (r) { if (m2 === seq && r.ok) count(claims ? 'ot-n-orders' : 'ot-n-claims', (r.data || []).length); });
       }
       load();
     }
@@ -136,9 +151,9 @@
       A.rest.select('orders', 'select=order_no,created_at,status,items,subtotal,shipping_fee,total_amount,payment_method,refunded_amount,shipping&order_no=eq.' + encodeURIComponent(no) + '&user_id=eq.' + encodeURIComponent(p.id), true).then(function (r) {
         if (m2 !== seq) return;
         var o = r.ok && r.data && r.data[0];
-        if (!o) { main().innerHTML = head('주문 상세') + empty(r.ok ? '주문을 찾을 수 없습니다.' : failText(r)) + '<button type="button" class="shp-btn line sm" id="my-bk" style="margin-top:16px">목록으로</button>'; $('my-bk').addEventListener('click', back); return; }
+        if (!o) { main().innerHTML = head('주문 상세', true) + empty(r.ok ? '주문을 찾을 수 없습니다.' : failText(r)) + '<button type="button" class="shp-btn line sm" id="my-bk" style="margin-top:16px">목록으로</button>'; $('my-bk').addEventListener('click', back); return; }
         var sh = o.shipping || {}, total = o.total_amount != null ? o.total_amount : o.subtotal + (o.shipping_fee || 0);
-        main().innerHTML = head('주문 상세') + '<dl class="my-dl"><div><dt>주문번호</dt><dd>' + esc(o.order_no) + '</dd></div><div><dt>주문일자</dt><dd>' + esc(day(o.created_at)) + '</dd></div><div><dt>상태</dt><dd>' + esc(stLabel(o)) + '</dd></div></dl>' +
+        main().innerHTML = head('주문 상세', true) + '<dl class="my-dl"><div><dt>주문번호</dt><dd>' + esc(o.order_no) + '</dd></div><div><dt>주문일자</dt><dd>' + esc(day(o.created_at)) + '</dd></div><div><dt>상태</dt><dd>' + esc(stLabel(o)) + '</dd></div></dl>' +
           '<h3 class="my-t3">주문 상품</h3><ul class="my-items">' + items(o).map(function (i) { return '<li>' + thumb(i) + '<span>' + esc(i.name) + ' · ' + esc(i.option) + ' · ' + esc(i.qty) + '개</span><b>' + esc(S.money(i.line_total)) + '</b></li>'; }).join('') + '</ul>' +
           '<dl class="my-dl"><div><dt>상품금액</dt><dd>' + esc(S.money(o.subtotal)) + '</dd></div><div><dt>배송비</dt><dd>' + (o.shipping_fee === 0 ? '무료' : esc(S.money(o.shipping_fee || 0))) + '</dd></div><div><dt>결제 금액</dt><dd><b>' + esc(S.money(total)) + '</b></dd></div>' + (o.payment_method ? '<div><dt>결제수단</dt><dd>' + esc(o.payment_method) + '</dd></div>' : '') + (o.refunded_amount > 0 ? '<div><dt>환불 금액</dt><dd>' + esc(S.money(o.refunded_amount)) + '</dd></div>' : '') + '</dl>' +
           '<h3 class="my-t3">받는 분</h3><dl class="my-dl"><div><dt>이름</dt><dd>' + esc(sh.name || '') + '</dd></div><div><dt>연락처</dt><dd>' + esc(sh.phone || '') + '</dd></div><div><dt>주소</dt><dd>' + esc(((sh.zip ? '(' + sh.zip + ') ' : '') + (sh.addr1 || '') + ' ' + (sh.addr2 || '')).trim()) + '</dd></div>' + (sh.memo ? '<div><dt>배송 메모</dt><dd>' + esc(sh.memo) + '</dd></div>' : '') + '</dl>' +
@@ -148,7 +163,7 @@
     }
 
     var VIEWS = {};
-    VIEWS.orders = listView; VIEWS.claims = listView;
+    VIEWS.orders = listView;
 
     /* ---- 배송지 관리: the address book (max 10), everything stored on the SERVER ---- */
     var AB_COLS = 'id,label,recipient,phone_home,phone_mobile,zip,addr1,addr2,is_default,pinned,source';
@@ -312,12 +327,12 @@
     VIEWS.profile = function (my, p) {
       A.rest.select('profiles', 'select=name,phone&id=eq.' + encodeURIComponent(p.id), true).then(function (r) {
         if (my !== seq) return;
-        if (!r.ok || !r.data || !r.data[0]) return paint(my, head('회원 정보 수정') + empty(failText(r)));
+        if (!r.ok || !r.data || !r.data[0]) return paint(my, empty(failText(r)));
         var f = r.data[0], ph = String(f.phone || ''), p1 = ph.slice(0, 3), p2 = ph.length === 11 ? ph.slice(3, 7) : ph.slice(3, 6), p3 = ph.slice(-4);
         var MOB = ['010', '011', '016', '017', '018', '019']; if (MOB.indexOf(p1) < 0) MOB.unshift(p1 || '010');
         function eye(id) { return '<div class="pf-eye"><input class="shp-in" id="' + id + '" type="password" autocomplete="new-password" maxlength="64"><button type="button" class="pf-eyeb" data-eye="' + id + '" aria-label="비밀번호 표시" aria-pressed="false"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div>'; }
         function row(lab, req, inner, id) { return '<div class="pf-row"><label class="pf-l"' + (id ? ' for="' + id + '"' : '') + '><span class="pf-d">' + (req ? '<i class="pf-req" aria-hidden="true">•</i>' : '') + '</span>' + lab + '</label><div class="pf-v">' + inner + '</div></div>'; }
-        paint(my, head('회원 정보 수정') + '<div class="pf-head"><h3>기본정보</h3><span><i class="pf-req" aria-hidden="true">•</i> 필수입력사항</span></div><form id="pf-form" class="pf-form" novalidate>' +
+        paint(my, '<div class="pf-head"><h3>기본정보</h3><span><i class="pf-req" aria-hidden="true">•</i> 필수입력사항</span></div><form id="pf-form" class="pf-form" novalidate>' +
           row('아이디', true, '<input class="shp-in" id="pf-id" value="' + esc(p.email || '') + '" readonly aria-readonly="true">', 'pf-id') +
           row('이름', true, '<input class="shp-in" id="pf-name" maxlength="50" autocomplete="name" value="' + esc(f.name || '') + '">', 'pf-name') +
           row('휴대전화', true, '<div class="pf-ph"><select class="shp-in" id="pf-p1" aria-label="휴대전화 앞자리">' + MOB.map(function (o) { return '<option' + (o === p1 ? ' selected' : '') + '>' + o + '</option>'; }).join('') + '</select><span aria-hidden="true">-</span><input class="shp-in" id="pf-p2" inputmode="numeric" maxlength="4" aria-label="휴대전화 가운데 자리" value="' + esc(p2) + '"><span aria-hidden="true">-</span><input class="shp-in" id="pf-p3" inputmode="numeric" maxlength="4" aria-label="휴대전화 뒷자리" value="' + esc(p3) + '"></div>', 'pf-p1') +

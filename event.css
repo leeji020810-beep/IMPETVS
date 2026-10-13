@@ -43,5 +43,3 @@
 .evt-act{padding-top:44px}
 .evt-note{margin-top:72px;padding-bottom:88px}
 }
-/* TEMP-REMOVE-WITH-NEW-IMAGE (see event.html) */
-.evt-tmp{margin:14px 0 0;padding:0 20px;text-align:center;font-size:14px;line-height:1.7;color:var(--label-alternative);word-break:keep-all;overflow-wrap:anywhere}
