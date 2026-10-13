@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>마이쇼핑 | IMPETVS</title>
+<link rel="icon" href="favicon.ico?v=20261013" sizes="any">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=20261013">
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fig-tokens.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/typography.css">
+<link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/semantic.css">
+<link rel="stylesheet" href="shop.css?v=20261016s">
+<style>html,body{margin:0;background:#fff}</style>
+</head>
+<body>
+<div data-shp-header></div>
+<main class="shp-page" id="mypage-root">
+  <div class="shp-doc shp-my">
+    <p class="shp-note" id="my-gate" role="status" hidden></p>
+    <div id="my-app" hidden>
+      <section class="my-hello" aria-labelledby="my-h">
+        <h1 id="my-h">회원님, 안녕하세요</h1>
+        <p>마이쇼핑에서 주문과 활동 내역, 내 정보를 확인할 수 있습니다.</p>
+      </section>
+      <div class="my-grid">
+        <nav class="my-nav" aria-label="마이쇼핑 메뉴">
+          <div class="my-g"><h2>나의 쇼핑 정보</h2>
+            <button type="button" data-m="orders">주문 내역</button>
+            <button type="button" data-m="claims">취소/교환/반품 내역</button>
+            <button type="button" data-m="address">배송지 수정</button>
+            <button type="button" data-m="pay">결제수단 관리</button>
+          </div>
+          <div class="my-g"><h2>나의 활동 정보</h2>
+            <button type="button" data-m="reviews">리뷰 관리</button>
+            <button type="button" data-m="inq">나의 문의 내역</button>
+          </div>
+          <div class="my-g"><h2>나의 정보</h2>
+            <button type="button" data-m="profile">회원 정보 수정</button>
+            <button type="button" id="my-logout">로그아웃</button>
+          </div>
+        </nav>
+        <section class="my-main" id="my-main" tabindex="-1" aria-live="polite"></section>
+      </div>
+    </div>
+  </div>
+</main>
+<script src="config.js?v=20261016s"></script>
+<script src="shop.js?v=20261016s"></script>
+<script src="auth.js?v=20261016s"></script>
+<script id="shp-js-mypage">
+(function () {
+  var S = window.IMShop, A = window.IMAuth, esc = S.esc, $ = function (id) { return document.getElementById(id); };
+  var OFF = '회원 서비스 연결 전입니다. 서버(Supabase) 설정이 끝나면 이용할 수 있습니다.';
+  var STATUS = { pending_payment: '결제 대기', confirming: '결제 확인 중', payment_failed: '결제 실패', paid: '결제 완료', cancelled: '취소됨', shipped: '배송 중', delivered: '배송 완료', refunded: '환불 완료' };
+  var ME = null, cur = 'orders', seq = 0;       // seq: a late answer of an earlier menu never paints into the current one
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function ymd(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function day(s) { var d = new Date(s); return isNaN(d) ? '' : ymd(d); }
+  function main() { return $('my-main'); }
+  function serverMissing(r) { return r && (r.status === 404 || r.status === 400 && /relation|function|schema cache|does not exist|Could not find/i.test(String(r.message || ''))); }
+  function failText(r) { return serverMissing(r) ? '이 기능에 필요한 서버 설정(SQL)이 아직 적용되지 않았습니다. 적용 전에는 이용할 수 없습니다.' : (r && r.status === 401 ? '로그인이 만료되었습니다. 다시 로그인해 주세요.' : '내용을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'); }
+  function items(o) { return Array.isArray(o.items) ? o.items : []; }
+  function summary(o) { var it = items(o), f = it[0]; if (!f) return '주문 상품'; return esc(f.name) + ' · ' + esc(f.option) + ' · ' + esc(f.qty) + '개' + (it.length > 1 ? ' 외 ' + (it.length - 1) + '건' : ''); }
+  function thumb(i) { var p = S.imgFor(i.product_id, i.option); return p ? '<img src="' + esc(S.img(p)) + '" alt="" width="64" height="64" loading="lazy">' : '<span class="my-ph"></span>'; }
+  function stLabel(o) { return o.status === 'refunded' || (o.refunded_amount > 0 && o.status !== 'cancelled') ? (o.status === 'refunded' ? '환불 완료' : '일부 환불') : (STATUS[o.status] || o.status); }
+  function empty(t) { return '<p class="shp-empty my-empty">' + t + '</p>'; }
+  function head(t) { return '<h2 class="my-t">' + t + '</h2>'; }
+
+  /* ---------------- gate: only a signed-in member sees anything; the SERVER (row-level security) is what really protects the data ---------------- */
+  function gate() {
+    var ok = A.backendReady() && A.loggedIn();
+    $('my-app').hidden = !ok; $('my-gate').hidden = ok;
+    if (ok) return true;
+    $('my-gate').innerHTML = (A.backendReady() ? '로그인 후 이용할 수 있습니다. ' : OFF + ' ') + (A.backendReady() ? '<a href="' + esc(S.links.login) + '" style="text-decoration:underline" id="my-login">로그인하기</a>' : '');
+    var l = $('my-login'); if (l) l.addEventListener('click', function () { A.needLogin('mypage.html'); });   // the return address is remembered only when the person really goes to log in
+    return false;
+  }
+  function hello() {
+    A.profile().then(function (p) {
+      if (!p) { ME = null; return; } ME = p;
+      $('my-h').textContent = (p.name ? p.name : '회원') + '님, 안녕하세요';     // textContent: the name is never parsed as HTML
+    });
+  }
+  function nav(m) {
+    cur = m; [].forEach.call(document.querySelectorAll('.my-nav [data-m]'), function (b) { if (b.getAttribute('data-m') === m) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+  }
+  function go(m, keepFocus) {
+    var my = ++seq; nav(m); main().innerHTML = '<p class="shp-note">불러오는 중…</p>';
+    A.profile().then(function (p) {
+      if (my !== seq) return; if (!p) { main().innerHTML = empty('로그인 정보를 확인하지 못했습니다. 다시 로그인해 주세요.'); return; } ME = p;
+      VIEWS[m](my, p);
+    });
+    if (!keepFocus) { try { main().focus({ preventScroll: false }); } catch (e) {} }
+  }
+  function paint(my, html) { if (my === seq) main().innerHTML = html; return my === seq; }
+
+  /* ---------------- date-range search (오늘 · 1주일 · 1개월 · 3개월 · 6개월 · 직접) ---------------- */
+  var RANGES = [['오늘', 0], ['1주일', 7], ['1개월', 30], ['3개월', 90], ['6개월', 180]];
+  var rg = { days: 90, from: '', to: '' };
+  function setDays(n) { var t = new Date(), f = new Date(); f.setDate(f.getDate() - n); rg = { days: n, from: ymd(f), to: ymd(t) }; }
+  setDays(90);
+  function rangeBox() {
+    return '<div class="my-rg"><div class="my-chips" role="group" aria-label="조회 기간">' + RANGES.map(function (r) { return '<button type="button" data-days="' + r[1] + '" aria-pressed="' + (rg.days === r[1] ? 'true' : 'false') + '">' + r[0] + '</button>'; }).join('') + '</div>' +
+      '<div class="my-dates"><input type="date" id="rg-from" value="' + esc(rg.from) + '" aria-label="시작일"><span aria-hidden="true">~</span><input type="date" id="rg-to" value="' + esc(rg.to) + '" aria-label="종료일"><button type="button" class="shp-btn line sm" id="rg-go">조회</button></div>' +
+      '<p class="shp-err" id="rg-err" role="alert" hidden></p></div>';
+  }
+  function bindRange(reload) {
+    [].forEach.call(main().querySelectorAll('[data-days]'), function (b) { b.addEventListener('click', function () { setDays(+b.getAttribute('data-days')); reload(); }); });
+    $('rg-go').addEventListener('click', function () {
+      var f = $('rg-from').value, t = $('rg-to').value, e = $('rg-err');
+      if (!f || !t) { e.hidden = false; e.textContent = '시작일과 종료일을 선택해 주세요.'; return; }
+      if (f > t) { e.hidden = false; e.textContent = '시작일이 종료일보다 늦을 수 없습니다.'; return; }
+      rg = { days: -1, from: f, to: t }; reload();
+    });
+  }
+  function fetchOrders(p, extra) {
+    var from = new Date(rg.from + 'T00:00:00'), to = new Date(rg.to + 'T23:59:59');
+    var q = 'select=order_no,created_at,status,items,subtotal,shipping_fee,total_amount,payment_method,refunded_amount&user_id=eq.' + encodeURIComponent(p.id) + '&created_at=gte.' + encodeURIComponent(from.toISOString()) + '&created_at=lte.' + encodeURIComponent(to.toISOString()) + (extra || '') + '&order=created_at.desc&limit=100';
+    return A.rest.select('orders', q, true);
+  }
+  function orderRows(list, none) {
+    if (!list.length) return empty(none);
+    return '<div class="my-tbl" role="table"><div class="my-tr my-th" role="row"><span role="columnheader">주문일자</span><span role="columnheader">주문번호</span><span role="columnheader">상품정보</span><span role="columnheader">금액</span><span role="columnheader">상태</span></div>' +
+      list.map(function (o) {
+        var i0 = items(o)[0] || {};
+        return '<div class="my-tr" role="row"><span role="cell" class="my-d">' + esc(day(o.created_at)) + '</span><span role="cell" class="my-no"><button type="button" class="shp-lk2" data-order="' + esc(o.order_no) + '">' + esc(o.order_no) + '</button></span>' +
+          '<span role="cell" class="my-pi">' + thumb(i0) + '<span>' + summary(o) + '</span></span><span role="cell" class="my-am">' + esc(S.money(o.total_amount != null ? o.total_amount : o.subtotal + (o.shipping_fee || 0))) + '</span><span role="cell" class="my-st">' + esc(stLabel(o)) + '</span></div>';
+      }).join('') + '</div>' + (list.length >= 100 ? '<p class="shp-note">최근 100건까지 표시됩니다. 기간을 좁혀 조회해 주세요.</p>' : '');
+  }
+
+  var VIEWS = {};
+  /* ---------------- 주문 내역 ---------------- */
+  VIEWS.orders = function (my, p) {
+    function load() {
+      var m2 = ++seq; main().innerHTML = head('주문 내역') + rangeBox() + '<div id="my-list"><p class="shp-note">불러오는 중…</p></div>'; bindRange(load); nav('orders');
+      fetchOrders(p).then(function (r) {
+        if (m2 !== seq) return; var box = $('my-list'); if (!box) return;
+        if (!r.ok) { box.innerHTML = empty(failText(r)); return; }
+        box.innerHTML = orderRows(r.data || [], '주문 내역이 없습니다.');
+        [].forEach.call(box.querySelectorAll('[data-order]'), function (b) { b.addEventListener('click', function () { detail(b.getAttribute('data-order'), p, load); }); });
+      });
+    }
+    load();
+  };
+  function detail(no, p, back) {
+    var m2 = ++seq; main().innerHTML = '<p class="shp-note">불러오는 중…</p>';
+    // the member comes from the login token; the filter on user_id is only a second line (row-level security on the server decides what is readable)
+    A.rest.select('orders', 'select=order_no,created_at,status,items,subtotal,shipping_fee,total_amount,payment_method,refunded_amount,shipping&order_no=eq.' + encodeURIComponent(no) + '&user_id=eq.' + encodeURIComponent(p.id), true).then(function (r) {
+      if (m2 !== seq) return;
+      var o = r.ok && r.data && r.data[0];
+      if (!o) { main().innerHTML = head('주문 상세') + empty(r.ok ? '주문을 찾을 수 없습니다.' : failText(r)) + '<button type="button" class="shp-btn line sm" id="my-back" style="margin-top:16px">목록으로</button>'; $('my-back').addEventListener('click', back); return; }
+      var sh = o.shipping || {}, total = o.total_amount != null ? o.total_amount : o.subtotal + (o.shipping_fee || 0);
+      main().innerHTML = head('주문 상세') + '<dl class="my-dl"><div><dt>주문번호</dt><dd>' + esc(o.order_no) + '</dd></div><div><dt>주문일자</dt><dd>' + esc(day(o.created_at)) + '</dd></div><div><dt>상태</dt><dd>' + esc(stLabel(o)) + '</dd></div></dl>' +
+        '<h3 class="my-t3">주문 상품</h3><ul class="my-items">' + items(o).map(function (i) { return '<li>' + thumb(i) + '<span>' + esc(i.name) + ' · ' + esc(i.option) + ' · ' + esc(i.qty) + '개</span><b>' + esc(S.money(i.line_total)) + '</b></li>'; }).join('') + '</ul>' +
+        '<dl class="my-dl"><div><dt>상품금액</dt><dd>' + esc(S.money(o.subtotal)) + '</dd></div><div><dt>배송비</dt><dd>' + (o.shipping_fee === 0 ? '무료' : esc(S.money(o.shipping_fee || 0))) + '</dd></div><div><dt>결제 금액</dt><dd><b>' + esc(S.money(total)) + '</b></dd></div>' + (o.payment_method ? '<div><dt>결제수단</dt><dd>' + esc(o.payment_method) + '</dd></div>' : '') + (o.refunded_amount > 0 ? '<div><dt>환불 금액</dt><dd>' + esc(S.money(o.refunded_amount)) + '</dd></div>' : '') + '</dl>' +
+        '<h3 class="my-t3">받는 분</h3><dl class="my-dl"><div><dt>이름</dt><dd>' + esc(sh.name || '') + '</dd></div><div><dt>연락처</dt><dd>' + esc(sh.phone || '') + '</dd></div><div><dt>주소</dt><dd>' + esc(((sh.zip ? '(' + sh.zip + ') ' : '') + (sh.addr1 || '') + ' ' + (sh.addr2 || '')).trim()) + '</dd></div>' + (sh.memo ? '<div><dt>배송 메모</dt><dd>' + esc(sh.memo) + '</dd></div>' : '') + '</dl>' +
+        '<button type="button" class="shp-btn line sm" id="my-back" style="margin-top:20px">목록으로</button>';
+      $('my-back').addEventListener('click', back);
+    });
+  }
+  /* ---------------- 취소/교환/반품 내역: only what is really stored (order status / refunded amount). A sent inquiry is NOT a completed cancel / refund. ---------------- */
+  VIEWS.claims = function (my, p) {
+    function load() {
+      var m2 = ++seq; main().innerHTML = head('취소/교환/반품 내역') + rangeBox() + '<div id="my-list"><p class="shp-note">불러오는 중…</p></div>' +
+        '<p class="shp-note my-nt">취소·환불 내역은 주문 정보에 실제로 기록된 처리 상태만 표시합니다. 교환·반품 요청을 접수하고 진행 상태를 저장하는 기능은 아직 연결되지 않았습니다. 교환·반품은 <a href="' + esc(S.links.contact) + '" style="text-decoration:underline">1:1 문의</a>로 접수해 주세요(문의를 보낸 것만으로 교환·반품이 완료되지는 않습니다).</p>';
+      bindRange(load); nav('claims');
+      fetchOrders(p, '&or=(status.in.(cancelled,refunded),refunded_amount.gt.0)').then(function (r) {
+        if (m2 !== seq) return; var box = $('my-list'); if (!box) return;
+        if (!r.ok) { box.innerHTML = empty(failText(r)); return; }
+        box.innerHTML = orderRows(r.data || [], '취소·교환·반품 내역이 없습니다.');
+        [].forEach.call(box.querySelectorAll('[data-order]'), function (b) { b.addEventListener('click', function () { detail(b.getAttribute('data-order'), p, load); }); });
+      });
+    }
+    load();
+  };
+  /* ---------------- 배송지 수정 ---------------- */
+  VIEWS.address = function (my, p) {
+    A.rest.select('member_addresses', 'select=zip,addr1,addr2,updated_at&user_id=eq.' + encodeURIComponent(p.id), true).then(function (r) {
+      if (my !== seq) return;
+      if (!r.ok) return paint(my, head('배송지 수정') + empty(failText(r)));
+      var a = (r.data && r.data[0]) || { zip: '', addr1: '', addr2: '' };
+      paint(my, head('배송지 수정') + '<form class="shp-form my-form" id="ad-form" novalidate>' +
+        '<label class="shp-field"><span>우편번호</span><input class="shp-in" id="ad-zip" inputmode="numeric" maxlength="5" autocomplete="postal-code" value="' + esc(a.zip) + '"></label>' +
+        '<label class="shp-field"><span>기본주소</span><input class="shp-in" id="ad-a1" maxlength="200" autocomplete="address-line1" value="' + esc(a.addr1) + '"></label>' +
+        '<label class="shp-field"><span>상세주소</span><input class="shp-in" id="ad-a2" maxlength="200" autocomplete="address-line2" value="' + esc(a.addr2) + '"></label>' +
+        '<p class="shp-err" id="ad-err" role="alert" hidden></p><p class="shp-okmsg" id="ad-ok" role="status" hidden></p>' +
+        '<div class="my-btns"><button type="submit" class="shp-btn main" id="ad-save">저장</button>' + (a.addr1 ? '<button type="button" class="shp-btn line" id="ad-del">저장된 배송지 삭제</button>' : '') + '</div></form>' +
+        '<p class="shp-note my-nt">이미 접수된 주문의 배송지는 여기서 바꾸어도 자동으로 변경되지 않습니다(주문서에 입력한 주소로 처리됩니다). 배송지 변경이 필요하면 고객센터(0507-1372-9152)로 문의해 주세요.</p>');
+      $('ad-form').addEventListener('submit', function (e) {
+        e.preventDefault(); $('ad-err').hidden = true; $('ad-ok').hidden = true;
+        var z = $('ad-zip').value.trim(), a1 = $('ad-a1').value.trim(), a2 = $('ad-a2').value.trim();
+        if (!/^\d{5}$/.test(z) || !a1) { $('ad-err').hidden = false; $('ad-err').textContent = '우편번호(숫자 5자리)와 기본주소를 입력해 주세요.'; return; }
+        var b = $('ad-save'); b.disabled = true; b.textContent = '저장 중…';
+        A.rpc('save_my_address', { p_zip: z, p_addr1: a1, p_addr2: a2 }).then(function (s) {
+          b.disabled = false; b.textContent = '저장';
+          if (s.ok && s.data && s.data.saved === true) { $('ad-ok').hidden = false; $('ad-ok').textContent = '배송지를 저장했습니다.'; return; }   // success only after the server said so
+          $('ad-err').hidden = false; $('ad-err').textContent = serverMissing(s) ? failText(s) : (String(s.message || '').indexOf('ADDRESS_INVALID') > -1 ? '주소 형식이 올바르지 않습니다.' : '배송지를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.');
+        });
+      });
+      var d = $('ad-del'); if (d) d.addEventListener('click', function () {
+        d.disabled = true; A.rpc('delete_my_address').then(function (s) { if (s.ok && s.data && s.data.deleted === true) go('address', true); else { d.disabled = false; $('ad-err').hidden = false; $('ad-err').textContent = '배송지를 삭제하지 못했습니다.'; } });
+      });
+    });
+  };
+  /* ---------------- 결제수단 관리: not available (payment is on hold); nothing is collected ---------------- */
+  VIEWS.pay = function (my) {
+    paint(my, head('결제수단 관리') + '<p class="my-soon"><b>준비 중입니다.</b><br>결제 서비스가 연결되면 이용할 수 있습니다. 카드번호·유효기간·CVC·계좌 정보는 이 사이트에서 입력받거나 저장하지 않으며, 저장된 결제수단도 없습니다.</p>');
+  };
+  /* ---------------- 리뷰 관리 ---------------- */
+  VIEWS.reviews = function (my, p) {
+    A.rest.select('reviews', 'select=id,product_id,rating,content,created_at,item_option,products(name)&user_id=eq.' + encodeURIComponent(p.id) + '&order=created_at.desc&limit=100', true).then(function (r) {
+      if (my !== seq) return;
+      if (!r.ok) return paint(my, head('리뷰 관리') + empty(failText(r)));
+      var l = r.data || [];
+      paint(my, head('리뷰 관리') + (l.length ? '<ul class="my-rv">' + l.map(function (v) {
+        return '<li data-id="' + esc(v.id) + '"><div class="my-rvh"><b>' + esc((v.products && v.products.name) || '임페투스') + (v.item_option ? ' · ' + esc(v.item_option) : '') + '</b><span>' + esc(day(v.created_at)) + '</span></div><div class="my-star" aria-label="평점 ' + esc(v.rating) + '점">' + '★'.repeat(v.rating) + '<i>' + '★'.repeat(5 - v.rating) + '</i></div><p>' + esc(v.content) + '</p><div class="my-act"><button type="button" class="shp-lk2" data-del>삭제</button></div></li>';
+      }).join('') + '</ul>' : empty('작성한 후기가 없습니다.')) +
+        '<p class="shp-note my-nt">후기는 구매하고 배송이 완료된 상품에만 작성할 수 있습니다(서버가 확인합니다). 수정 기능은 제공하지 않으며, 삭제한 뒤 다시 작성할 수 있는지는 구매·배송 완료 조건에 따라 서버가 판단합니다.</p>');
+      [].forEach.call(main().querySelectorAll('[data-del]'), function (b) {
+        b.addEventListener('click', function () {
+          var li = b.closest('li'), act = li.querySelector('.my-act');
+          act.innerHTML = '<span>이 후기를 삭제할까요?</span> <button type="button" class="shp-lk2" data-no>취소</button> <button type="button" class="shp-lk2" data-yes>삭제</button>';
+          act.querySelector('[data-no]').addEventListener('click', function () { go('reviews', true); });
+          act.querySelector('[data-yes]').addEventListener('click', function () {
+            var y = act.querySelector('[data-yes]'); y.disabled = true;
+            A.rest.remove('reviews', 'id=eq.' + encodeURIComponent(li.getAttribute('data-id')) + '&user_id=eq.' + encodeURIComponent(p.id)).then(function (d) {
+              if (d.ok && Array.isArray(d.data) && d.data.length === 1) go('reviews', true);
+              else { act.innerHTML = '<span class="shp-err">삭제하지 못했습니다.</span>'; }
+            });
+          });
+        });
+      });
+    });
+  };
+  /* ---------------- 나의 문의 내역: 상품문의 + 1:1 문의 (private ones stay readable by their author only; the server enforces it) ---------------- */
+  function inqList(l, kind) {
+    return l.length ? '<ul class="my-iq">' + l.map(function (q) {
+      var done = !!q.answer;
+      return '<li><button type="button" class="my-iqh" aria-expanded="false"><span class="my-iqt">' + (kind === 'p' && q.is_public === false ? '<em>비공개</em> ' : '') + esc(q.title) + '</span><span class="my-iqm">' + esc(day(q.created_at)) + ' · ' + (done ? '답변 완료' : '답변 대기') + '</span></button>' +
+        '<div class="my-iqb" hidden><p>' + esc(q.content).replace(/\n/g, '<br>') + '</p>' + (done ? '<div class="my-ans"><b>답변</b><p>' + esc(q.answer).replace(/\n/g, '<br>') + '</p></div>' : '') + '</div></li>';
+    }).join('') + '</ul>' : '<p class="shp-empty my-empty">내역이 없습니다.</p>';
+  }
+  VIEWS.inq = function (my, p) {
+    Promise.all([
+      A.rest.select('product_inquiries', 'select=id,title,content,is_public,answer,answered_at,created_at&user_id=eq.' + encodeURIComponent(p.id) + '&order=created_at.desc&limit=100', true),
+      A.rest.select('service_inquiries', 'select=id,type,title,content,status,answer,answered_at,created_at&user_id=eq.' + encodeURIComponent(p.id) + '&order=created_at.desc&limit=100', true)
+    ]).then(function (rs) {
+      if (my !== seq) return;
+      var pr = rs[0], sr = rs[1];
+      paint(my, head('나의 문의 내역') + '<h3 class="my-t3">1:1 문의</h3>' + (sr.ok ? inqList(sr.data || [], 's') : empty(failText(sr))) + '<h3 class="my-t3">상품문의</h3>' + (pr.ok ? inqList(pr.data || [], 'p') : empty(failText(pr))) +
+        '<p class="shp-note my-nt"><a href="' + esc(S.links.contact) + '" style="text-decoration:underline">1:1 문의하기</a></p>');
+      [].forEach.call(main().querySelectorAll('.my-iqh'), function (b) { b.addEventListener('click', function () { var o = b.getAttribute('aria-expanded') === 'true'; b.setAttribute('aria-expanded', o ? 'false' : 'true'); b.nextElementSibling.hidden = o; }); });
+    });
+  };
+  /* ---------------- 회원 정보 수정: name / phone are saved by the server rules (role, admin, verified flags can never be changed from the browser) ---------------- */
+  VIEWS.profile = function (my, p) {
+    A.rest.select('profiles', 'select=name,phone&id=eq.' + encodeURIComponent(p.id), true).then(function (r) {
+      if (my !== seq) return;
+      if (!r.ok || !r.data || !r.data[0]) return paint(my, head('회원 정보 수정') + empty(failText(r)));
+      var f = r.data[0];
+      paint(my, head('회원 정보 수정') + '<form class="shp-form my-form" id="pf-form" novalidate>' +
+        '<label class="shp-field"><span>이름</span><input class="shp-in" id="pf-name" maxlength="50" autocomplete="name" value="' + esc(f.name || '') + '"></label>' +
+        '<label class="shp-field"><span>휴대폰 번호</span><input class="shp-in" id="pf-phone" type="tel" inputmode="numeric" autocomplete="tel" value="' + esc(f.phone || '') + '"></label>' +
+        '<p class="shp-note my-hlp">휴대폰 번호는 본인 인증을 거치지 않은 정보이며, 같은 번호로는 하나의 계정만 가입할 수 있습니다.</p>' +
+        '<p class="shp-err" id="pf-err" role="alert" hidden></p><p class="shp-okmsg" id="pf-ok" role="status" hidden></p>' +
+        '<button type="submit" class="shp-btn main" id="pf-save">저장</button></form>' +
+        '<h3 class="my-t3">이메일(아이디)</h3><p class="my-cur">' + esc(p.email || '') + '</p>' +
+        '<form class="shp-form my-form" id="em-form" novalidate><label class="shp-field"><span>새 이메일</span><input class="shp-in" id="em-new" type="email" autocomplete="email"></label>' +
+        '<p class="shp-note my-hlp">새 이메일 주소로 확인 메일을 보냅니다. 메일의 링크를 열어야 변경되며, 그 전까지는 지금 이메일로 로그인합니다.</p>' +
+        '<p class="shp-err" id="em-err" role="alert" hidden></p><p class="shp-okmsg" id="em-ok" role="status" hidden></p><button type="submit" class="shp-btn line" id="em-save">이메일 변경 메일 받기</button></form>' +
+        '<h3 class="my-t3">비밀번호</h3><p class="shp-note my-hlp">비밀번호는 이메일 본인 확인 후 새로 정합니다. 기존 비밀번호는 표시하지 않습니다.</p>' +
+        '<p class="shp-err" id="pw-err" role="alert" hidden></p><p class="shp-okmsg" id="pw-ok" role="status" hidden></p><button type="button" class="shp-btn line" id="pw-mail" style="max-width:360px">비밀번호 변경 메일 받기</button>' +
+        '<h3 class="my-t3">회원탈퇴</h3><p class="shp-note my-hlp">탈퇴하면 계정과 삭제 대상 게시물을 복구할 수 없습니다.</p><a class="shp-btn line" href="' + esc(S.links.withdraw) + '" style="max-width:360px">회원탈퇴</a>');
+      $('pf-form').addEventListener('submit', function (e) {
+        e.preventDefault(); $('pf-err').hidden = true; $('pf-ok').hidden = true;
+        var nm = $('pf-name').value.trim(), ph = $('pf-phone').value.trim(), np = ph ? A.normPhone(ph) : null;
+        if (!nm) { $('pf-err').hidden = false; $('pf-err').textContent = '이름을 입력해 주세요.'; return; }
+        if (ph && !np) { $('pf-err').hidden = false; $('pf-err').textContent = '휴대폰 번호 형식이 올바르지 않습니다. 예: 010-1234-5678'; return; }
+        var body = { name: nm }; if (np && np !== (f.phone || '')) body.phone = np;
+        var b = $('pf-save'); b.disabled = true; b.textContent = '저장 중…';
+        A.rest.update('profiles', 'id=eq.' + encodeURIComponent(p.id), body).then(function (u) {
+          b.disabled = false; b.textContent = '저장';
+          if (u.ok && Array.isArray(u.data) && u.data.length === 1) { f.name = nm; if (body.phone) f.phone = np; $('pf-phone').value = f.phone || ''; $('pf-ok').hidden = false; $('pf-ok').textContent = '저장했습니다.'; A.refreshProfile().then(hello); return; }
+          var m = String(u.message || ''); $('pf-err').hidden = false;
+          $('pf-err').textContent = /23505|duplicate|profiles_phone_uq/i.test(m + String(u.code || '')) ? '이미 사용 중인 휴대폰 번호입니다.' : m.indexOf('PHONE_INVALID') > -1 ? '휴대폰 번호 형식이 올바르지 않습니다.' : '저장하지 못했습니다. 잠시 후 다시 시도해 주세요.';
+        });
+      });
+      $('em-form').addEventListener('submit', function (e) {
+        e.preventDefault(); $('em-err').hidden = true; $('em-ok').hidden = true;
+        var n = A.normEmail($('em-new').value);
+        if (!/^\S+@\S+\.\S+$/.test(n)) { $('em-err').hidden = false; $('em-err').textContent = '이메일 주소를 정확히 입력해 주세요.'; return; }
+        if (n === A.normEmail(p.email)) { $('em-err').hidden = false; $('em-err').textContent = '지금 사용 중인 이메일입니다.'; return; }
+        var b = $('em-save'); b.disabled = true;
+        A.changeEmail(n).then(function (u) { b.disabled = false; if (u.ok) { $('em-ok').hidden = false; $('em-ok').textContent = '새 이메일 주소로 확인 메일을 보냈습니다. 메일의 링크를 열면 변경됩니다.'; } else { $('em-err').hidden = false; $('em-err').textContent = u.message; } });
+      });
+      var last = 0; $('pw-mail').addEventListener('click', function () {
+        $('pw-err').hidden = true; $('pw-ok').hidden = true; if (Date.now() - last < 60000) { $('pw-err').hidden = false; $('pw-err').textContent = '잠시 후 다시 요청해 주세요.'; return; }
+        var b = $('pw-mail'); b.disabled = true;
+        A.resetRequest(p.email).then(function (u) { b.disabled = false; if (u.ok) { last = Date.now(); $('pw-ok').hidden = false; $('pw-ok').textContent = '가입한 이메일로 비밀번호 변경 안내 메일을 보냈습니다. 메일함(스팸함 포함)을 확인해 주세요.'; } else { $('pw-err').hidden = false; $('pw-err').textContent = u.message; } });
+      });
+    });
+  };
+
+  /* ---------------- wiring ---------------- */
+  [].forEach.call(document.querySelectorAll('.my-nav [data-m]'), function (b) { b.addEventListener('click', function () { go(b.getAttribute('data-m')); }); });
+  $('my-logout').addEventListener('click', function () { A.signOut().then(function () { S.toast('로그아웃되었습니다.'); setTimeout(function () { location.href = S.links.home; }, 600); }); });
+  function boot() { if (gate()) { hello(); go(cur, true); } }
+  A.onChange(function () { var on = A.backendReady() && A.loggedIn(); if (!on) gate(); else if ($('my-app').hidden) boot(); });   // logged out in another tab -> this page closes too
+  boot();
+})();
+</script>
+</body>
+</html>

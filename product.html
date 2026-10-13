@@ -26,7 +26,7 @@
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fig-tokens.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/typography.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/semantic.css">
-<link rel="stylesheet" href="shop.css?v=20261016l">
+<link rel="stylesheet" href="shop.css?v=20261016s">
 <style>html,body{margin:0;background:#fff;scroll-behavior:smooth}</style>
 </head>
 <body>
@@ -90,7 +90,6 @@
         </div>
 
         <div class="shp-opt">
-          <p class="shp-opt-note">상품 이미지와 상세 정보를 확인한 후 옵션과 수량을 선택해 주세요.</p>
           <fieldset class="shp-sizes">
             <legend>용량</legend>
             <div class="shp-sizes-in">
@@ -142,7 +141,6 @@
       <div class="shp-pad">
         <div class="shp-sec-h"><h2>고객후기</h2><button type="button" class="shp-btn line sm" id="pd-review-write" aria-expanded="false" aria-controls="pd-review-form">후기 작성</button></div>
         <p class="shp-notice" id="pd-review-note" role="status" hidden></p>
-        <p class="shp-note" style="margin:0 0 12px;font-size:13px">상품을 구매하고 배송이 완료된 회원만 후기를 작성할 수 있습니다. 회원 탈퇴 시 작성한 후기와 상품문의(답변 포함)는 삭제됩니다.</p>
         <form class="shp-cform" id="pd-review-form" hidden novalidate>
           <fieldset class="shp-rate">
             <legend>평점</legend>
@@ -187,9 +185,9 @@
       <div class="shp-pad">
         <h2>쇼핑가이드</h2>
         <dl class="shp-guide">
-          <div><dt>배송 안내</dt><dd data-ship="guide"></dd></div>
-          <div><dt>교환·반품 안내</dt><dd>교환 및 반품 주소: <span data-return-addr>서울 강남구 압구정로10길 30-12 2F</span><br>단순 변심은 상품 수령 후 7일 이내이며, 상품이 표시·광고와 다르거나 계약과 다르게 이행된 경우 공급받은 날부터 3개월 이내, 알게 된 날부터 30일 이내입니다.<br>접수: 고객센터 0507-1372-9152 / otu_company@naver.com (주문번호와 사유)<br>자세한 내용은 <a href="returns.html" style="text-decoration:underline">교환 및 반품 페이지</a>를 참고해 주세요.</dd></div>
-          <div><dt>판매자 정보</dt><dd data-seller></dd></div>
+          <div><dt>배송 안내</dt><dd data-ship="guide" data-dots></dd></div>
+          <div><dt>교환·반품 안내</dt><dd><ul class="shp-dots"><li><b class="shp-k">교환 및 반품 주소</b>: <span data-return-addr>서울 강남구 압구정로10길 30-12 2F</span></li><li>단순 변심은 상품 수령 후 7일 이내이며, 상품이 표시·광고와 다르거나 계약과 다르게 이행된 경우 공급받은 날부터 3개월 이내, 알게 된 날부터 30일 이내입니다.</li><li>접수: 고객센터 0507-1372-9152 / otu_company@naver.com (주문번호와 사유)</li><li>자세한 내용은 <a href="returns.html" style="text-decoration:underline">교환 및 반품 페이지</a>를 참고해 주세요.</li></ul></dd></div>
+          <div><dt>판매자 정보</dt><dd data-seller data-dots></dd></div>
           <div><dt>고객센터</dt><dd>0507-1372-9152</dd></div>
         </dl>
       </div>
@@ -202,9 +200,9 @@
     <button type="button" class="shp-btn" id="pd-bar-buy">바로 구매</button>
   </div>
 </main>
-<script src="config.js?v=20261016l"></script>
-<script src="shop.js?v=20261016l"></script>
-<script src="auth.js?v=20261016l"></script>
+<script src="config.js?v=20261016s"></script>
+<script src="shop.js?v=20261016s"></script>
+<script src="auth.js?v=20261016s"></script>
 <script id="shp-js-product">
 (function () {
   var root = document.getElementById('product-root'), S = window.IMShop, A = window.IMAuth, P = S.products[S.PRODUCT_ID];

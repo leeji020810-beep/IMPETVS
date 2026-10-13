@@ -60,7 +60,7 @@
 
   var LINKS = {
     home: 'index.html', login: 'login.html', signup: 'signup.html', cart: 'cart.html', product: 'product.html', order: 'order.html',
-    guestOrder: 'guest-order.html', returns: 'returns.html', faq: 'faq.html', contact: 'contact.html', notices: 'notices.html', terms: 'terms.html', privacy: 'privacy.html', withdraw: 'withdraw.html'
+    mypage: 'mypage.html', guestOrder: 'guest-order.html', returns: 'returns.html', faq: 'faq.html', contact: 'contact.html', notices: 'notices.html', terms: 'terms.html', privacy: 'privacy.html', withdraw: 'withdraw.html'
   };
 
   /* ----------------------------------------------------------------- storage */
@@ -236,7 +236,7 @@
       '<div class="shp-sh-h"><h2 id="shp-sh-t">공유하기</h2><button type="button" class="shp-sh-x" aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>' +
       '<ul class="shp-sh-l">' + (url ? (kakaoReady() ? '<li><button type="button" class="shp-sh-i" data-kakao>' + SH_ICON.kakao + '<span>카카오톡</span></button></li>' : '<li><button type="button" class="shp-sh-i" disabled aria-disabled="true" title="카카오톡 공유는 아직 연결되지 않았습니다">' + SH_ICON.kakao + '<span>카카오톡<small>준비 중</small></span></button></li>') : '') + links.map(function (l) { return '<li><a class="shp-sh-i" href="' + esc(l[2]) + '" target="_blank" rel="noopener noreferrer">' + SH_ICON[l[0]] + '<span>' + esc(l[1]) + '</span></a></li>'; }).join('') +
       '<li><button type="button" class="shp-sh-i" data-copy' + (url ? '' : ' disabled') + '>' + SH_ICON.link + '<span>URL 복사</span></button></li></ul>' +
-      (url ? '<p class="shp-sh-u" id="shp-sh-u" tabindex="-1">' + esc(url) + '</p>' : '<p class="shp-sh-u">공개 사이트 주소가 설정되지 않아 공유할 수 없습니다.</p>') +
+      (url ? '' : '<p class="shp-sh-m">공개 사이트 주소가 설정되지 않아 공유할 수 없습니다.</p>') +
       '<p class="shp-sh-m" role="status" aria-live="polite"></p></div>';
     document.body.appendChild(ov);
     var box = ov.querySelector('.shp-sh'), msg = ov.querySelector('.shp-sh-m'), copyBtn = ov.querySelector('[data-copy]');
@@ -267,7 +267,10 @@
     copyBtn.addEventListener('click', function () {
       msg.textContent = '';
       copyText(url).then(function () { msg.textContent = '주소를 복사했습니다.'; toast('주소를 복사했습니다.'); },
-        function () { msg.textContent = '주소를 복사하지 못했습니다. 위 주소를 길게 눌러(또는 드래그해서) 직접 복사해 주세요.'; var u = ov.querySelector('#shp-sh-u'); if (u) { var r = document.createRange(); r.selectNodeContents(u); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); } });
+        function () {   // only now the address is shown, so it can be copied by hand
+        msg.textContent = '주소를 복사하지 못했습니다. 아래 주소를 길게 눌러(또는 드래그해서) 직접 복사해 주세요.';
+        var u = ov.querySelector('#shp-sh-u'); if (!u) { u = document.createElement('p'); u.className = 'shp-sh-u'; u.id = 'shp-sh-u'; u.textContent = url; msg.parentNode.insertBefore(u, msg.nextSibling); }
+        var r = document.createRange(); r.selectNodeContents(u); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); });
     });
     var kb = ov.querySelector('[data-kakao]');
     if (kb) kb.addEventListener('click', function () { msg.textContent = ''; kakaoShare(url).catch(function () { msg.textContent = '카카오톡 공유를 시작하지 못했습니다. 다른 방법을 이용해 주세요.'; }); });   // opening Kakao's own share screen is not "shared"
@@ -311,7 +314,7 @@
   // seller information shown where the customer buys (order page, product page): the same data as the footer
   function sellerHTML() {
     return ['상호: ' + COMPANY.name, '대표자: ' + COMPANY.ceo, '사업자 주소: ' + COMPANY.address, '고객센터: ' + COMPANY.tel, '이메일: ' + COMPANY.email,
-      '사업자등록번호: ' + COMPANY.biz, '통신판매업신고번호: ' + COMPANY.mailOrder].map(esc).join('<br>');
+      '사업자등록번호: ' + COMPANY.biz, '통신판매업신고번호: ' + COMPANY.mailOrder].map(esc);
   }
   var FOOT_SERVICE = [['비회원 주문 조회', LINKS.guestOrder], ['교환 및 반품', LINKS.returns], ['자주 묻는 질문', LINKS.faq], ['1:1 문의하기', LINKS.contact]];
   var FOOT_LEGAL = [['공지사항', LINKS.notices], ['이용약관', LINKS.terms], ['개인정보처리방침', LINKS.privacy]];
@@ -331,12 +334,14 @@
     [].forEach.call(document.querySelectorAll('[data-shp-header]'), function (el) { if (!el.firstChild) el.innerHTML = headerHTML(); });
     // the footer goes right after each page's <main>; the home page has its own copy of the same footer (premium.jsx), fed by the same COMPANY data
     [].forEach.call(document.querySelectorAll('main[id$="-root"]'), function (m) { var n = m.nextElementSibling; if (!(n && n.classList.contains('shp-ft'))) m.insertAdjacentHTML('afterend', footerHTML()); });
-    [].forEach.call(document.querySelectorAll('[data-seller]'), function (el) { el.innerHTML = sellerHTML(); });
+    [].forEach.call(document.querySelectorAll('[data-seller]'), function (el) { var L = sellerHTML(); el.innerHTML = el.hasAttribute('data-dots') ? '<ul class="shp-dots">' + L.map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ul>' : L.join('<br>'); });
     [].forEach.call(document.querySelectorAll('[data-ship]'), function (el) {
       var s = SHIPPING.text[el.getAttribute('data-ship')]; if (s == null) return;
-      el.innerHTML = el.hasAttribute('data-ship-p') ? s.split('\n').map(function (x) { return '<p>' + esc(x) + '</p>'; }).join('') : esc(s).replace(/\n/g, '<br>');
+      var nb = function (x) { return esc(x).replace(/(이상 구매 시 무료\))/g, '<span class="shp-nb">$1</span>').replace(/(^|\n| · )(배송업체|기본 배송비|제주·도서산간|당일 출고|예상 배송 기간): /g, '$1<b class="shp-k">$2</b>: '); };   // keep the short ending together; item names are bold
+      el.innerHTML = el.hasAttribute('data-dots') ? '<ul class="shp-dots">' + s.split('\n').map(function (x) { return '<li>' + nb(x) + '</li>'; }).join('') + '</ul>'
+        : el.hasAttribute('data-ship-p') ? s.split('\n').map(function (x) { return '<p>' + nb(x) + '</p>'; }).join('') : nb(s).replace(/\n/g, '<br>');
     });
-    [].forEach.call(document.querySelectorAll('[data-return-addr]'), function (el) { el.textContent = SHIPPING.returnAddress; });
+    [].forEach.call(document.querySelectorAll('[data-return-addr]'), function (el) { el.innerHTML = String(SHIPPING.returnAddress).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/(\d+-\d+(?: \d+F)?)/, '<span class="shp-nb">$1</span>'); });
     emit();
     if (window.IMAuth) window.IMAuth.paintHeader();
   }

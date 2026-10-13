@@ -1,6 +1,7 @@
 /* IMPETVS account + data client (talks to Supabase over plain fetch, no SDK, no secrets).
    - Passwords are only ever sent to the server (HTTPS) and are never stored in the browser.
-   - The browser keeps the login TOKENS (not the password) in localStorage under "impetvs-session".
+   - The browser keeps the login TOKENS (not the password) under "impetvs-session": in localStorage when 자동 로그인 was ticked (stays after the browser closes),
+     otherwise in sessionStorage (this tab / window only, gone when it is closed). The default is NOT remembered (shared computers).
    - Every permission check (who may write a review, who may read a private inquiry, which prices are valid) is done by the server:
      row-level-security + Edge Functions in backend/supabase/. This file only calls them and reports their real answer. */
 (function () {
@@ -22,6 +23,8 @@
   function signupReady() { return backendReady() && C.signupReady === true; }
   // 1:1 inquiries have their own switch too (they never open orders, social login or payment)
   function inquiryReady() { return backendReady() && C.inquiryReady === true; }
+  // the guest order look-up has its own switch too: it never opens orders, payment or social login
+  function guestLookupReady() { return backendReady() && C.guestLookupReady === true; }
   function siteBase() {
     if (C.siteUrl) return String(C.siteUrl).replace(/\/$/, '');
     return location.origin + location.pathname.replace(/[^/]*$/, '').replace(/\/$/, '');
@@ -30,12 +33,17 @@
 
   /* ---------------------------------------------------------------- session */
   var me = null, listeners = [];
-  function readSession() { try { var s = JSON.parse(lget(SKEY)); if (s && s.access_token && s.refresh_token) return s; } catch (e) {} return null; }
-  function writeSession(d) {
-    lset(SKEY, JSON.stringify({ access_token: d.access_token, refresh_token: d.refresh_token, expires_at: Math.floor(Date.now() / 1000) + (d.expires_in || 3600) }));
+  function parseSession(v) { try { var s = JSON.parse(v); if (s && s.access_token && s.refresh_token) return s; } catch (e) {} return null; }
+  function readSession() { return parseSession(lget(SKEY)) || parseSession(sget(SKEY)); }
+  function remembered() { return !!parseSession(lget(SKEY)); }
+  // remember === true  -> localStorage (자동 로그인); false -> sessionStorage; undefined -> keep where the current session already lives (a token refresh must not change it), else session only
+  function writeSession(d, remember) {
+    var keep = remember === undefined ? remembered() : remember === true;
+    var v = JSON.stringify({ access_token: d.access_token, refresh_token: d.refresh_token, expires_at: Math.floor(Date.now() / 1000) + (d.expires_in || 3600) });
+    if (keep) { lset(SKEY, v); sdel(SKEY); } else { sset(SKEY, v); ldel(SKEY); }
     me = null; notify();
   }
-  function clearSession() { ldel(SKEY); sdel(NKEY); sdel(OKEY); me = null; notify(); }   // tokens + the remembered return address / login-state value; the cart is not login data and stays
+  function clearSession() { ldel(SKEY); sdel(SKEY); sdel(NKEY); sdel(OKEY); me = null; notify(); }   // tokens (both places) + the remembered return address / login-state value; the cart is not login data and stays   // tokens + the remembered return address / login-state value; the cart is not login data and stays
   function loggedIn() { return !!readSession(); }
   function notify() { listeners.forEach(function (f) { try { f(); } catch (e) {} }); paintHeader(); }
 
@@ -111,6 +119,15 @@
       return { ok: false, limited: String(r.message || '').indexOf('RATE_LIMITED') > -1 || r.status === 429 };
     });
   }
+  // 비회원 주문 조회: ONE server function (guest_order_lookup) checks name + order number + guest password. Nothing is stored in the browser; the password is only sent, never kept.
+  function guestLookup(name, orderNo, password) {
+    return raw('/rest/v1/rpc/guest_order_lookup', { method: 'POST', body: { p_name: String(name), p_order_no: String(orderNo), p_password: String(password) } }).then(function (r) {
+      if (r.ok && r.data && r.data.found === true) return { ok: true, found: true, order: r.data };
+      if (r.ok && r.data && r.data.found === false) return { ok: true, found: false };
+      var m = String(r.message || '');
+      return { ok: false, limited: m.indexOf('RATE_LIMITED') > -1 || r.status === 429, badInput: m.indexOf('BAD_INPUT') > -1, status: r.status, code: r.code };
+    });
+  }
   function signUp(f) {
     return raw('/auth/v1/signup?redirect_to=' + encodeURIComponent(siteBase() + '/auth-callback.html'), { method: 'POST', body: { email: normEmail(f.email), password: f.password, data: { name: f.name, phone: normPhone(f.phone) || '', consent_terms: true, consent_privacy: true, consent_age14: f.age14 === true, consent_at: new Date().toISOString() } } })
       .then(function (r) {
@@ -119,9 +136,10 @@
         return { ok: true, loggedIn: false }; // e-mail confirmation is on: the server sent a confirmation mail
       });
   }
-  function signIn(email, password) {
+  // remember = the 자동 로그인 box (default off). Only the tokens are kept, never the password.
+  function signIn(email, password, remember) {
     return raw('/auth/v1/token?grant_type=password', { method: 'POST', body: { email: email, password: password } }).then(function (r) {
-      if (r.ok && r.data && r.data.access_token) { writeSession(r.data); return { ok: true }; }
+      if (r.ok && r.data && r.data.access_token) { writeSession(r.data, remember === true); return { ok: true }; }
       return { ok: false, message: errorText(r) };
     });
   }
@@ -136,6 +154,10 @@
       if (r.ok) return { ok: true };
       return { ok: false, message: errorText(r) };
     });
+  }
+  // e-mail change: the OFFICIAL Supabase procedure (a confirmation mail goes to the new address; the e-mail only changes after that link is used)
+  function changeEmail(newEmail) {
+    return req('/auth/v1/user?redirect_to=' + encodeURIComponent(siteBase() + '/auth-callback.html'), { auth: true, method: 'PUT', body: { email: normEmail(newEmail) } }).then(function (r) { return r.ok ? { ok: true } : { ok: false, message: errorText(r) }; });
   }
   function updatePassword(accessToken, password) {
     return raw('/auth/v1/user', { method: 'PUT', token: accessToken, body: { password: password } }).then(function (r) { return r.ok ? { ok: true } : { ok: false, message: errorText(r) }; });
@@ -194,6 +216,7 @@
     });
   }
   // the server is what really enforces "admin only"; this only decides whether to show the admin controls
+  function refreshProfile() { me = null; return profile(); }
   function isAdmin() { return profile().then(function (p) { return !!(p && p.isAdmin); }); }
 
   /* -------------------------------------------------------------- data (REST) */
@@ -208,38 +231,25 @@
   function fn(name, body, auth) { return req('/functions/v1/' + name, { auth: !!auth, method: 'POST', body: body }); }
 
   /* ------------------------------------------------------------------ header */
-  var menuEl = null, menuFor = null;
-  function closeMenu() { if (menuEl) { menuEl.remove(); menuEl = null; if (menuFor) menuFor.setAttribute('aria-expanded', 'false'); menuFor = null; } }
   function esc(s) { return window.IMShop ? window.IMShop.esc(s) : String(s); }
-  function openMenu(a) {
-    closeMenu(); menuFor = a; a.setAttribute('aria-expanded', 'true');
-    var L = (window.IMShop && window.IMShop.links) || {};
-    menuEl = document.createElement('div'); menuEl.className = 'hd-menu'; menuEl.setAttribute('role', 'menu');
-    var r = a.getBoundingClientRect();
-    menuEl.style.top = Math.round(r.bottom + 6) + 'px'; menuEl.style.right = Math.max(8, Math.round(document.documentElement.clientWidth - r.right)) + 'px';
-    menuEl.innerHTML = '<p class="hd-menu-n" id="hd-menu-n">내 계정</p><a role="menuitem" href="' + esc(L.contact || 'contact.html') + '">1:1 문의</a><a role="menuitem" href="' + esc(L.withdraw || 'withdraw.html') + '">회원탈퇴</a><button type="button" role="menuitem" data-logout>로그아웃</button>';
-    document.body.appendChild(menuEl);
-    profile().then(function (p) { var n = document.getElementById('hd-menu-n'); if (n && p) n.textContent = (p.name || p.email || '내 계정') + (p.name ? '님' : ''); });
-    var f = menuEl.querySelector('a'); if (f) f.focus();
-  }
   document.addEventListener('click', function (e) {
-    var a = e.target.closest && e.target.closest('[data-user-icon]');
-    if (a && loggedIn()) { e.preventDefault(); if (menuEl && menuFor === a) closeMenu(); else openMenu(a); return; }
+    // the home page draws its header icon AFTER this file ran: do not rely on the painted address, decide at click time (logged in -> 마이쇼핑)
+    var ic = e.target.closest && e.target.closest('[data-user-icon]');
+    if (ic && loggedIn()) { e.preventDefault(); location.href = (window.IMShop && window.IMShop.links && window.IMShop.links.mypage) || 'mypage.html'; return; }
     var lo = e.target.closest && e.target.closest('[data-logout]');
-    if (lo) { closeMenu(); signOut().then(function () { if (window.IMShop) window.IMShop.toast('로그아웃되었습니다.'); }); return; }
-    if (menuEl && !e.target.closest('.hd-menu')) closeMenu();
+    if (lo) { signOut().then(function () { if (window.IMShop) window.IMShop.toast('로그아웃되었습니다.'); }); }
   });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && menuEl) { var f = menuFor; closeMenu(); f && f.focus(); } });
   function paintHeader() {
     var on = loggedIn();
     [].forEach.call(document.querySelectorAll('[data-user-icon]'), function (a) {
-      a.setAttribute('aria-label', on ? '내 계정' : '로그인'); a.setAttribute('data-tip', on ? '내 계정' : '로그인');
-      if (on) { a.setAttribute('aria-haspopup', 'menu'); a.setAttribute('aria-expanded', menuFor === a ? 'true' : 'false'); a.setAttribute('data-on', ''); }
-      else { a.removeAttribute('aria-haspopup'); a.removeAttribute('aria-expanded'); a.removeAttribute('data-on'); }
+      var L = (window.IMShop && window.IMShop.links) || {};
+      a.setAttribute('aria-label', on ? '마이쇼핑' : '로그인'); a.setAttribute('data-tip', on ? '마이쇼핑' : '로그인'); a.setAttribute('href', on ? (L.mypage || 'mypage.html') : (L.login || 'login.html'));   // logged out: login page; logged in: 마이쇼핑
+      if (on) a.setAttribute('data-on', ''); else a.removeAttribute('data-on');
     });
-    if (!on) closeMenu();
   }
-  window.addEventListener('storage', function (e) { if (e.key === SKEY) { me = null; notify(); } });
+  // icons that appear later (the home page is drawn by React) get their label / address as soon as they exist
+  if (window.MutationObserver) { var pend = false; new MutationObserver(function () { if (pend) return; pend = true; setTimeout(function () { pend = false; paintHeader(); }, 50); }).observe(document.documentElement, { childList: true, subtree: true }); }
+  window.addEventListener('storage', function (e) { if (e.key === SKEY) { me = null; notify(); } });   // login / logout in another tab with 자동 로그인 shows here too
 
   /* ------------------------------------------------------------ misc helpers */
   function setNext(href) { sset(NKEY, href); }
@@ -248,8 +258,8 @@
   function needLogin(next) { setNext(next || (location.hash || (location.pathname.split('/').pop() || ''))); }
 
   window.IMAuth = {
-    cfg: C, backendReady: backendReady, legalReady: legalReady, signupReady: signupReady, inquiryReady: inquiryReady, loggedIn: loggedIn, profile: profile, isAdmin: isAdmin, onChange: function (f) { listeners.push(f); },
-    signUp: signUp, signIn: signIn, signOut: signOut, resetRequest: resetRequest, updatePassword: updatePassword,
+    cfg: C, backendReady: backendReady, legalReady: legalReady, guestLookupReady: guestLookupReady, guestLookup: guestLookup, signupReady: signupReady, inquiryReady: inquiryReady, loggedIn: loggedIn, profile: profile, isAdmin: isAdmin, onChange: function (f) { listeners.push(f); },
+    signUp: signUp, signIn: signIn, changeEmail: changeEmail, refreshProfile: refreshProfile, remembered: remembered, signOut: signOut, resetRequest: resetRequest, updatePassword: updatePassword,
     startKakao: startKakao, startNaver: startNaver, finishFromHash: finishFromHash, finishNaver: finishNaver, parseHash: parseHash,
     clearSession: clearSession, checkSignup: checkSignup, normEmail: normEmail, normPhone: normPhone, findIdSend: findIdSend, findIdVerify: findIdVerify, rest: rest, rpc: rpc, fn: fn, errorText: errorText, NOT_READY: NOT_READY,
     setNext: setNext, takeNext: takeNext, needLogin: needLogin, paintHeader: paintHeader, siteBase: siteBase

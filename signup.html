@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fig-tokens.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/typography.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/semantic.css">
-<link rel="stylesheet" href="shop.css?v=20261016l">
+<link rel="stylesheet" href="shop.css?v=20261016s">
 <style>html,body{margin:0;background:#fff}</style>
 </head>
 <body>
@@ -23,9 +23,9 @@
       <p class="shp-notice" id="su-notice" role="status" style="margin:0 0 24px" hidden></p>
       <label class="shp-field"><span>이름</span><input class="shp-in" type="text" id="su-name" autocomplete="name" maxlength="50"></label>
       <label class="shp-field"><span>이메일 (아이디)</span><input class="shp-in" type="email" id="su-email" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" aria-describedby="su-email-msg"></label>
-      <div class="su-chk"><button type="button" class="shp-btn line sm" id="su-check">중복 확인</button><p class="su-msg" id="su-email-msg" role="status" aria-live="polite" hidden></p></div>
+      <p class="su-msg" id="su-email-msg" role="status" aria-live="polite" style="margin:-12px 0 20px" hidden></p>
       <label class="shp-field"><span>휴대폰 번호</span><input class="shp-in" type="tel" id="su-phone" autocomplete="tel" inputmode="numeric" placeholder="숫자만 입력" aria-describedby="su-phone-msg"></label>
-      <p class="su-msg shp-note" id="su-phone-msg" aria-live="polite" style="margin:-8px 0 20px;font-size:13px">휴대폰 번호 인증은 아직 제공하지 않으며, 입력한 번호는 본인 확인에 사용되지 않습니다.</p>
+      <p class="su-msg shp-err" id="su-phone-msg" aria-live="polite" style="margin:-12px 0 20px" hidden></p>
       <label class="shp-field"><span>비밀번호 <small style="font-weight:400;color:rgba(55,56,60,.61)">(8자 이상)</small></span><input class="shp-in" type="password" id="su-pw" autocomplete="new-password"></label>
       <label class="shp-field"><span>비밀번호 확인</span><input class="shp-in" type="password" id="su-pw2" autocomplete="new-password" aria-describedby="su-pw2-err"></label>
       <p class="shp-err" id="su-pw2-err" role="alert" style="margin:-8px 0 20px" hidden>비밀번호가 일치하지 않습니다.</p>
@@ -33,7 +33,7 @@
       <label class="shp-chk"><input type="checkbox" id="su-c0"><span>[필수] 만 14세 이상입니다.</span></label>
       <label class="shp-chk"><input type="checkbox" id="su-c1"><span>[필수] <a href="terms.html" target="_blank" rel="noopener">이용약관</a>에 동의합니다.</span></label>
       <label class="shp-chk"><input type="checkbox" id="su-c2"><span>[필수] <a href="privacy.html" target="_blank" rel="noopener">개인정보 수집·이용</a>에 동의합니다.</span></label>
-      <p class="shp-note" style="margin:12px 0 0;font-size:13px">가입 후 72시간 안에 이메일 인증을 완료해 주세요. 미완료 시 가입 정보가 삭제될 수 있습니다.</p>
+      <p class="shp-note" style="margin:12px 0 0;font-size:13px"><span class="shp-ln">가입 후 72시간 안에 이메일 인증을 완료해 주세요.</span><span class="shp-ln">미완료 시 가입 정보가 삭제될 수 있습니다.</span></p>
       <p class="shp-err" id="su-err" role="alert" hidden></p>
       <p class="shp-okmsg" id="su-ok" role="status" hidden></p>
       <button type="submit" class="shp-btn main" id="su-submit" style="margin-top:12px">회원가입</button>
@@ -41,13 +41,13 @@
     </form>
   </div>
 </main>
-<script src="config.js?v=20261016l"></script>
-<script src="shop.js?v=20261016l"></script>
-<script src="auth.js?v=20261016l"></script>
+<script src="config.js?v=20261016s"></script>
+<script src="shop.js?v=20261016s"></script>
+<script src="auth.js?v=20261016s"></script>
 <script id="shp-js-signup">
 (function () {
   var S = window.IMShop, A = window.IMAuth, $ = function (id) { return document.getElementById(id); };
-  var fields = ['su-name', 'su-email', 'su-phone', 'su-pw', 'su-pw2', 'su-all', 'su-c0', 'su-c1', 'su-c2', 'su-check'];
+  var fields = ['su-name', 'su-email', 'su-phone', 'su-pw', 'su-pw2', 'su-all', 'su-c0', 'su-c1', 'su-c2'];
   // personal data is only collected when the server is connected AND sign-up is switched on (config.js signupReady: 이용약관 / 개인정보처리방침 published)
   var on = A.signupReady();
   fields.forEach(function (id) { $(id).disabled = !on; });
@@ -58,28 +58,37 @@
   function err(msg) { $('su-err').hidden = false; $('su-err').textContent = msg; }
   var MAILRE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
-  // ---------- e-mail: format error at once; "사용 가능" ONLY after the server's real answer; any edit clears an earlier result
-  var emailState = { value: null, status: 'idle' };       // status: idle | checking | available | taken | error | limited | invalid
-  function emailMsg(kind, html) { var m = $('su-email-msg'); m.hidden = !html; m.className = 'su-msg ' + (kind === 'ok' ? 'shp-okmsg' : kind === 'err' ? 'shp-err' : 'shp-note'); m.style.margin = '-8px 0 20px'; m.innerHTML = html || ''; }
-  function emailFormat() { var v = $('su-email').value.trim(); if (!v) return emailMsg('', ''); emailMsg(MAILRE.test(v) ? '' : 'err', MAILRE.test(v) ? '' : '이메일 형식이 올바르지 않습니다.'); }
-  $('su-email').addEventListener('input', function () { emailState = { value: null, status: 'idle' }; emailFormat(); });   // editing the address throws the old result away
-  function runEmailCheck(thenPhone) {
-    var v = A.normEmail($('su-email').value); if (!v) { emailMsg('err', '이메일을 입력해 주세요.'); return Promise.resolve(null); }
-    if (!MAILRE.test(v)) { emailMsg('err', '이메일 형식이 올바르지 않습니다.'); emailState = { value: v, status: 'invalid' }; return Promise.resolve(null); }
-    emailState = { value: v, status: 'checking' }; emailMsg('', '확인 중입니다…'); $('su-check').disabled = true;
-    return A.checkSignup(v, thenPhone || '').then(function (r) {
-      $('su-check').disabled = !on;
-      if (A.normEmail($('su-email').value) !== v) return null;                // edited while the answer was on its way: that answer no longer applies
-      if (!r.ok) { emailState = { value: v, status: r.limited ? 'limited' : 'error' }; emailMsg('err', r.limited ? '확인 요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.' : '중복 확인을 하지 못했습니다. 잠시 후 <button type="button" class="shp-lk2" id="su-retry">다시 확인</button>해 주세요.'); var rt = $('su-retry'); if (rt) rt.onclick = function () { runEmailCheck(); }; return r; }
-      if (r.email === 'invalid') { emailState = { value: v, status: 'invalid' }; emailMsg('err', '이메일 형식이 올바르지 않습니다.'); return r; }
-      if (r.email === 'taken') { emailState = { value: v, status: 'taken' }; emailMsg('err', '이미 사용 중인 이메일입니다. <a href="login.html" style="text-decoration:underline">로그인</a>하거나 <a href="login.html" style="text-decoration:underline">비밀번호를 재설정</a>(로그인 화면의 ‘비밀번호 재설정’)해 주세요.'); return r; }
-      emailState = { value: v, status: 'available' }; emailMsg('ok', '사용 가능한 이메일입니다.'); return r;
+  // ---------- e-mail: there is no button. A well-formed address is checked on the SERVER once typing pauses (700 ms) or the field loses focus.
+  // "사용 가능" / "중복" are shown ONLY from the server's real answer; a good format alone never says "available". Editing clears the old result; a late answer is dropped.
+  var emailState = { value: null, status: 'idle' }, timer = null, seq = 0, autoCount = 0, done = {};   // done = answers already received for exact addresses (no repeated request for the same text)
+  function emailMsg(kind, html) { var m = $('su-email-msg'); m.hidden = !html; m.className = 'su-msg ' + (kind === 'ok' ? 'shp-okmsg' : kind === 'err' ? 'shp-err' : 'shp-note'); m.innerHTML = html || ''; }
+  var TAKEN = '중복된 이메일입니다. <a href="login.html">로그인</a> · <a href="login.html">비밀번호 재설정</a>';
+  function showResult(v, st) { emailState = { value: v, status: st }; if (st === 'available') emailMsg('ok', '사용 가능한 이메일입니다.'); else emailMsg('err', TAKEN); }
+  function runEmailCheck() {
+    clearTimeout(timer); var v = A.normEmail($('su-email').value);
+    if (!v || !MAILRE.test(v)) return;
+    if (done[v]) return showResult(v, done[v]);                                  // same address, answer already known: no new request
+    if (autoCount >= 20) { emailState = { value: v, status: 'limited' }; return emailMsg('err', '확인 요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.'); }
+    var my = ++seq; autoCount++; emailState = { value: v, status: 'checking' }; emailMsg('', '확인 중입니다…');
+    A.checkSignup(v, '').then(function (r) {
+      if (my !== seq) return;                                                      // a newer edit / check exists: this old answer must not appear under the new address
+      if (!r.ok) { emailState = { value: v, status: r.limited ? 'limited' : 'error' }; return emailMsg('err', r.limited ? '확인 요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.' : '이메일 확인에 실패했습니다. <button type="button" class="shp-lk2" id="su-retry">다시 확인</button>'); }
+      if (r.email === 'invalid') { emailState = { value: v, status: 'invalid' }; return emailMsg('err', '이메일 형식이 올바르지 않습니다.'); }
+      done[v] = r.email === 'taken' ? 'taken' : 'available'; showResult(v, done[v]);
     });
   }
-  $('su-check').addEventListener('click', function () { runEmailCheck(); });
+  $('su-email').addEventListener('input', function () {
+    clearTimeout(timer); seq++; emailState = { value: null, status: 'idle' };       // editing throws the old result (and any answer still on its way) away
+    var v = A.normEmail($('su-email').value);
+    if (!v) return emailMsg('', '');
+    if (!MAILRE.test(v)) return emailMsg('err', '이메일 형식이 올바르지 않습니다.');
+    emailMsg('', ''); timer = setTimeout(runEmailCheck, 700);
+  });
+  $('su-email').addEventListener('blur', function () { if (emailState.status === 'idle') runEmailCheck(); });
+  $('su-email-msg').addEventListener('click', function (e) { if (e.target.id === 'su-retry') { emailMsg('', ''); runEmailCheck(); } });
 
-  // ---------- phone: format error at once (the number is NOT verified and is never shown as verified)
-  $('su-phone').addEventListener('input', function () { var v = $('su-phone').value.trim(), m = $('su-phone-msg'); if (!v || A.normPhone(v)) { m.className = 'su-msg shp-note'; m.textContent = '휴대폰 번호 인증은 아직 제공하지 않으며, 입력한 번호는 본인 확인에 사용되지 않습니다.'; } else { m.className = 'su-msg shp-err'; m.textContent = '휴대폰 번호 형식이 올바르지 않습니다. 예: 010-1234-5678'; } });
+  // ---------- phone: format error at once (the number is NOT verified and nothing says it is)
+  $('su-phone').addEventListener('input', function () { var v = $('su-phone').value.trim(), m = $('su-phone-msg'); if (!v || A.normPhone(v)) { m.hidden = true; m.textContent = ''; } else { m.hidden = false; m.textContent = '휴대폰 번호 형식이 올바르지 않습니다. 예: 010-1234-5678'; } });
 
   // ---------- password confirmation: nothing is shown before the second field is used; mismatch at once; re-compared when the first field changes
   function pwCheck() { var a = $('su-pw').value, b = $('su-pw2').value, bad = b !== '' && a !== b; $('su-pw2-err').hidden = !bad; $('su-pw2').setAttribute('aria-invalid', bad ? 'true' : 'false'); return !bad; }
@@ -112,7 +121,7 @@
     // the final request is checked again ON THE SERVER (an earlier "available" can be stale), then the real sign-up runs
     A.checkSignup(email, phone).then(function (c) {
       if (!c.ok) { done(); return err(c.limited ? '확인 요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.' : '중복 확인을 하지 못해 가입을 진행하지 않았습니다. 잠시 후 다시 시도해 주세요. (입력한 내용은 그대로 남아 있습니다.)'); }
-      if (c.email === 'taken') { done(); emailState = { value: email, status: 'taken' }; emailMsg('err', '이미 사용 중인 이메일입니다. <a href="login.html" style="text-decoration:underline">로그인</a>하거나 <a href="login.html" style="text-decoration:underline">비밀번호를 재설정</a>(로그인 화면의 ‘비밀번호 재설정’)해 주세요.'); return err('이미 사용 중인 이메일입니다.'); }
+      if (c.email === 'taken') { done(); done[email] = 'taken'; showResult(email, 'taken'); return err('중복된 이메일입니다.'); }
       if (c.phone === 'taken') { done(); return err('이미 가입에 사용된 휴대폰 번호입니다. 본인의 번호인데 가입한 적이 없다면 고객센터(otu_company@naver.com)로 문의해 주세요.'); }
       if (c.email !== 'available' || c.phone !== 'available') { done(); return err('입력한 이메일 또는 휴대폰 번호를 확인해 주세요.'); }
       b.textContent = '처리 중…';

@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fig-tokens.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/typography.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/semantic.css">
-<link rel="stylesheet" href="shop.css?v=20261016l">
+<link rel="stylesheet" href="shop.css?v=20261016s">
 <style>html,body{margin:0;background:#fff}</style>
 </head>
 <body>
@@ -34,7 +34,12 @@
           <section class="shp-box" aria-labelledby="od-h2">
             <h2 id="od-h2">주문자 정보</h2>
             <label class="shp-field"><span>이름</span><input class="shp-in" id="od-buyer" type="text" autocomplete="name" maxlength="50"></label>
-            <label class="shp-field"><span>이메일 <small style="font-weight:400;color:rgba(55,56,60,.61)">(주문 확인·비회원 주문 조회에 사용)</small></span><input class="shp-in" id="od-email" type="email" autocomplete="email"></label>
+            <label class="shp-field"><span>이메일 <small style="font-weight:400;color:rgba(55,56,60,.61)">(주문 확인에 사용)</small></span><input class="shp-in" id="od-email" type="email" autocomplete="email"></label>
+            <div id="od-guest" hidden>
+              <label class="shp-field"><span>비회원 비밀번호 <small style="font-weight:400;color:rgba(55,56,60,.61)">(비회원 주문 조회에 사용 · 8자 이상, 영문과 숫자 포함)</small></span><input class="shp-in" id="od-gpw" type="password" autocomplete="new-password" maxlength="64"></label>
+              <label class="shp-field"><span>비회원 비밀번호 확인</span><input class="shp-in" id="od-gpw2" type="password" autocomplete="new-password" maxlength="64"></label>
+              <p class="shp-note" style="margin:-8px 0 0;font-size:13px">이 비밀번호를 잊으면 온라인으로 주문을 조회할 수 없으니 기억해 두세요. 서버에는 암호화된 값만 저장됩니다.</p>
+            </div>
           </section>
 
           <section class="shp-box" aria-labelledby="od-h3">
@@ -82,10 +87,10 @@
     </form>
   </div>
 </main>
-<script src="config.js?v=20261016l"></script>
-<script src="shop.js?v=20261016l"></script>
-<script src="auth.js?v=20261016l"></script>
-<script src="payments-toss.js?v=20261016l"></script>
+<script src="config.js?v=20261016s"></script>
+<script src="shop.js?v=20261016s"></script>
+<script src="auth.js?v=20261016s"></script>
+<script src="payments-toss.js?v=20261016s"></script>
 <script id="shp-js-order">
 (function () {
   var S = window.IMShop, A = window.IMAuth, C = A.cfg, $ = function (id) { return document.getElementById(id); };
@@ -130,13 +135,16 @@
   $('od-pay-note').hidden = !payOk;   // the payment-provider note only appears when a payment service is really connected
   var miss = missing(); canOrder = payOk && miss.length === 0;
   pay = (C.payment && S.payments && S.payments[C.payment.provider]) || null; testPay = !!(pay && pay.isTest && pay.isTest());
-  var personal = ['od-buyer', 'od-email', 'od-rname', 'od-rphone', 'od-zip', 'od-addr1', 'od-addr2', 'od-memo', 'od-c1', 'od-c2'];
+  $('od-guest').hidden = A.loggedIn();   // only a guest chooses a guest password
+  var personal = ['od-buyer', 'od-email', 'od-gpw', 'od-gpw2', 'od-rname', 'od-rphone', 'od-zip', 'od-addr1', 'od-addr2', 'od-memo', 'od-c1', 'od-c2'];
   personal.forEach(function (id) { $(id).disabled = !(A.legalReady() && payOk); });   // no personal data is taken while payment is not connected or the 약관 / 방침 are not live // no personal data is taken before the 약관 / 방침 are live
   $('od-submit').setAttribute('aria-disabled', canOrder ? 'false' : 'true');
   if (canOrder && testPay) $('od-submit').textContent = '테스트 결제하기';
   if (!payOk) $('od-notice').textContent = S.PAY_NOT_READY + ' 담아 두신 상품은 그대로 유지됩니다. 문의: 고객센터 0507-1372-9152';
   else $('od-notice').textContent = canOrder ? (testPay ? '테스트 결제 환경입니다. 실제 결제·청구가 일어나지 않으며, 이 주문은 테스트로 처리됩니다. ' : '결제는 토스페이먼츠 결제창에서 진행됩니다(카드·간편결제). ') + '입력하신 정보는 주문 처리를 위해 서버로 전송되며, 이 브라우저에는 저장되지 않습니다.'
     : '주문·결제 연동 준비 중입니다. 아래 항목이 연결되기 전에는 주문할 수 없습니다: ' + miss.join(', ') + '. 장바구니의 상품은 그대로 유지됩니다. 문의: 고객센터 0507-1372-9152';
+  // a member's saved delivery address (마이쇼핑 > 배송지 수정) pre-fills the empty address fields; it can still be changed here and never changes an existing order
+  if (A.loggedIn()) A.rest.select('member_addresses', 'select=zip,addr1,addr2', true).then(function (r) { var a = r.ok && r.data && r.data[0]; if (!a) return; if (!$('od-zip').value) $('od-zip').value = a.zip || ''; if (!$('od-addr1').value) $('od-addr1').value = a.addr1 || ''; if (!$('od-addr2').value) $('od-addr2').value = a.addr2 || ''; });
   if (A.loggedIn()) A.profile().then(function (p) { if (p && p.email && !$('od-email').value) $('od-email').value = p.email; if (p && p.name && !$('od-buyer').value) $('od-buyer').value = p.name; });
 
   function err(m) { $('od-err').hidden = false; $('od-err').textContent = m; }
@@ -150,13 +158,15 @@
       zip: $('od-zip').value.trim(), addr1: $('od-addr1').value.trim(), addr2: $('od-addr2').value.trim(), memo: $('od-memo').value.trim()
     };
     if (!b.name || !/^\S+@\S+\.\S+$/.test(b.email)) return err('주문자 이름과 이메일을 정확히 입력해 주세요.');
+    var gpw = A.loggedIn() ? '' : $('od-gpw').value;
+    if (!A.loggedIn()) { if (gpw.length < 8 || gpw.length > 64 || !/[A-Za-z]/.test(gpw) || !/[0-9]/.test(gpw)) return err('비회원 비밀번호를 8자 이상(영문과 숫자 포함)으로 입력해 주세요.'); if (gpw !== $('od-gpw2').value) return err('비회원 비밀번호 확인이 일치하지 않습니다.'); }
     if (!b.rname || !/^01\d{8,9}$/.test(b.rphone) || !b.zip || !b.addr1) return err('받는 분, 연락처, 우편번호, 주소를 정확히 입력해 주세요.');
     if (!$('od-c1').checked || !$('od-c2').checked) return err('필수 약관에 모두 동의해 주세요.');
     var btn = $('od-submit'), label = testPay ? '테스트 결제하기' : '결제하기'; btn.disabled = true; btn.textContent = '처리 중…';
     // one checkout attempt = one random key (no personal data): double clicks and retries re-use the same pending order instead of creating new ones
     var idem = null; try { idem = sessionStorage.getItem('impetvs-checkout-idem'); if (!idem) { idem = (window.crypto && crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2) + Date.now()).replace(/[^A-Za-z0-9-]/g, '') + 'ck'; sessionStorage.setItem('impetvs-checkout-idem', idem); } } catch (e) { idem = 'ck' + String(Math.random()).slice(2) + Date.now(); }
     // the server re-reads the real prices from its own table and re-checks quantities; the page's numbers are never trusted
-    A.fn('create-order', { items: lines.map(function (i) { return { product_id: i.id, option: i.option, qty: i.qty }; }), buyer: { name: b.name, email: b.email }, shipping: { name: b.rname, phone: b.rphone, zip: b.zip, addr1: b.addr1, addr2: b.addr2, memo: b.memo }, mode: src.mode, idem: idem }, A.loggedIn()).then(function (r) {
+    A.fn('create-order', { items: lines.map(function (i) { return { product_id: i.id, option: i.option, qty: i.qty }; }), buyer: A.loggedIn() ? { name: b.name, email: b.email } : { name: b.name, email: b.email, guest_password: gpw }, shipping: { name: b.rname, phone: b.rphone, zip: b.zip, addr1: b.addr1, addr2: b.addr2, memo: b.memo }, mode: src.mode, idem: idem }, A.loggedIn()).then(function (r) {
       btn.disabled = false; btn.textContent = label;
       if (r.data && r.data.code === 'ALREADY_PAID') { try { sessionStorage.removeItem('impetvs-checkout-idem'); } catch (e) {} return err('이미 결제가 완료된 주문입니다. 비회원은 ‘비회원 주문 조회’에서 확인할 수 있습니다.'); }
       if (!r.ok || !r.data || !r.data.order_no) return err('주문을 접수하지 못했습니다. ' + A.errorText(r) + ' (입력하신 내용은 그대로 남아 있습니다.)');

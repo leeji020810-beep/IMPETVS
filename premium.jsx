@@ -5,7 +5,7 @@ function useScrollFX(motion) {
     let raf;
     // Scroll-linked ZOOM of the hero picture is a wide-screen effect only. On phones (<= 900px) its variable (--pz) is never updated: no per-frame zoom maths,
     // nothing to re-apply after scrolling away and back, rotating the phone or the address bar collapsing. (--p keeps driving the non-zoom effects.)
-    const phone = window.matchMedia('(max-width: 900px)');
+    const phone = window.matchMedia('(max-width: 900px), (hover: none) and (pointer: coarse)');   // phones, tablets and "desktop site" mode on a touch device
     const tick = () => {
       const vh = window.innerHeight;
       document.querySelectorAll('[data-p]').forEach(el => {
@@ -63,7 +63,8 @@ function PBtnInner({ t, on = 'dark', label = '구매하기', size = 'lg' }) {
   const r = t.btnShape === 'rect' ? 0 : 999;
   if (t.accent === 'blue') return <DBtn size={size} label={label} style={{ borderRadius: r }} />;
   if (t.btnStyle === 'outline') return <span className={on === 'dark' ? 'dark' : ''}><DBtn variant="outlined" color="assistive" size={size} label={label} style={{ borderRadius: r, boxShadow: `inset 0 0 0 1px ${on === 'dark' ? 'rgba(255,255,255,.7)' : 'rgba(0,0,0,.7)'}` }} /></span>;
-  const s = on === 'dark' ? { backgroundColor: 'var(--common-100)', borderRadius: r } : { backgroundColor: 'var(--common-0)', borderRadius: r };
+  const sh = '0 4px 16px rgba(0,0,0,.28)';   // same shadow as the 카카오톡 상담 button
+  const s = on === 'dark' ? { backgroundColor: 'var(--common-100)', borderRadius: r, boxShadow: sh } : { backgroundColor: 'var(--common-0)', borderRadius: r, boxShadow: sh };
   return <DBtn size={size} label={label} style={s} className={on === 'dark' ? 'btn-w' : 'btn-k'} />;
 }
 
