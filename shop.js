@@ -50,6 +50,10 @@
       returns: SHIPPING.lines.map(function (l) { return l[0] + ': ' + l[1]; }).join(' · '),
       guide: SHIPPING.lines.map(function (l) { return l[0] + ': ' + l[1]; }).join('\n'),
       acc: SHIPPING.lines.map(function (l) { return l[0] + ': ' + l[1]; }).join('\n'),
+      // 체험단 (event page): the SAME shipping standard as the regular product
+      'event-period': '예상 배송 기간: ' + SHIPPING.period + ' (당일 출고는 당일 도착을 뜻하지 않습니다.)',
+      'event-dispatch': SHIPPING.dispatch,
+      'event-busy': SHIPPING.busy,
       'faq-carrier': SHIPPING.carrier + '로 발송합니다.',
       'faq-fee': '배송업체는 ' + SHIPPING.carrier + '이며 기본 배송비는 ' + f(SHIPPING.fee) + '입니다. 할인 적용 후 상품금액 ' + f(SHIPPING.freeFrom) + ' 이상 구매 시 기본 배송비는 무료입니다(30ml ' + f(59000) + ', 50ml ' + f(99000) + '은 1개부터 해당). ' + SHIPPING.surcharge,
       'faq-surcharge': SHIPPING.surcharge + ' 지역별 추가 금액은 아직 확정되지 않았으며, 확정되면 이 페이지와 상품 페이지에서 안내합니다.',

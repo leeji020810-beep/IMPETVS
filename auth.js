@@ -61,6 +61,9 @@
     if (m.indexOf('not authorized') > -1 || m.indexOf('error sending') > -1 || c === 'unexpected_failure' && m.indexOf('mail') > -1) return '인증 메일을 보내지 못했습니다. 잠시 후 다시 시도하거나 고객센터(otu_company@naver.com)로 문의해 주세요.';
     if (c === 'signup_disabled' || m.indexOf('signups not allowed') > -1) return '지금은 회원가입을 받지 않습니다.';
     if (c === 'otp_expired' || m.indexOf('expired') > -1) return '인증 링크가 만료되었거나 이미 사용되었습니다. 로그인해 보시고, 안 되면 다시 가입하거나 비밀번호를 재설정해 주세요.';
+    if (c === 'reauthentication_needed' || m.indexOf('reauthentication') > -1) return '본인 확인이 필요합니다.';
+    if (c === 'reauthentication_not_valid' || m.indexOf('nonce') > -1) return '확인 코드가 올바르지 않거나 만료되었습니다.';
+    if (c === 'same_password' || m.indexOf('different from the old') > -1) return '현재 비밀번호와 다른 비밀번호를 입력해 주세요.';
     if (res.status === 429 || c === 'over_request_rate_limit' || c === 'over_email_send_rate_limit') return '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.';
     if (res.status === 401 || res.status === 403) return '권한이 없습니다. 로그인 후 다시 시도해 주세요.';
     if (res.message && /[가-힣]/.test(res.message)) return res.message; // messages written by our own Edge Functions are already Korean
@@ -159,6 +162,16 @@
   function changeEmail(newEmail) {
     return req('/auth/v1/user?redirect_to=' + encodeURIComponent(siteBase() + '/auth-callback.html'), { auth: true, method: 'PUT', body: { email: normEmail(newEmail) } }).then(function (r) { return r.ok ? { ok: true } : { ok: false, message: errorText(r) }; });
   }
+  // password change while signed in: needs a valid session; if the auth service asks for re-authentication (secure password change) it mails a one-time code to the account's e-mail,
+  // and the change is only accepted together with that code (nonce). The old password is never shown or stored.
+  function changePassword(password, nonce) {
+    var body = { password: password }; if (nonce) body.nonce = nonce;
+    return req('/auth/v1/user', { auth: true, method: 'PUT', body: body }).then(function (r) {
+      if (r.ok) return { ok: true };
+      return { ok: false, reauth: String(r.code || '').toLowerCase() === 'reauthentication_needed' || /reauthentication/i.test(String(r.message || '')), badCode: /nonce|reauthentication_not_valid/i.test(String(r.message || '') + String(r.code || '')), message: errorText(r) };
+    });
+  }
+  function sendReauth() { return req('/auth/v1/reauthenticate', { auth: true, method: 'GET' }).then(function (r) { return r.ok ? { ok: true } : { ok: false, message: errorText(r) }; }); }
   function updatePassword(accessToken, password) {
     return raw('/auth/v1/user', { method: 'PUT', token: accessToken, body: { password: password } }).then(function (r) { return r.ok ? { ok: true } : { ok: false, message: errorText(r) }; });
   }
@@ -259,7 +272,7 @@
 
   window.IMAuth = {
     cfg: C, backendReady: backendReady, legalReady: legalReady, guestLookupReady: guestLookupReady, guestLookup: guestLookup, signupReady: signupReady, inquiryReady: inquiryReady, loggedIn: loggedIn, profile: profile, isAdmin: isAdmin, onChange: function (f) { listeners.push(f); },
-    signUp: signUp, signIn: signIn, changeEmail: changeEmail, refreshProfile: refreshProfile, remembered: remembered, signOut: signOut, resetRequest: resetRequest, updatePassword: updatePassword,
+    signUp: signUp, signIn: signIn, changeEmail: changeEmail, changePassword: changePassword, sendReauth: sendReauth, refreshProfile: refreshProfile, remembered: remembered, signOut: signOut, resetRequest: resetRequest, updatePassword: updatePassword,
     startKakao: startKakao, startNaver: startNaver, finishFromHash: finishFromHash, finishNaver: finishNaver, parseHash: parseHash,
     clearSession: clearSession, checkSignup: checkSignup, normEmail: normEmail, normPhone: normPhone, findIdSend: findIdSend, findIdVerify: findIdVerify, rest: rest, rpc: rpc, fn: fn, errorText: errorText, NOT_READY: NOT_READY,
     setNext: setNext, takeNext: takeNext, needLogin: needLogin, paintHeader: paintHeader, siteBase: siteBase

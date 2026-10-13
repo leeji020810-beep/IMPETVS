@@ -26,7 +26,7 @@
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fig-tokens.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/typography.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/semantic.css">
-<link rel="stylesheet" href="shop.css?v=20261016s">
+<link rel="stylesheet" href="shop.css?v=20261016u">
 <style>html,body{margin:0;background:#fff;scroll-behavior:smooth}</style>
 </head>
 <body>
@@ -200,9 +200,9 @@
     <button type="button" class="shp-btn" id="pd-bar-buy">바로 구매</button>
   </div>
 </main>
-<script src="config.js?v=20261016s"></script>
-<script src="shop.js?v=20261016s"></script>
-<script src="auth.js?v=20261016s"></script>
+<script src="config.js?v=20261016u"></script>
+<script src="shop.js?v=20261016u"></script>
+<script src="auth.js?v=20261016u"></script>
 <script id="shp-js-product">
 (function () {
   var root = document.getElementById('product-root'), S = window.IMShop, A = window.IMAuth, P = S.products[S.PRODUCT_ID];
@@ -353,7 +353,7 @@
 
   // tabs: scroll to the section (no hash change) and mark the current one
   var tabs = [].slice.call(root.querySelectorAll('[data-tab]'));
-  function mark(id) { tabs.forEach(function (a) { if (a.dataset.tab === id) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current'); }); }
+  function mark(id) { tabs.forEach(function (a) { if (a.dataset.tab === id) { a.setAttribute('aria-current', 'true'); var ul = a.closest('ul'); if (ul && ul.scrollWidth > ul.clientWidth) { var l = a.parentElement.offsetLeft - 20, r = a.parentElement.offsetLeft + a.parentElement.offsetWidth + 20; if (l < ul.scrollLeft) ul.scrollLeft = l; else if (r > ul.scrollLeft + ul.clientWidth) ul.scrollLeft = r - ul.clientWidth; } } else a.removeAttribute('aria-current'); }); }
   var locked = null; // the clicked tab stays marked until the visitor scrolls by hand (the last sections can't reach the top of the page)
   ['wheel', 'touchstart', 'keydown'].forEach(function (ev) { window.addEventListener(ev, function () { locked = null; }, { passive: true }); });
   tabs.forEach(function (a) {

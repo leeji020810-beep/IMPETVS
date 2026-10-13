@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fig-tokens.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/typography.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/semantic.css">
-<link rel="stylesheet" href="shop.css?v=20261016s">
+<link rel="stylesheet" href="shop.css?v=20261016u">
 <style>html,body{margin:0;background:#fff}</style>
 </head>
 <body>
@@ -30,9 +30,9 @@
     <div id="go-result" class="shp-hist" hidden></div>
   </div>
 </main>
-<script src="config.js?v=20261016s"></script>
-<script src="shop.js?v=20261016s"></script>
-<script src="auth.js?v=20261016s"></script>
+<script src="config.js?v=20261016u"></script>
+<script src="shop.js?v=20261016u"></script>
+<script src="auth.js?v=20261016u"></script>
 <script id="shp-js-guest-order">
 (function () {
   var S = window.IMShop, A = window.IMAuth, $ = function (id) { return document.getElementById(id); };
@@ -41,7 +41,8 @@
   var on = A.guestLookupReady(), STATUS = { pending_payment: '결제 대기', confirming: '결제 확인 중', payment_failed: '결제 실패', paid: '결제 완료', cancelled: '취소됨', shipped: '배송 중', delivered: '배송 완료', refunded: '환불 완료' };
   ['go-name', 'go-no', 'go-pw'].forEach(function (id) { $(id).disabled = !on; });
   $('go-submit').setAttribute('aria-disabled', on ? 'false' : 'true');
-  $('go-banner').textContent = on ? '주문 시 입력한 주문자명, 주문번호, 비회원 비밀번호를 입력해 주세요. 입력하신 정보는 이 브라우저에 저장되지 않습니다.' : '비회원 주문 조회 기능은 준비 중입니다.';
+  $('go-banner').textContent = on ? '' : '비회원 주문 조회 기능은 준비 중입니다.';
+  $('go-banner').hidden = on;
   function err(m) { $('go-err').hidden = false; $('go-err').textContent = m; }
   var busy = false;
   $('go-form').addEventListener('submit', function (e) {

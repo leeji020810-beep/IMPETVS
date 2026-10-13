@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fig-tokens.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/typography.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/semantic.css">
-<link rel="stylesheet" href="shop.css?v=20261016s">
+<link rel="stylesheet" href="shop.css?v=20261016u">
 <style>html,body{margin:0;background:#fff}</style>
 </head>
 <body>
@@ -25,7 +25,6 @@
         <input class="shp-in" type="email" id="lg-id" autocomplete="username" placeholder="아이디(이메일)" aria-label="아이디(이메일)">
         <input class="shp-in" type="password" id="lg-pw" autocomplete="current-password" placeholder="비밀번호" aria-label="비밀번호">
         <label class="shp-chk shp-auto"><input type="checkbox" id="lg-auto"><span>자동 로그인</span></label>
-        <p class="shp-note shp-auto-n" id="lg-auto-n">공용 PC에서는 사용하지 마세요.</p>
         <button type="submit" class="shp-btn main" id="lg-submit">로그인</button>
         <div class="shp-links shp-links3">
           <button type="button" class="shp-lk" data-go="find">ID/PW 찾기</button><i aria-hidden="true"></i>
@@ -45,84 +44,76 @@
       </form>
     </section>
 
-    <!-- ② ID/PW 찾기: 아이디 찾기 / 비밀번호 찾기, 인증 방법 = 이메일 / 휴대폰 번호.
-         The log-in ID IS the e-mail address (no separate user ID exists). Nothing is shown about an account before the person proves the address (link in the e-mail).
-         Phone verification is NOT connected: that method is visible but its request is switched off. -->
+    <!-- ② ID/PW 찾기 (centred, short): tabs 아이디 찾기 / 비밀번호 찾기, 인증방법 = 이메일 / 휴대폰 번호, one wide 확인 button.
+         The log-in ID IS the e-mail address. Nothing about an account is shown before the address is proven by the e-mail link. The phone method is NOT connected: its inputs and request are switched off. -->
     <section data-mode="find" aria-labelledby="fd-h" hidden>
       <h1 id="fd-h">ID/PW 찾기</h1>
-      <div class="shp-tabs" role="tablist" aria-label="찾기 종류">
+      <div class="fd-tabs" role="tablist" aria-label="찾기 종류">
         <button type="button" role="tab" id="tab-id" aria-selected="true" aria-controls="pn-id" data-tab="id">아이디 찾기</button>
         <button type="button" role="tab" id="tab-pw" aria-selected="false" aria-controls="pn-pw" data-tab="pw" tabindex="-1">비밀번호 찾기</button>
       </div>
 
-      <!-- 아이디 찾기 -->
       <div id="pn-id" role="tabpanel" aria-labelledby="tab-id">
-        <fieldset class="shp-meth"><legend>인증 방법</legend>
+        <div class="fd-meth" role="radiogroup" aria-label="인증방법"><span class="fd-ml" aria-hidden="true">인증방법</span><div class="fd-rd">
           <label><input type="radio" name="idm" value="email" checked><span>이메일</span></label>
           <label><input type="radio" name="idm" value="phone"><span>휴대폰 번호</span></label>
-        </fieldset>
+        </div></div>
         <form class="shp-form" id="fi-mail" novalidate data-m="email">
-          <p class="shp-note shp-hlp"><span class="shp-ln">로그인 아이디는 가입한 이메일 주소입니다.</span><span class="shp-ln">입력한 이메일로 확인 메일을 보내 드리며, 메일의 링크로 본인 확인을 마친 뒤에 진행됩니다.</span></p>
           <input class="shp-in" type="text" id="fm-name" autocomplete="name" placeholder="이름" aria-label="이름">
           <input class="shp-in" type="email" id="fm-email" autocomplete="email" placeholder="가입한 이메일" aria-label="가입한 이메일">
-          <p class="shp-note shp-hlp">이름은 서버로 보내지 않으며 본인 확인은 이메일 링크로만 이루어집니다.</p>
-          <button type="submit" class="shp-btn main" id="fm-send">확인 메일 받기</button>
           <p class="shp-err" id="fm-err" role="alert" hidden></p>
           <p class="shp-okmsg" id="fm-ok" role="status" hidden></p>
+          <button type="submit" class="shp-btn main" id="fm-send">확인</button>
         </form>
         <form class="shp-form" id="fi-form" novalidate data-m="phone" hidden>
           <input class="shp-in" type="text" id="fi-name" autocomplete="name" placeholder="이름" aria-label="이름">
           <input class="shp-in" type="tel" id="fi-phone" autocomplete="tel" placeholder="휴대폰 번호 (숫자만)" aria-label="휴대폰 번호" inputmode="numeric">
-          <button type="button" class="shp-btn main" id="fi-send">인증번호 받기</button>
           <div id="fi-step2" hidden>
-            <input class="shp-in" type="text" id="fi-code" autocomplete="one-time-code" placeholder="인증번호 6자리" aria-label="인증번호" inputmode="numeric" maxlength="6" style="margin-top:8px">
+            <input class="shp-in" type="text" id="fi-code" autocomplete="one-time-code" placeholder="인증번호 6자리" aria-label="인증번호" inputmode="numeric" maxlength="6">
             <button type="submit" class="shp-btn main" id="fi-verify">확인</button>
           </div>
           <p class="shp-err" id="fi-err" role="alert" hidden></p>
           <p class="shp-okmsg" id="fi-result" role="status" hidden></p>
           <p class="shp-note" id="fi-note" role="status"></p>
+          <button type="button" class="shp-btn main" id="fi-send">확인</button>
         </form>
       </div>
 
-      <!-- 비밀번호 찾기 -->
       <div id="pn-pw" role="tabpanel" aria-labelledby="tab-pw" hidden>
-        <p class="shp-note" style="margin:0 0 16px">기존 비밀번호는 알려 드리지 않습니다. 본인 확인 후 새 비밀번호를 정하는 방식입니다.</p>
-        <fieldset class="shp-meth"><legend>인증 방법</legend>
+        <div class="fd-meth" role="radiogroup" aria-label="인증방법"><span class="fd-ml" aria-hidden="true">인증방법</span><div class="fd-rd">
           <label><input type="radio" name="pwm" value="email" checked><span>이메일</span></label>
           <label><input type="radio" name="pwm" value="phone"><span>휴대폰 번호</span></label>
-        </fieldset>
+        </div></div>
         <form class="shp-form" id="rs-form" novalidate data-m="email">
-          <p class="shp-note" style="margin:0 0 20px"><span class="shp-ln">가입한 이메일을 입력하면</span><span class="shp-ln">비밀번호를 새로 정할 수 있는 링크를 <span class="shp-nw">보내 드립니다.</span></span></p>
           <input class="shp-in" type="email" id="rs-email" autocomplete="email" placeholder="아이디(가입한 이메일)" aria-label="아이디(가입한 이메일)">
-          <p class="shp-note shp-hlp">아이디가 곧 이메일 주소라서 따로 이메일을 한 번 더 입력하지 않습니다. 재설정 링크는 이 주소로만 보냅니다.</p>
-          <button type="submit" class="shp-btn main" id="rs-submit">재설정 메일 보내기</button>
           <p class="shp-err" id="rs-err" role="alert" hidden></p>
           <p class="shp-okmsg" id="rs-ok" role="status" hidden></p>
           <p class="shp-note" id="rs-note" role="status"></p>
+          <button type="submit" class="shp-btn main" id="rs-submit">확인</button>
         </form>
         <form class="shp-form" id="rp-form" novalidate data-m="phone" hidden>
           <input class="shp-in" type="email" id="rp-id" autocomplete="username" placeholder="아이디(가입한 이메일)" aria-label="아이디(가입한 이메일)">
           <input class="shp-in" type="text" id="rp-name" autocomplete="name" placeholder="이름" aria-label="이름">
           <input class="shp-in" type="tel" id="rp-phone" autocomplete="tel" placeholder="휴대폰 번호 (숫자만)" aria-label="휴대폰 번호" inputmode="numeric">
-          <button type="button" class="shp-btn main" id="rp-send">인증번호 받기</button>
           <p class="shp-err" id="rp-err" role="alert" hidden></p>
           <p class="shp-note" id="rp-note" role="status"></p>
+          <button type="button" class="shp-btn main" id="rp-send">확인</button>
         </form>
       </div>
       <div class="shp-links"><button type="button" class="shp-lk" data-go="login">로그인으로 돌아가기</button></div>
     </section>
   </div>
 </main>
-<script src="config.js?v=20261016s"></script>
-<script src="shop.js?v=20261016s"></script>
-<script src="auth.js?v=20261016s"></script>
+<script src="config.js?v=20261016u"></script>
+<script src="shop.js?v=20261016u"></script>
+<script src="auth.js?v=20261016u"></script>
 <script id="shp-js-login">
 (function () {
   var root = document.getElementById('login-root'), S = window.IMShop, A = window.IMAuth, C = A.cfg;
   var $ = function (id) { return document.getElementById(id); };
   var OFF = '회원 서비스 연결 전입니다. 서버(Supabase) 설정이 끝나면 이용할 수 있습니다.';
   var LEGAL = '이용약관·개인정보처리방침 게시 후 이용할 수 있습니다.';
-  var SMS_OFF = '휴대폰 번호 인증은 아직 연결되지 않아 이용할 수 없습니다. (준비 중) 이메일 방법을 이용해 주세요.';
+  var SMS_OFF = '휴대폰 인증은 준비 중입니다.';
 
   function show(mode) {
     [].forEach.call(root.querySelectorAll('[data-mode]'), function (s) { s.hidden = s.getAttribute('data-mode') !== mode; });
@@ -141,7 +132,7 @@
   // phone verification is not connected: its inputs and request stay switched off and say so (no fake code, no fake success)
   var smsOn = ready && !!(C.sms && C.sms.enabled);
   [$('fi-name'), $('fi-phone'), $('rp-id'), $('rp-name'), $('rp-phone')].forEach(function (i) { i.disabled = !smsOn; });
-  [$('fi-send'), $('rp-send')].forEach(function (b) { b.disabled = !smsOn; });
+  [$('fi-send'), $('rp-send')].forEach(function (b) { b.setAttribute('aria-disabled', smsOn ? 'false' : 'true'); b.classList.toggle('is-off', !smsOn); });   // clickable on purpose: it answers '준비 중' instead of doing nothing
   $('fi-note').textContent = !ready ? OFF : (smsOn ? '' : SMS_OFF);
   $('rp-note').textContent = !ready ? OFF : (smsOn ? '' : SMS_OFF);
 
@@ -183,6 +174,8 @@
   method('idm', { email: 'fi-mail', phone: 'fi-form' }); method('pwm', { email: 'rs-form', phone: 'rp-form' });
 
   // a short pause between mail requests from this browser (the mail service has its own server-side limit as well)
+  // the same short answer for every address (nothing about an account is shown). Only a request was made: the person is NOT verified until the link in the e-mail is opened.
+  var SENT = '요청을 접수했습니다. 메일의 링크로 본인 확인을 완료해 주세요.';
   var COOL = 60000, lastMail = 0;
   function cooling(btn, label) { var left = COOL - (Date.now() - lastMail); if (left <= 0) return false; btn.textContent = Math.ceil(left / 1000) + '초 뒤 다시 요청할 수 있습니다'; setTimeout(function () { btn.textContent = label; }, Math.min(left, 3000)); return true; }
   function mailRequest(em, btn, label, errEl, okEl, okText) {
@@ -201,12 +194,12 @@
   $('fi-mail').addEventListener('submit', function (e) {
     e.preventDefault();
     if (!$('fm-name').value.trim()) { $('fm-ok').hidden = true; return err($('fm-err'), '이름을 입력해 주세요.'); }
-    mailRequest($('fm-email').value.trim(), $('fm-send'), '확인 메일 받기', $('fm-err'), $('fm-ok'), '입력하신 주소로 가입된 계정이 있다면 확인 메일을 보냈습니다. 메일의 링크로 본인 확인을 마치면 비밀번호를 새로 정할 수 있고, 가입한 이메일이 곧 로그인 아이디입니다. 메일이 오지 않으면 스팸함을 확인해 주세요.');
+    mailRequest($('fm-email').value.trim(), $('fm-send'), '확인', $('fm-err'), $('fm-ok'), SENT);
   });
   // 비밀번호 찾기 (e-mail): same safe flow, ends in the normal "set a new password" page
   $('rs-form').addEventListener('submit', function (e) {
     e.preventDefault();
-    mailRequest($('rs-email').value.trim(), $('rs-submit'), '재설정 메일 보내기', $('rs-err'), $('rs-ok'), '입력하신 주소로 가입된 계정이 있다면 비밀번호 재설정 안내 메일을 보냈습니다. 메일함(스팸함 포함)을 확인해 주세요.');
+    mailRequest($('rs-email').value.trim(), $('rs-submit'), '확인', $('rs-err'), $('rs-ok'), SENT);
   });
   // phone methods: switched off until a real SMS / identity service is connected
   $('rp-send').addEventListener('click', function () { err($('rp-err'), ready ? SMS_OFF : OFF); });
@@ -215,9 +208,9 @@
     if (!smsOn) return err($('fi-err'), ready ? SMS_OFF : OFF);
     var n = $('fi-name').value.trim(), p = $('fi-phone').value.replace(/\D/g, '');
     if (!n || p.length < 10) return err($('fi-err'), '이름과 휴대폰 번호를 정확히 입력해 주세요.');
-    busy($('fi-send'), true, '인증번호 받기');
+    busy($('fi-send'), true, '확인');
     A.findIdSend(n, p).then(function (r) {
-      busy($('fi-send'), false, '인증번호 받기');
+      busy($('fi-send'), false, '확인');
       if (!r.ok) return err($('fi-err'), r.message);
       $('fi-step2').hidden = false; $('fi-note').textContent = '문자로 받은 인증번호를 입력해 주세요. 입력하신 정보가 가입 정보와 일치할 때만 문자가 발송됩니다.'; $('fi-code').focus();
     });
