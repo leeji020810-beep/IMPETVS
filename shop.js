@@ -191,7 +191,7 @@
   // The address that is shared is ALWAYS built from the public site address in config.js (siteUrl) plus a fixed page path:
   // never from location.href, so a file:// address (merged HTML), a login token (#access_token), a ?code= / paymentKey / orderId / amount query or any
   // other parameter of the current page can never end up in a shared link.
-  var SHARE_PAGES = { home: '', product: 'product.html' };
+  var SHARE_PAGES = { product: 'product.html' };   // the share menu exists on the product page only
   function publicUrl(page) {
     var base = String((window.IMPETVS_CONFIG && window.IMPETVS_CONFIG.siteUrl) || '').replace(/\/+$/, '');
     if (!base && /^https?:$/.test(location.protocol)) base = location.origin + location.pathname.replace(/\/[^\/]*$/, '');
@@ -199,6 +199,15 @@
     return base + '/' + (SHARE_PAGES[page] || '');
   }
   var shareState = null;
+  // 카카오톡 needs a Kakao app: it is offered only when config.js has the public JavaScript key; otherwise the entry is visibly disabled ("준비 중") and never claims to work
+  function kakaoReady() { var k = window.IMPETVS_CONFIG && window.IMPETVS_CONFIG.kakaoShare; return !!(k && k.jsKey); }
+  function kakaoShare(url) {
+    return new Promise(function (res, rej) {
+      function go() { try { if (!window.Kakao.isInitialized()) window.Kakao.init(window.IMPETVS_CONFIG.kakaoShare.jsKey); window.Kakao.Share.sendScrap({ requestUrl: url }); res(); } catch (e) { rej(e); } }
+      if (window.Kakao) return go();
+      var sc = document.createElement('script'); sc.src = 'https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js'; sc.async = true; sc.onload = go; sc.onerror = function () { rej(new Error('sdk')); }; document.head.appendChild(sc);
+    });
+  }
   function closeShare(returnFocus) {
     if (!shareState) return;
     var st = shareState; shareState = null;
@@ -209,13 +218,14 @@
   var SH_ICON = {
     facebook: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13.5 21v-7.5h2.6l.4-3h-3V8.6c0-.9.3-1.5 1.6-1.5h1.6V4.4c-.3 0-1.2-.1-2.3-.1-2.3 0-3.9 1.4-3.9 4v2.2H7.9v3h2.6V21h3z"/></svg>',
     x: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.8 3h3l-6.6 7.5L22 21h-6l-4.7-6.1L5.9 21h-3l7-8L2.4 3h6.2l4.2 5.6L17.8 3zm-1 16.2h1.7L7.7 4.7H5.9l10.9 14.5z"/></svg>',
+    kakao: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.8 5.3 4.6 6.7l-1 3.6c-.1.3.2.5.5.4l4.2-2.8c.5.1 1.1.1 1.7.1 5.5 0 10-3.6 10-8S17.5 3 12 3z"/></svg>',
     line: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3C6.5 3 2 6.6 2 11c0 3.9 3.5 7.2 8.3 7.9.3.1.8.2.9.5.1.3.1.7 0 1l-.1.9c0 .3-.2 1 .9.6s5.9-3.5 8-6C21.4 14.5 22 12.8 22 11c0-4.4-4.5-8-10-8zM8.3 13.3H6.2c-.3 0-.5-.2-.5-.5V9.2c0-.3.2-.5.5-.5s.5.2.5.5v3.1h1.6c.3 0 .5.2.5.5s-.2.5-.5.5zm2.1-.5c0 .3-.2.5-.5.5s-.5-.2-.5-.5V9.2c0-.3.2-.5.5-.5s.5.2.5.5v3.6zm5 0c0 .2-.1.4-.3.5h-.2c-.2 0-.3-.1-.4-.2l-2-2.8v2.5c0 .3-.2.5-.5.5s-.5-.2-.5-.5V9.2c0-.2.1-.4.3-.5h.2c.2 0 .3.1.4.2l2 2.8V9.2c0-.3.2-.5.5-.5s.5.2.5.5v3.6zm3.1-2.3c.3 0 .5.2.5.5s-.2.5-.5.5H17v.8h1.5c.3 0 .5.2.5.5s-.2.5-.5.5h-2c-.3 0-.5-.2-.5-.5V9.2c0-.3.2-.5.5-.5h2c.3 0 .5.2.5.5s-.2.5-.5.5H17v.8h1.5z"/></svg>',
     link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg>'
   };
   // share(title, { page: 'home' | 'product', trigger: <the button that opened it> })
   function share(title, opts) {
     opts = opts || {}; closeShare(false);
-    var url = publicUrl(opts.page || 'home'), trigger = opts.trigger || null, enc = encodeURIComponent;
+    var url = publicUrl(opts.page || 'product'), trigger = opts.trigger || null, enc = encodeURIComponent;
     var ov = document.createElement('div'); ov.className = 'shp-sh-ov';
     var links = url ? [
       ['facebook', '페이스북', 'https://www.facebook.com/sharer/sharer.php?u=' + enc(url)],
@@ -224,7 +234,7 @@
     ] : [];
     ov.innerHTML = '<div class="shp-sh" role="dialog" aria-modal="true" aria-labelledby="shp-sh-t" tabindex="-1">' +
       '<div class="shp-sh-h"><h2 id="shp-sh-t">공유하기</h2><button type="button" class="shp-sh-x" aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>' +
-      '<ul class="shp-sh-l">' + links.map(function (l) { return '<li><a class="shp-sh-i" href="' + esc(l[2]) + '" target="_blank" rel="noopener noreferrer">' + SH_ICON[l[0]] + '<span>' + esc(l[1]) + '</span></a></li>'; }).join('') +
+      '<ul class="shp-sh-l">' + (url ? (kakaoReady() ? '<li><button type="button" class="shp-sh-i" data-kakao>' + SH_ICON.kakao + '<span>카카오톡</span></button></li>' : '<li><button type="button" class="shp-sh-i" disabled aria-disabled="true" title="카카오톡 공유는 아직 연결되지 않았습니다">' + SH_ICON.kakao + '<span>카카오톡<small>준비 중</small></span></button></li>') : '') + links.map(function (l) { return '<li><a class="shp-sh-i" href="' + esc(l[2]) + '" target="_blank" rel="noopener noreferrer">' + SH_ICON[l[0]] + '<span>' + esc(l[1]) + '</span></a></li>'; }).join('') +
       '<li><button type="button" class="shp-sh-i" data-copy' + (url ? '' : ' disabled') + '>' + SH_ICON.link + '<span>URL 복사</span></button></li></ul>' +
       (url ? '<p class="shp-sh-u" id="shp-sh-u" tabindex="-1">' + esc(url) + '</p>' : '<p class="shp-sh-u">공개 사이트 주소가 설정되지 않아 공유할 수 없습니다.</p>') +
       '<p class="shp-sh-m" role="status" aria-live="polite"></p></div>';
@@ -259,6 +269,8 @@
       copyText(url).then(function () { msg.textContent = '주소를 복사했습니다.'; toast('주소를 복사했습니다.'); },
         function () { msg.textContent = '주소를 복사하지 못했습니다. 위 주소를 길게 눌러(또는 드래그해서) 직접 복사해 주세요.'; var u = ov.querySelector('#shp-sh-u'); if (u) { var r = document.createRange(); r.selectNodeContents(u); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); } });
     });
+    var kb = ov.querySelector('[data-kakao]');
+    if (kb) kb.addEventListener('click', function () { msg.textContent = ''; kakaoShare(url).catch(function () { msg.textContent = '카카오톡 공유를 시작하지 못했습니다. 다른 방법을 이용해 주세요.'; }); });   // opening Kakao's own share screen is not "shared"
     if (phone()) document.documentElement.classList.add('shp-sh-lock');
     if (trigger) trigger.setAttribute('aria-expanded', 'true');
     place(); var f = choices()[0] || items()[0]; (f || box).focus();
