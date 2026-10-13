@@ -13,5 +13,7 @@ window.IMPETVS_CONFIG = {
   naver: { enabled: false, clientId: '' }, // true + Naver Client ID after the naver-login Edge Function is deployed
   sms: { enabled: false },                 // true after an SMS provider is connected to the find-id Edge Function
   payment: { provider: 'toss', clientKey: '', live: false }, // Toss Payments. clientKey = the PUBLIC client key (test_gck_… for tests). live: true ONLY after contract, review and live keys are done (see backend/TOSS-SETUP.md). The SECRET key never goes here.
-  legalReady: false                        // true ONLY after 이용약관 / 개인정보처리방침 are approved and published
+  signupReady: true,                       // e-mail sign-up (회원가입). SEPARATE from legalReady: 이용약관 / 개인정보처리방침 are published and the server is verified. Set false to close sign-up again.
+  inquiryReady: true,                      // 1:1 문의 (members write, members + admin read). SEPARATE from legalReady. Set false to close it again.
+  legalReady: false                        // still false on purpose: it opens 1:1 문의, 비회원 주문 조회, 주문 입력 and 카카오·네이버 로그인, which are NOT switched on yet
 };

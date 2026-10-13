@@ -18,6 +18,10 @@
   function backendReady() { return !!(SB.url && SB.anonKey); }
   // sign-up, social login, 1:1 inquiries and orders collect personal data: they also wait for the approved 약관 / 개인정보처리방침
   function legalReady() { return backendReady() && C.legalReady === true; }
+  // e-mail sign-up has its own switch: opening it must not open inquiries, orders or social login (those keep using legalReady)
+  function signupReady() { return backendReady() && C.signupReady === true; }
+  // 1:1 inquiries have their own switch too (they never open orders, social login or payment)
+  function inquiryReady() { return backendReady() && C.inquiryReady === true; }
   function siteBase() {
     if (C.siteUrl) return String(C.siteUrl).replace(/\/$/, '');
     return location.origin + location.pathname.replace(/[^/]*$/, '').replace(/\/$/, '');
@@ -44,6 +48,11 @@
     if (c === 'email_not_confirmed' || m.indexOf('not confirmed') > -1) return '이메일 인증 후 로그인해 주세요. 가입 시 받은 인증 메일을 확인해 주세요.';
     if (c === 'user_already_exists' || m.indexOf('already registered') > -1) return '이미 가입된 이메일입니다.';
     if (c === 'weak_password' || m.indexOf('password should') > -1) return '비밀번호가 조건을 만족하지 않습니다. 더 길고 복잡하게 설정해 주세요.';
+    if (c === 'email_address_invalid' || (m.indexOf('email address') > -1 && m.indexOf('is invalid') > -1)) return '사용할 수 없는 이메일 주소입니다. 주소를 확인해 주세요.';
+    if (c === 'validation_failed' && m.indexOf('email') > -1) return '이메일 주소 형식이 올바르지 않습니다.';
+    if (m.indexOf('not authorized') > -1 || m.indexOf('error sending') > -1 || c === 'unexpected_failure' && m.indexOf('mail') > -1) return '인증 메일을 보내지 못했습니다. 잠시 후 다시 시도하거나 고객센터(otu_company@naver.com)로 문의해 주세요.';
+    if (c === 'signup_disabled' || m.indexOf('signups not allowed') > -1) return '지금은 회원가입을 받지 않습니다.';
+    if (c === 'otp_expired' || m.indexOf('expired') > -1) return '인증 링크가 만료되었거나 이미 사용되었습니다. 로그인해 보시고, 안 되면 다시 가입하거나 비밀번호를 재설정해 주세요.';
     if (res.status === 429 || c === 'over_request_rate_limit' || c === 'over_email_send_rate_limit') return '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.';
     if (res.status === 401 || res.status === 403) return '권한이 없습니다. 로그인 후 다시 시도해 주세요.';
     if (res.message && /[가-힣]/.test(res.message)) return res.message; // messages written by our own Edge Functions are already Korean
@@ -87,7 +96,7 @@
 
   /* ----------------------------------------------------------------- account */
   function signUp(f) {
-    return raw('/auth/v1/signup?redirect_to=' + encodeURIComponent(siteBase() + '/login.html'), { method: 'POST', body: { email: f.email, password: f.password, data: { name: f.name, phone: f.phone || '', consent_terms: true, consent_privacy: true, consent_age14: f.age14 === true, consent_at: new Date().toISOString() } } })
+    return raw('/auth/v1/signup?redirect_to=' + encodeURIComponent(siteBase() + '/auth-callback.html'), { method: 'POST', body: { email: f.email, password: f.password, data: { name: f.name, phone: f.phone || '', consent_terms: true, consent_privacy: true, consent_age14: f.age14 === true, consent_at: new Date().toISOString() } } })
       .then(function (r) {
         if (!r.ok) return { ok: false, message: errorText(r) };
         if (r.data && r.data.access_token) { writeSession(r.data); return { ok: true, loggedIn: true }; }
@@ -223,7 +232,7 @@
   function needLogin(next) { setNext(next || (location.hash || (location.pathname.split('/').pop() || ''))); }
 
   window.IMAuth = {
-    cfg: C, backendReady: backendReady, legalReady: legalReady, loggedIn: loggedIn, profile: profile, isAdmin: isAdmin, onChange: function (f) { listeners.push(f); },
+    cfg: C, backendReady: backendReady, legalReady: legalReady, signupReady: signupReady, inquiryReady: inquiryReady, loggedIn: loggedIn, profile: profile, isAdmin: isAdmin, onChange: function (f) { listeners.push(f); },
     signUp: signUp, signIn: signIn, signOut: signOut, resetRequest: resetRequest, updatePassword: updatePassword,
     startKakao: startKakao, startNaver: startNaver, finishFromHash: finishFromHash, finishNaver: finishNaver, parseHash: parseHash,
     findIdSend: findIdSend, findIdVerify: findIdVerify, rest: rest, rpc: rpc, fn: fn, errorText: errorText, NOT_READY: NOT_READY,

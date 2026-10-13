@@ -397,3 +397,27 @@ select.shp-in{appearance:auto}
   .shp-page :is(h1,h2,h3){text-wrap:balance}
   .shp-page :is(a,dd,td,li,p){overflow-wrap:anywhere}
 }
+
+/* ---------- share menu ---------- */
+.shp-sh-ov{position:fixed;inset:0;z-index:1200;font-family:var(--font-sans);word-break:keep-all;overflow-wrap:anywhere}
+.shp-sh{position:fixed;left:0;right:0;bottom:0;max-height:80vh;overflow:auto;box-sizing:border-box;padding:20px 20px calc(20px + env(safe-area-inset-bottom));background:#fff;color:#171719;border-radius:16px 16px 0 0;box-shadow:0 -12px 40px rgba(0,0,0,.28);outline:0}
+.shp-sh-ov{background:rgba(0,0,0,.45)}
+.shp-sh-lock{overflow:hidden}
+.shp-sh-h{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 8px}
+.shp-sh-h h2{margin:0;font-size:18px;font-weight:700;letter-spacing:-.03em;color:#000}
+.shp-sh-x{display:grid;place-items:center;flex:none;width:44px;height:44px;margin:-8px -12px -8px 0;padding:0;border:0;background:none;color:#171719;cursor:pointer}
+.shp-sh-x svg{width:22px;height:22px}
+.shp-sh-l{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0;padding:0;list-style:none}
+.shp-sh-i{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;padding:0 14px;box-sizing:border-box;border:1px solid rgba(112,115,124,.32);border-radius:8px;background:#fff;color:#171719;font:inherit;font-size:15px;text-decoration:none;text-align:left;cursor:pointer}
+.shp-sh-i svg{flex:none;width:22px;height:22px}
+.shp-sh-i:hover{background:#f7f7f8}
+.shp-sh-i:disabled{opacity:.4;cursor:not-allowed}
+.shp-sh-i:focus-visible,.shp-sh-x:focus-visible{outline:2px solid #171719;outline-offset:2px}
+.shp-sh-u{margin:12px 0 0;padding:10px 12px;background:#f7f7f8;border-radius:8px;font-size:13px;line-height:1.6;color:rgba(55,56,60,.72);user-select:all}
+.shp-sh-m{min-height:1.6em;margin:8px 0 0;font-size:14px;line-height:1.6;color:#171719}
+@media (min-width:641px){
+  .shp-sh-ov{background:transparent}
+  .shp-sh{left:auto;right:auto;bottom:auto;width:300px;max-height:calc(100vh - 24px);padding:16px;border-radius:12px;border:1px solid rgba(112,115,124,.32);box-shadow:0 12px 32px rgba(0,0,0,.18)}
+  .shp-sh-lock{overflow:visible}
+}
+.hd-share{border:0;background:none;padding:0;color:inherit;font:inherit;cursor:pointer}

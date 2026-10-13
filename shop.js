@@ -14,6 +14,7 @@
     name: '임페투스 리치맨',
     sub: '섬유향수 · Eau De Perfume',
     stock: null,
+    maxQty: 30,            // per PRODUCT, 30ml + 50ml together (the server enforces the same limit: backend/supabase/functions/_shared/orders.ts)
     defaultOption: '30ml',
     options: {
       '30ml': { key: '30ml', price: 59000, img: 'opt/product-main.webp', alt: '임페투스 리치맨 30ml 향수 병' },
@@ -88,6 +89,16 @@
   function items() { return normalize(readJSON(CART_KEY)); }
   function count() { return items().reduce(function (s, i) { return s + i.qty; }, 0); }
   function limit(id) { var s = PRODUCTS[id] && PRODUCTS[id].stock; return typeof s === 'number' ? s : Infinity; }
+  // ----- quantity limit: the same product may be bought up to maxQty in TOTAL, whatever the capacities (30ml + 50ml are added together)
+  var MAX_MSG = '동일 상품은 최대 30개까지 구매할 수 있습니다.';
+  function maxQty(id) { var p = PRODUCTS[id]; return Math.min(p && typeof p.maxQty === 'number' ? p.maxQty : Infinity, limit(id)); }
+  function totalOf(list, id, exceptIdx) { var t = 0; list.forEach(function (i, k) { if (i.id === id && k !== exceptIdx) t += i.qty; }); return t; }
+  // products whose total in `list` is above the limit -> [{id, total, max}]
+  function overLimit(list) {
+    var seen = {}, out = [];
+    (list || items()).forEach(function (i) { if (seen[i.id]) return; seen[i.id] = 1; var t = totalOf(list || items(), i.id, -1), m = maxQty(i.id); if (t > m) out.push({ id: i.id, total: t, max: m }); });
+    return out;
+  }
   function save(list) { sset(CART_KEY, JSON.stringify(list)); emit(); }
   function emit() {
     var n = count();
@@ -99,18 +110,22 @@
     items: items,
     count: count,
     // same product + same capacity -> quantities are merged; a different capacity is a separate line
+    // -> { qty: this line's quantity now, added: how many were really added, capped: true if the product limit stopped it, total: product total in the cart now }
     add: function (id, option, qty) {
-      var list = items(), hit = null;
-      list.forEach(function (i) { if (i.id === id && i.option === option) hit = i; });
-      var want = (hit ? hit.qty : 0) + qty, cap = limit(id);
-      if (want > cap) want = cap;
-      if (hit) hit.qty = want; else list.push({ id: id, option: option, qty: want });
-      save(list); return want;
+      var list = items(), hit = null, idx = -1;
+      list.forEach(function (i, k) { if (i.id === id && i.option === option) { hit = i; idx = k; } });
+      qty = Math.max(1, Math.floor(qty) || 1);
+      var others = totalOf(list, id, idx), have = hit ? hit.qty : 0, room = Math.max(0, maxQty(id) - others - have), add = Math.min(qty, room);
+      if (add > 0) { if (hit) hit.qty = have + add; else list.push({ id: id, option: option, qty: add }); save(list); }
+      return { qty: have + add, added: add, capped: add < qty, total: others + have + add };
     },
+    // never above the product limit (the other capacities of the same product count too); lowering is always allowed
     setQty: function (idx, qty) {
       var list = items(); if (!list[idx]) return;
-      list[idx].qty = Math.max(1, Math.min(limit(list[idx].id), Math.floor(qty) || 1)); save(list);
+      var room = Math.max(1, maxQty(list[idx].id) - totalOf(list, list[idx].id, idx));
+      list[idx].qty = Math.max(1, Math.min(room, Math.floor(qty) || 1)); save(list);
     },
+    maxQty: maxQty, totalOf: function (id) { return totalOf(items(), id, -1); }, overLimit: overLimit, MAX_MSG: MAX_MSG,
     remove: function (idx) { var list = items(); list.splice(idx, 1); save(list); },
     // after a payment the SERVER confirmed: take exactly the paid quantities out of the cart (never anything else)
     removePaid: function (paid) {
@@ -133,7 +148,7 @@
   // Addresses, names, phone numbers and e-mail addresses are never written to any browser storage.
   var order = {
     fromCart: function () { try { sessionStorage.setItem(ORDER_KEY, JSON.stringify({ mode: 'cart' })); } catch (e) { mem[ORDER_KEY] = JSON.stringify({ mode: 'cart' }); } },
-    buyNow: function (id, option, qty) { var v = JSON.stringify({ mode: 'buy', items: [{ id: id, option: option, qty: qty }] }); try { sessionStorage.setItem(ORDER_KEY, v); } catch (e) { mem[ORDER_KEY] = v; } },
+    buyNow: function (id, option, qty) { qty = Math.max(1, Math.min(maxQty(id), Math.floor(qty) || 1)); var v = JSON.stringify({ mode: 'buy', items: [{ id: id, option: option, qty: qty }] }); try { sessionStorage.setItem(ORDER_KEY, v); } catch (e) { mem[ORDER_KEY] = v; } },
     // -> {mode, items} ; the cart is read live, "buy now" uses only the single selection that was passed
     source: function () {
       var raw = null; try { raw = sessionStorage.getItem(ORDER_KEY); } catch (e) { raw = mem[ORDER_KEY] || null; }
@@ -172,16 +187,82 @@
       t.remove(); ok ? res() : rej(new Error('copy failed'));
     });
   }
-  // device share sheet when the browser has one, otherwise copy the page address; the toast only says "copied" if it really was
-  function share(title) {
-    var url = location.href.split('#')[0] + (location.hash && /^#[a-z-]+-page$/.test(location.hash) ? location.hash : '');
-    if (navigator.share) {
-      return navigator.share({ title: title, url: url }).catch(function (e) { if (e && e.name !== 'AbortError') return fallback(); });
+  // ----- share menu (Facebook / X / LINE / copy the address) -----
+  // The address that is shared is ALWAYS built from the public site address in config.js (siteUrl) plus a fixed page path:
+  // never from location.href, so a file:// address (merged HTML), a login token (#access_token), a ?code= / paymentKey / orderId / amount query or any
+  // other parameter of the current page can never end up in a shared link.
+  var SHARE_PAGES = { home: '', product: 'product.html' };
+  function publicUrl(page) {
+    var base = String((window.IMPETVS_CONFIG && window.IMPETVS_CONFIG.siteUrl) || '').replace(/\/+$/, '');
+    if (!base && /^https?:$/.test(location.protocol)) base = location.origin + location.pathname.replace(/\/[^\/]*$/, '');
+    if (!/^https?:\/\/[^\s?#]+$/.test(base)) return null;
+    return base + '/' + (SHARE_PAGES[page] || '');
+  }
+  var shareState = null;
+  function closeShare(returnFocus) {
+    if (!shareState) return;
+    var st = shareState; shareState = null;
+    document.removeEventListener('keydown', st.onKey, true); window.removeEventListener('resize', st.onResize); window.removeEventListener('scroll', st.onScroll, true);
+    st.ov.remove(); document.documentElement.classList.remove('shp-sh-lock');
+    if (st.trigger) { st.trigger.setAttribute('aria-expanded', 'false'); if (returnFocus !== false && st.trigger.focus) st.trigger.focus(); }
+  }
+  var SH_ICON = {
+    facebook: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13.5 21v-7.5h2.6l.4-3h-3V8.6c0-.9.3-1.5 1.6-1.5h1.6V4.4c-.3 0-1.2-.1-2.3-.1-2.3 0-3.9 1.4-3.9 4v2.2H7.9v3h2.6V21h3z"/></svg>',
+    x: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.8 3h3l-6.6 7.5L22 21h-6l-4.7-6.1L5.9 21h-3l7-8L2.4 3h6.2l4.2 5.6L17.8 3zm-1 16.2h1.7L7.7 4.7H5.9l10.9 14.5z"/></svg>',
+    line: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3C6.5 3 2 6.6 2 11c0 3.9 3.5 7.2 8.3 7.9.3.1.8.2.9.5.1.3.1.7 0 1l-.1.9c0 .3-.2 1 .9.6s5.9-3.5 8-6C21.4 14.5 22 12.8 22 11c0-4.4-4.5-8-10-8zM8.3 13.3H6.2c-.3 0-.5-.2-.5-.5V9.2c0-.3.2-.5.5-.5s.5.2.5.5v3.1h1.6c.3 0 .5.2.5.5s-.2.5-.5.5zm2.1-.5c0 .3-.2.5-.5.5s-.5-.2-.5-.5V9.2c0-.3.2-.5.5-.5s.5.2.5.5v3.6zm5 0c0 .2-.1.4-.3.5h-.2c-.2 0-.3-.1-.4-.2l-2-2.8v2.5c0 .3-.2.5-.5.5s-.5-.2-.5-.5V9.2c0-.2.1-.4.3-.5h.2c.2 0 .3.1.4.2l2 2.8V9.2c0-.3.2-.5.5-.5s.5.2.5.5v3.6zm3.1-2.3c.3 0 .5.2.5.5s-.2.5-.5.5H17v.8h1.5c.3 0 .5.2.5.5s-.2.5-.5.5h-2c-.3 0-.5-.2-.5-.5V9.2c0-.3.2-.5.5-.5h2c.3 0 .5.2.5.5s-.2.5-.5.5H17v.8h1.5z"/></svg>',
+    link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg>'
+  };
+  // share(title, { page: 'home' | 'product', trigger: <the button that opened it> })
+  function share(title, opts) {
+    opts = opts || {}; closeShare(false);
+    var url = publicUrl(opts.page || 'home'), trigger = opts.trigger || null, enc = encodeURIComponent;
+    var ov = document.createElement('div'); ov.className = 'shp-sh-ov';
+    var links = url ? [
+      ['facebook', '페이스북', 'https://www.facebook.com/sharer/sharer.php?u=' + enc(url)],
+      ['x', 'X (트위터)', 'https://twitter.com/intent/tweet?url=' + enc(url) + '&text=' + enc(title || '')],
+      ['line', 'LINE', 'https://social-plugins.line.me/lineit/share?url=' + enc(url)]
+    ] : [];
+    ov.innerHTML = '<div class="shp-sh" role="dialog" aria-modal="true" aria-labelledby="shp-sh-t" tabindex="-1">' +
+      '<div class="shp-sh-h"><h2 id="shp-sh-t">공유하기</h2><button type="button" class="shp-sh-x" aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>' +
+      '<ul class="shp-sh-l">' + links.map(function (l) { return '<li><a class="shp-sh-i" href="' + esc(l[2]) + '" target="_blank" rel="noopener noreferrer">' + SH_ICON[l[0]] + '<span>' + esc(l[1]) + '</span></a></li>'; }).join('') +
+      '<li><button type="button" class="shp-sh-i" data-copy' + (url ? '' : ' disabled') + '>' + SH_ICON.link + '<span>URL 복사</span></button></li></ul>' +
+      (url ? '<p class="shp-sh-u" id="shp-sh-u" tabindex="-1">' + esc(url) + '</p>' : '<p class="shp-sh-u">공개 사이트 주소가 설정되지 않아 공유할 수 없습니다.</p>') +
+      '<p class="shp-sh-m" role="status" aria-live="polite"></p></div>';
+    document.body.appendChild(ov);
+    var box = ov.querySelector('.shp-sh'), msg = ov.querySelector('.shp-sh-m'), copyBtn = ov.querySelector('[data-copy]');
+    function items() { return [].slice.call(box.querySelectorAll('a[href],button:not([disabled])')); }
+    function choices() { return [].slice.call(box.querySelectorAll('.shp-sh-i:not([disabled])')); }   // arrow keys move between the four share choices; Tab also reaches the close button
+    var phone = function () { return window.matchMedia('(max-width: 640px)').matches; };
+    function place() {                                  // PC: a small popup under the icon, kept inside the screen. Phones: a bottom sheet (CSS).
+      box.style.top = box.style.left = box.style.right = ''; if (phone() || !trigger) { box.classList.remove('pop'); return; }
+      box.classList.add('pop'); var r = trigger.getBoundingClientRect(), w = box.offsetWidth, h = box.offsetHeight;
+      var left = Math.min(Math.max(12, r.right - w), window.innerWidth - w - 12), top = r.bottom + 8; if (top + h > window.innerHeight - 12) top = Math.max(12, r.top - h - 8);
+      box.style.left = left + 'px'; box.style.top = top + 'px';
     }
-    return fallback();
-    function fallback() {
-      return copyText(url).then(function () { toast('상품 페이지 주소를 복사했습니다.'); }, function () { toast('주소를 복사하지 못했습니다. 주소창의 주소를 직접 복사해 주세요.'); });
-    }
+    var st = shareState = { ov: ov, trigger: trigger };
+    st.onKey = function (e) {
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeShare(); return; }
+      var it = items(), i = it.indexOf(document.activeElement);
+      if (e.key === 'Tab') { if (!it.length) return; if (e.shiftKey && (i <= 0)) { e.preventDefault(); it[it.length - 1].focus(); } else if (!e.shiftKey && (i === it.length - 1 || i < 0)) { e.preventDefault(); it[0].focus(); } return; }
+      var ch = choices(), k = ch.indexOf(document.activeElement); if (!ch.length) return;
+      if (e.key === 'ArrowDown' || e.key === 'ArrowRight') { e.preventDefault(); ch[(k + 1) % ch.length].focus(); }
+      else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') { e.preventDefault(); ch[(k - 1 + ch.length) % ch.length].focus(); }
+      else if (e.key === 'Home') { e.preventDefault(); ch[0].focus(); } else if (e.key === 'End') { e.preventDefault(); ch[ch.length - 1].focus(); }
+    };
+    st.onResize = place; st.onScroll = function (e) { if (!phone() && !box.contains(e.target)) closeShare(false); };
+    document.addEventListener('keydown', st.onKey, true); window.addEventListener('resize', st.onResize); window.addEventListener('scroll', st.onScroll, true);
+    ov.addEventListener('mousedown', function (e) { if (e.target === ov) closeShare(); });       // click outside
+    ov.querySelector('.shp-sh-x').addEventListener('click', function () { closeShare(); });
+    // nothing here says "shared": opening a platform's page is only the START of sharing, which the platform completes. Copy reports success only if it really worked.
+    copyBtn.addEventListener('click', function () {
+      msg.textContent = '';
+      copyText(url).then(function () { msg.textContent = '주소를 복사했습니다.'; toast('주소를 복사했습니다.'); },
+        function () { msg.textContent = '주소를 복사하지 못했습니다. 위 주소를 길게 눌러(또는 드래그해서) 직접 복사해 주세요.'; var u = ov.querySelector('#shp-sh-u'); if (u) { var r = document.createRange(); r.selectNodeContents(u); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); } });
+    });
+    if (phone()) document.documentElement.classList.add('shp-sh-lock');
+    if (trigger) trigger.setAttribute('aria-expanded', 'true');
+    place(); var f = choices()[0] || items()[0]; (f || box).focus();
+    return Promise.resolve();
   }
 
   /* ------------------------------------------------------------------ header */
@@ -259,7 +340,7 @@
 
   /* ----------------------------------------------------------------- exports */
   window.IMShop = {
-    PRODUCT_ID: PRODUCT_ID, products: PRODUCTS, payments: {}, links: LINKS, cart: cart, order: order, company: COMPANY, shipping: SHIPPING, paymentReady: paymentReady, PAY_NOT_READY: PAY_NOT_READY,
+    PRODUCT_ID: PRODUCT_ID, products: PRODUCTS, payments: {}, links: LINKS, cart: cart, order: order, company: COMPANY, shipping: SHIPPING, paymentReady: paymentReady, PAY_NOT_READY: PAY_NOT_READY, QTY_MSG: MAX_MSG,
     unit: unit, imgFor: imgFor, img: img, money: money, esc: esc, toast: toast, share: share, emit: emit, mountHeaders: mountHeaders, icons: ICONS,
     subscribe: function (f) { subs.push(f); return function () { subs = subs.filter(function (x) { return x !== f; }); }; },
     // accordion: <button data-acc aria-expanded aria-controls=id> + <div id hidden>

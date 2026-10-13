@@ -1,0 +1,6 @@
+# IMPETVS: public pages may be crawled. This file is NOT an access control: nothing private is protected by it
+# (login, orders and personal data are protected by the server, not by robots.txt).
+User-agent: *
+Allow: /
+
+Sitemap: https://leeji020810-beep.github.io/IMPETVS/sitemap.xml

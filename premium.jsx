@@ -103,6 +103,9 @@ function PNav({ t }) {
       <div className="pn-r">
         <nav className="lbl"><a href="#review">Review</a><a href="#howto">How to use</a><a href="product.html">Buy</a></nav>
         <div className="hd-ics">
+          <button type="button" className="hd-ic hd-share" aria-label="홈페이지 공유하기" aria-haspopup="dialog" aria-expanded="false" data-tip="공유하기" onClick={(e) => window.IMShop.share('IMPETVS RICH MAN | 임페투스 리치맨 섬유향수', { page: 'home', trigger: e.currentTarget })}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="M8.6 10.5l6.8-4M8.6 13.5l6.8 4" /></svg>
+          </button>
           <a className="hd-ic" href="login.html" aria-label="로그인" data-tip="로그인" data-user-icon>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" /></svg>
           </a>
