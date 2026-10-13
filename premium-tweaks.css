@@ -305,3 +305,9 @@
    PC: the picture is wider than its box, 72% shifts the bottle left, away from the card.  Phones: the box is very tall and narrow, 45% centres the label. */
 .how-bg img{object-position:72% 50%}
 @media (max-width:900px){.how-bg img{object-position:45% 50%}}
+
+/* 카카오톡 상담: fixed at the bottom right, stacked ABOVE the floating 구매하기 button (44px tall, 28px / 16px from the edge) with a 12px gap, so neither covers the other */
+.pkc{position:fixed;right:28px;bottom:84px;z-index:66;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 18px;box-sizing:border-box;border-radius:999px;background:var(--common-100,#fff);color:#000;text-decoration:none;white-space:nowrap;font-size:16px;font-weight:600;letter-spacing:-.01em;box-shadow:0 4px 16px rgba(0,0,0,.28)}
+.pkc svg{flex:none;display:block}
+.pkc:hover{opacity:.85}.pkc:focus-visible{outline:2px solid #fff;outline-offset:3px}
+@media (max-width:900px){.pkc{right:16px;bottom:72px}}

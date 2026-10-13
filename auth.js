@@ -35,7 +35,7 @@
     lset(SKEY, JSON.stringify({ access_token: d.access_token, refresh_token: d.refresh_token, expires_at: Math.floor(Date.now() / 1000) + (d.expires_in || 3600) }));
     me = null; notify();
   }
-  function clearSession() { ldel(SKEY); me = null; notify(); }
+  function clearSession() { ldel(SKEY); sdel(NKEY); sdel(OKEY); me = null; notify(); }   // tokens + the remembered return address / login-state value; the cart is not login data and stays
   function loggedIn() { return !!readSession(); }
   function notify() { listeners.forEach(function (f) { try { f(); } catch (e) {} }); paintHeader(); }
 
@@ -95,8 +95,24 @@
   }
 
   /* ----------------------------------------------------------------- account */
+  // The same rules the database applies. E-mail: trimmed + lower-cased (Supabase Auth stores it that way). Phone: hyphens / spaces / +82 / 82 / 0082 / (0) removed -> 01XXXXXXXXX, else null.
+  function normEmail(s) { return String(s || '').trim().toLowerCase(); }
+  function normPhone(s) {
+    var d = String(s || '').replace(/\D/g, ''), n;
+    if (d.indexOf('0082') === 0) n = d.slice(4); else if (d.indexOf('82') === 0) n = d.slice(2); else if (d.charAt(0) === '0') n = d.slice(1); else n = d;
+    if (n.charAt(0) === '0') n = n.slice(1);
+    return /^1[016789][0-9]{7,8}$/.test(n) ? '0' + n : null;
+  }
+  // Asks the SERVER whether this e-mail / phone is already registered. One address per call, rate limited on the server, no list is ever returned.
+  // -> { ok:true, email:'available|taken|invalid', phone:'available|taken|invalid|none' } | { ok:false, limited:true|false }
+  function checkSignup(email, phone) {
+    return raw('/rest/v1/rpc/check_signup_available', { method: 'POST', body: { p_email: normEmail(email), p_phone: phone ? String(phone) : null } }).then(function (r) {
+      if (r.ok && r.data && r.data.email) return { ok: true, email: r.data.email, phone: r.data.phone };
+      return { ok: false, limited: String(r.message || '').indexOf('RATE_LIMITED') > -1 || r.status === 429 };
+    });
+  }
   function signUp(f) {
-    return raw('/auth/v1/signup?redirect_to=' + encodeURIComponent(siteBase() + '/auth-callback.html'), { method: 'POST', body: { email: f.email, password: f.password, data: { name: f.name, phone: f.phone || '', consent_terms: true, consent_privacy: true, consent_age14: f.age14 === true, consent_at: new Date().toISOString() } } })
+    return raw('/auth/v1/signup?redirect_to=' + encodeURIComponent(siteBase() + '/auth-callback.html'), { method: 'POST', body: { email: normEmail(f.email), password: f.password, data: { name: f.name, phone: normPhone(f.phone) || '', consent_terms: true, consent_privacy: true, consent_age14: f.age14 === true, consent_at: new Date().toISOString() } } })
       .then(function (r) {
         if (!r.ok) return { ok: false, message: errorText(r) };
         if (r.data && r.data.access_token) { writeSession(r.data); return { ok: true, loggedIn: true }; }
@@ -201,7 +217,7 @@
     menuEl = document.createElement('div'); menuEl.className = 'hd-menu'; menuEl.setAttribute('role', 'menu');
     var r = a.getBoundingClientRect();
     menuEl.style.top = Math.round(r.bottom + 6) + 'px'; menuEl.style.right = Math.max(8, Math.round(document.documentElement.clientWidth - r.right)) + 'px';
-    menuEl.innerHTML = '<p class="hd-menu-n" id="hd-menu-n">내 계정</p><a role="menuitem" href="' + esc(L.contact || 'contact.html') + '">1:1 문의</a><a role="menuitem" href="' + esc(L.withdraw || 'withdraw.html') + '">회원 탈퇴 요청</a><button type="button" role="menuitem" data-logout>로그아웃</button>';
+    menuEl.innerHTML = '<p class="hd-menu-n" id="hd-menu-n">내 계정</p><a role="menuitem" href="' + esc(L.contact || 'contact.html') + '">1:1 문의</a><a role="menuitem" href="' + esc(L.withdraw || 'withdraw.html') + '">회원탈퇴</a><button type="button" role="menuitem" data-logout>로그아웃</button>';
     document.body.appendChild(menuEl);
     profile().then(function (p) { var n = document.getElementById('hd-menu-n'); if (n && p) n.textContent = (p.name || p.email || '내 계정') + (p.name ? '님' : ''); });
     var f = menuEl.querySelector('a'); if (f) f.focus();
@@ -235,7 +251,7 @@
     cfg: C, backendReady: backendReady, legalReady: legalReady, signupReady: signupReady, inquiryReady: inquiryReady, loggedIn: loggedIn, profile: profile, isAdmin: isAdmin, onChange: function (f) { listeners.push(f); },
     signUp: signUp, signIn: signIn, signOut: signOut, resetRequest: resetRequest, updatePassword: updatePassword,
     startKakao: startKakao, startNaver: startNaver, finishFromHash: finishFromHash, finishNaver: finishNaver, parseHash: parseHash,
-    findIdSend: findIdSend, findIdVerify: findIdVerify, rest: rest, rpc: rpc, fn: fn, errorText: errorText, NOT_READY: NOT_READY,
+    clearSession: clearSession, checkSignup: checkSignup, normEmail: normEmail, normPhone: normPhone, findIdSend: findIdSend, findIdVerify: findIdVerify, rest: rest, rpc: rpc, fn: fn, errorText: errorText, NOT_READY: NOT_READY,
     setNext: setNext, takeNext: takeNext, needLogin: needLogin, paintHeader: paintHeader, siteBase: siteBase
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', paintHeader); else paintHeader();

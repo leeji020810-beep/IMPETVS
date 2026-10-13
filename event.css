@@ -23,7 +23,7 @@
 
 /* participate button */
 .evt-act{display:flex;justify-content:center;padding:56px 20px 0}
-.evt-cta{display:inline-flex;align-items:center;justify-content:center;height:56px;padding:0 40px;border:0;border-radius:999px;background:var(--common-100);color:var(--common-0);font:600 16px/1 var(--font-sans);letter-spacing:-.01em;cursor:pointer;transition:opacity .3s var(--ease)}
+.evt-cta{text-decoration:none;display:inline-flex;align-items:center;justify-content:center;height:56px;padding:0 40px;border:0;border-radius:999px;background:var(--common-100);color:var(--common-0);font:600 16px/1 var(--font-sans);letter-spacing:-.01em;cursor:pointer;transition:opacity .3s var(--ease)}
 .evt-cta:hover{opacity:.85}
 .evt-cta:focus-visible{outline:2px solid var(--common-100);outline-offset:3px}
 

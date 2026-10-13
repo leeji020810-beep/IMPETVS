@@ -421,3 +421,19 @@ select.shp-in{appearance:auto}
   .shp-sh-lock{overflow:visible}
 }
 .shp-sh-i small{display:block;font-size:12px;line-height:1.3;color:rgba(55,56,60,.72)}
+
+/* sign-up: e-mail availability row, "all agree" box */
+.su-chk{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;margin:-8px 0 20px}
+.su-chk .su-msg{flex:1 1 220px;margin:0!important;min-width:0}
+.su-all{padding:0 0 12px;margin:0 0 12px;border-bottom:1px solid rgba(112,115,124,.32)}
+.su-all b{font-weight:700}
+.su-msg.shp-err,.su-msg.shp-okmsg,.su-msg.shp-note{font-size:14px;line-height:1.6}
+
+/* confirmation window (회원탈퇴): centred, never wider than the screen, buttons >= 48px */
+.shp-dlg-ov{position:fixed;inset:0;z-index:1300;display:grid;place-items:center;padding:20px;background:rgba(0,0,0,.55);font-family:var(--font-sans);word-break:keep-all;overflow-wrap:anywhere}
+.shp-dlg{box-sizing:border-box;width:100%;max-width:400px;max-height:calc(100vh - 40px);overflow:auto;padding:28px 24px 24px;background:#fff;color:#171719;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.35);outline:0}
+.shp-dlg-t{margin:0 0 12px;font-size:20px;font-weight:700;letter-spacing:-.03em;color:#000}
+.shp-dlg-d{margin:0 0 24px;font-size:16px;line-height:1.7}
+.shp-dlg-a{display:flex;gap:10px}
+.shp-dlg-a .shp-btn{flex:1 1 0;min-width:0;min-height:48px}
+.shp-dlg-lock{overflow:hidden}
