@@ -671,3 +671,75 @@ select.shp-in{appearance:auto;height:56px}
 .pf-out{margin:24px 0 0;text-align:left}
 .pf-outb{display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border:1px solid #ccc;font-size:14px;color:#222;text-decoration:none}
 @media (max-width:900px){.pf-row{padding:12px 0}.pf-l{padding-left:14px}.pf-ph{grid-template-columns:minmax(0,1.1fr) auto minmax(0,1fr) auto minmax(0,1fr)}.pf-ph select.shp-in{padding-left:8px;padding-right:2px}}
+
+/* ===== 3rd round ===== */
+/* product top notice: the shipping item names take the same colour as the text next to them (weight stays bold) */
+.shp-acc-p .shp-k{color:inherit}
+/* mobile tab bar: ONE continuous grey base line (on the bar), the selected tab draws a 3px black line exactly over it: no gap, no height change */
+@media (max-width:900px){
+  .shp-tabs{border-bottom:0}
+  .shp-tabs ul{box-shadow:inset 0 -1px 0 rgba(112,115,124,.32)}
+  .shp-tabs a{margin-bottom:0;border-bottom:0}
+  .shp-tabs a[aria-current="true"]{box-shadow:inset 0 -3px 0 #000}
+}
+/* 마이쇼핑 (shared by every 마이쇼핑 page): the title has no line under it, and the menu / the content start at the same top */
+.my-title{margin:0 0 40px;padding:0;border-bottom:0}
+.shp-my .my-t{margin:0 0 20px;padding:0 0 16px;line-height:28px}
+.shp-my .my-g h2{margin:0 0 6px;line-height:28px}
+.my-nav a{display:block;min-height:44px;padding:8px 0;box-sizing:border-box;font:500 16px/1.4 var(--font-sans);letter-spacing:-.02em;color:#171719;text-decoration:none}
+.my-nav a:hover{text-decoration:underline;opacity:1}
+.my-nav a[aria-current="page"]{font-weight:700;color:#000}
+.my-logout{display:block;width:100%;min-height:44px;padding:8px 0;border:0;background:none;text-align:left;font:500 16px/1.4 var(--font-sans);color:#171719;cursor:pointer}
+.my-logout:hover{text-decoration:underline}
+.my-back{display:none}
+.mt-tabs{display:grid;grid-template-columns:1fr 1fr;margin:0 0 20px;border-bottom:1px solid rgba(112,115,124,.32)}
+.mt-tabs a{display:flex;align-items:center;justify-content:center;min-height:48px;margin-bottom:-1px;border-bottom:2px solid transparent;font-size:15px;font-weight:500;color:rgba(55,56,60,.61);text-decoration:none}
+.mt-tabs a[aria-selected="true"]{color:#000;font-weight:700;border-bottom-color:#000}
+.my-sel{width:100%;height:48px;padding:0 12px;border:1px solid rgba(112,115,124,.4);background:#fff;font:400 14px var(--font-sans);color:#171719;box-sizing:border-box;border-radius:0}
+.my-rg .my-sel{flex:1 1 100%}
+.my-ask{display:inline-flex;width:auto;min-width:160px;margin:0 0 8px}
+.my-empty-i::before,.my-empty::before{content:none}
+.my-empty-i{padding:48px 0}
+.my-empty-i::before{content:"!";display:block;margin:0 auto 14px;width:52px;height:52px;border:2px solid #ddd;border-radius:50%;line-height:48px;font-size:26px;color:#ddd}
+/* 배송지 관리 list: every value centred under its column, vertically centred; long addresses wrap inside their cell */
+.ab-tr{align-items:center;justify-items:center;text-align:center}
+.ab-nm{display:flex;flex-direction:column;align-items:center}
+.ab-ad{text-align:center}
+.ab-chk{margin:0}
+/* address block (one item): zip + 주소검색, base address, rest of the address */
+.ab-addr{display:block;margin:0 0 20px}
+.ab-addr>span{display:block;margin:0 0 8px}
+.ab-zr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin:0 0 8px}
+.ab-zr .shp-btn{width:auto;min-width:96px;height:auto;padding:0 18px;font-size:15px}
+.ab-addr>.shp-in{margin:0 0 8px}
+.shp-dlg-ov.ab-pc-ov{padding:12px;z-index:1400}
+.ab-pc{display:flex;flex-direction:column;width:min(500px,100%);height:min(560px,calc(100vh - 24px));height:min(560px,calc(100dvh - 24px));background:#fff;color:#171719;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.ab-pc-h{display:flex;justify-content:space-between;align-items:center;flex:none;height:52px;padding:0 6px 0 16px;border-bottom:1px solid #ddd;font-size:15px}
+.ab-pc-x{min-width:44px;min-height:44px;padding:0 10px;border:0;background:none;font:500 14px var(--font-sans);color:#171719;cursor:pointer}
+.ab-pc-b{flex:1;min-height:0}
+/* 회원 정보 수정 (3rd round) */
+.pf-head{border-bottom:0;padding-bottom:8px}
+.pf-l{position:static;display:flex;align-items:baseline;padding-left:0}
+.pf-d{display:inline-block;flex:none;width:16px}
+.pf-req{position:static}
+.shp-my .pf-out{margin:40px 0 0;text-align:right}
+@media (max-width:900px){
+  .pf-l{padding-left:0}
+  /* mobile 마이쇼핑: a plain left-aligned vertical menu (landing page); every other 마이쇼핑 page is its own page with a back button */
+  .my-nav{display:block}
+  .my-g{display:block;padding:0 0 12px;margin:0 0 12px;border-bottom:1px solid rgba(112,115,124,.22)}
+  .my-g h2{padding:0}
+  .my-g:last-of-type{border-bottom:1px solid rgba(112,115,124,.22)}
+  .my-nav a{text-align:left}
+  .my-nav .my-logout{width:100%;min-height:56px;margin:12px 0 0;padding:0 16px;border:1px solid rgba(112,115,124,.5);background:#fff;text-align:center;font-weight:500;color:rgba(55,56,60,.85)}
+  .my-home .my-main{display:none}
+  .my-home .my-nav a[aria-current="page"]{font-weight:500;color:#171719}
+  .my-page .my-nav,.my-page .my-title{display:none}
+  .my-back{display:flex;align-items:center;gap:6px;min-height:44px;margin:0 0 4px;font-size:15px;font-weight:500;color:#171719;text-decoration:none}
+  .my-page .my-grid{margin-top:8px}
+  .ab-tr{justify-items:stretch;text-align:left}
+  .ab-nm{align-items:flex-start}.ab-ad{text-align:left}
+  .ab-pin{text-align:left}
+  .ab-pin .ab-chk{justify-self:start;justify-content:flex-start;width:44px;margin:-12px 0}
+  .ab-pin .ab-chk input{margin:0}
+}

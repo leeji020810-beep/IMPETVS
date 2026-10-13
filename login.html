@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fig-tokens.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/typography.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/semantic.css">
-<link rel="stylesheet" href="shop.css?v=20261016u">
+<link rel="stylesheet" href="shop.css?v=20261016w">
 <style>html,body{margin:0;background:#fff}</style>
 </head>
 <body>
@@ -104,9 +104,9 @@
     </section>
   </div>
 </main>
-<script src="config.js?v=20261016u"></script>
-<script src="shop.js?v=20261016u"></script>
-<script src="auth.js?v=20261016u"></script>
+<script src="config.js?v=20261016w"></script>
+<script src="shop.js?v=20261016w"></script>
+<script src="auth.js?v=20261016w"></script>
 <script id="shp-js-login">
 (function () {
   var root = document.getElementById('login-root'), S = window.IMShop, A = window.IMAuth, C = A.cfg;
@@ -175,7 +175,7 @@
 
   // a short pause between mail requests from this browser (the mail service has its own server-side limit as well)
   // the same short answer for every address (nothing about an account is shown). Only a request was made: the person is NOT verified until the link in the e-mail is opened.
-  var SENT = '요청을 접수했습니다. 메일의 링크로 본인 확인을 완료해 주세요.';
+  var SENT = '메일의 링크로 본인 확인을 완료해 주세요.';
   var COOL = 60000, lastMail = 0;
   function cooling(btn, label) { var left = COOL - (Date.now() - lastMail); if (left <= 0) return false; btn.textContent = Math.ceil(left / 1000) + '초 뒤 다시 요청할 수 있습니다'; setTimeout(function () { btn.textContent = label; }, Math.min(left, 3000)); return true; }
   function mailRequest(em, btn, label, errEl, okEl, okText) {
