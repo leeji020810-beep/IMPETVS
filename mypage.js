@@ -1,4 +1,4 @@
-/* IMPETVS 마이쇼핑: ONE shared script for every 마이쇼핑 page (mypage.html = menu / PC overview, mypage-orders.html, -claims, -address, -pay, -reviews, -inquiries, -profile).
+/* IMPETVS MY PAGE: ONE shared script for every MY PAGE page (mypage.html = menu / PC overview, mypage-orders.html, -claims, -address, -pay, -reviews, -inquiries, -profile).
    Each page only says which view it is (<main data-my-view="...">) and calls IMMy.init(root). All data goes through auth.js; the SERVER (row-level security + functions) decides what a member may read or change.
    Nothing here stores personal data in the browser. */
 (function () {
@@ -54,17 +54,17 @@
     function main() { return $('my-main'); }
     function paint(my, html) { if (my === seq) main().innerHTML = html; return my === seq; }
 
-    /* ---- page skeleton (the same on every 마이쇼핑 page) ---- */
-    var solo = cv === 'profile' && !home;       // 회원 정보 수정 has its own page without the 마이쇼핑 menu
+    /* ---- page skeleton (the same on every MY PAGE page) ---- */
+    var solo = cv === 'profile' && !home;       // 회원 정보 수정 has its own page without the MY PAGE menu
     function skeleton() {
       var nav = GROUPS.map(function (g) {
         return '<div class="my-g"><h2>' + g[0] + '</h2>' + g[1].map(function (k) { return '<a href="' + P[k][0] + '"' + (k === cv ? ' aria-current="page"' : '') + '>' + P[k][1] + '</a>'; }).join('') + '</div>';
       }).join('');
       var CHEV = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';
       root.innerHTML = '<div class="shp-doc shp-my ' + (home ? 'my-home' : 'my-page') + (solo ? ' my-solo' : '') + '"><p class="shp-note" id="my-gate" role="status" hidden></p><div id="my-app" hidden>' +
-        '<h1 class="my-title" id="my-h">' + (solo ? P[cv][1] : '마이쇼핑') + '</h1>' +
-        (home ? '' : '<div class="my-bar"><a class="my-back" href="' + HOME + '" aria-label="마이쇼핑으로 돌아가기">' + CHEV + '</a><p class="my-bt" role="heading" aria-level="1">' + P[cv][1] + '</p><span class="my-bs" aria-hidden="true"></span></div>') +
-        '<div class="my-grid"><nav class="my-nav" aria-label="마이쇼핑 메뉴">' + nav + '<button type="button" class="my-logout" id="my-logout">로그아웃</button></nav><section class="my-main" id="my-main" tabindex="-1" aria-live="polite"></section></div></div></div>';
+        '<h1 class="my-title" id="my-h">' + (solo ? P[cv][1] : 'MY PAGE') + '</h1>' +
+        (home ? '' : '<div class="my-bar"><a class="my-back" href="' + HOME + '" aria-label="MY PAGE로 돌아가기">' + CHEV + '</a><p class="my-bt" role="heading" aria-level="1">' + P[cv][1] + '</p><span class="my-bs" aria-hidden="true"></span></div>') +
+        '<div class="my-grid"><nav class="my-nav" aria-label="MY PAGE 메뉴">' + nav + '<button type="button" class="my-logout" id="my-logout">로그아웃</button></nav><section class="my-main" id="my-main" tabindex="-1" aria-live="polite"></section></div></div></div>';
       $('my-logout').addEventListener('click', function () { A.signOut().then(function () { S.toast('로그아웃되었습니다.'); setTimeout(function () { location.href = S.links.home; }, 600); }); });
     }
     function gate() {
@@ -142,7 +142,7 @@
       function load() {
         var m2 = ++seq, claims = claimsTab;
         main().innerHTML = head('주문 내역') + rangeBox(claims ? CLAIM_FILTER : ORDER_FILTER) + '<div id="my-list"><p class="shp-note">불러오는 중…</p></div>' +
-          (claims ? '<p class="shp-note my-nt">취소·환불 내역은 주문 정보에 실제로 기록된 처리 상태만 표시합니다. 교환·반품 요청을 접수하고 진행 상태를 저장하는 기능은 아직 연결되지 않았습니다. 교환·반품은 <a href="' + esc(S.links.contact) + '" style="text-decoration:underline">1:1 문의</a>로 접수해 주세요(문의를 보낸 것만으로 교환·반품이 완료되지는 않습니다).</p>' : '');
+          '';
         bindRange(load);
         function count(id, n) { var el = $(id); if (el && n > 0) el.textContent = ' (' + (n >= 100 ? '100+' : n) + ')'; }     // a number only when there really are orders in the chosen period
         fetchOrders(p, claims, true).then(function (r) {
@@ -334,9 +334,19 @@
           '<div class="my-iqb" hidden><p>' + esc(q.content).replace(/\n/g, '<br>') + '</p>' + (done ? '<div class="my-ans"><b>답변</b><p>' + esc(q.answer).replace(/\n/g, '<br>') + '</p></div>' : '') + '</div></li>';
       }).join('') + '</ul>' : '<p class="shp-empty my-empty my-empty-i">' + none + '</p>';
     }
-    var iq = { tab: 's', days: 180, from: '', to: '', st: '' };
-    (function () { var t = new Date(), f = new Date(); f.setDate(f.getDate() - 180); iq.from = ymd(f); iq.to = ymd(t); })();
-    function setIqDays(n) { var t = new Date(), f = new Date(); f.setDate(f.getDate() - n); iq.days = n; iq.from = ymd(f); iq.to = ymd(t); }
+    // 나의 문의 내역: tabs (1:1 문의 내역 / 상품문의) -> period select (전체 / 최근 1·3·6개월, kept when the tab changes) -> the member's OWN list -> 문의하기 (below the list).
+    // PC shows the list as a table (번호 / 제목 / 작성일 / 작성자) under a light grey filter strip; phones keep the compact list.
+    var iq = { tab: 's', range: 'all' };
+    var IQR = [['all', '전체'], ['30', '최근 1개월'], ['90', '최근 3개월'], ['180', '최근 6개월']];
+    function iqTable(list, kind, none, who) {
+      var th = '<div class="iq-tr iq-th" role="row"><span role="columnheader">번호</span><span role="columnheader">제목</span><span role="columnheader">작성일</span><span role="columnheader">작성자</span></div>';
+      if (!list.length) return '<div class="iq-tbl" role="table">' + th + '<div class="iq-empty">' + none + '</div></div>';
+      return '<div class="iq-tbl" role="table">' + th + list.map(function (q, k) {
+        var done = !!q.answer;
+        return '<div class="iq-item"><button type="button" class="iq-tr iq-hd my-iqh" aria-expanded="false"><span class="iq-n">' + (list.length - k) + '</span><span class="iq-t"><span class="iq-tt">' + (kind === 'p' && q.is_public === false ? '<em>비공개</em> ' : '') + esc(q.title) + '</span><span class="iq-st">' + (done ? '답변 완료' : '답변 대기') + '</span></span><span class="iq-d">' + esc(day(q.created_at)) + '</span><span class="iq-a">' + esc(who) + '</span></button>' +
+          '<div class="my-iqb" hidden><p>' + esc(q.content).replace(/\n/g, '<br>') + '</p>' + (done ? '<div class="my-ans"><b>답변</b><p>' + esc(q.answer).replace(/\n/g, '<br>') + '</p></div>' : '') + '</div></div>';
+      }).join('') + '</div>';
+    }
     VIEWS.inq = function (my, p) {
       function load() {
         var m2 = ++seq, s = iq.tab === 's';
@@ -344,16 +354,18 @@
         var href = s ? S.links.contact : (S.links.product + (String(S.links.product).charAt(0) === '#' ? '' : '#pd-qna'));
         main().innerHTML = head('나의 문의 내역') +
           '<div class="ut-tabs" role="tablist" aria-label="문의 구분"><button type="button" role="tab" class="ut-tab" data-iq="s" aria-selected="' + s + '">1:1 문의 내역</button><button type="button" role="tab" class="ut-tab" data-iq="p" aria-selected="' + (!s) + '">상품문의</button></div>' +
-          '<a class="shp-btn main my-ask" href="' + esc(href) + '">문의하기</a>' + periodBox(iq, null) + '<div id="my-list"><p class="shp-note">불러오는 중…</p></div>';
+          '<div class="iq-filter"><select id="iq-range" class="my-sel iq-sel" aria-label="조회 기간">' + IQR.map(function (r) { return '<option value="' + r[0] + '"' + (iq.range === r[0] ? ' selected' : '') + '>' + r[1] + '</option>'; }).join('') + '</select></div>' +
+          '<div id="my-list" class="iq-wrap"><p class="shp-note">불러오는 중…</p></div>' +
+          '<div class="iq-ask"><a class="shp-btn main my-ask" href="' + esc(href) + '">문의하기</a></div>';
         [].forEach.call(main().querySelectorAll('[data-iq]'), function (b) { b.addEventListener('click', function () { var t2 = b.getAttribute('data-iq'); if (t2 === iq.tab) return; iq.tab = t2; load(); }); });
-        bindPeriod(iq, load, setIqDays);
-        var from = new Date(iq.from + 'T00:00:00'), to = new Date(iq.to + 'T23:59:59');
-        var win = '&created_at=gte.' + encodeURIComponent(from.toISOString()) + '&created_at=lte.' + encodeURIComponent(to.toISOString());      // the chosen period filters the member's OWN inquiries
+        $('iq-range').addEventListener('change', function () { iq.range = this.value; load(); });
+        var win = '';      // the chosen period filters the member's OWN inquiries (real dates)
+        if (iq.range !== 'all') { var f = new Date(); f.setDate(f.getDate() - (+iq.range)); win = '&created_at=gte.' + encodeURIComponent(f.toISOString()); }
         var req = s ? A.rest.select('service_inquiries', 'select=id,type,title,content,status,answer,answered_at,created_at&user_id=eq.' + encodeURIComponent(p.id) + win + '&order=created_at.desc&limit=100', true)
                     : A.rest.select('product_inquiries', 'select=id,title,content,is_public,answer,answered_at,created_at&user_id=eq.' + encodeURIComponent(p.id) + win + '&order=created_at.desc&limit=100', true);
         req.then(function (r) {
           if (m2 !== seq) return; var box = $('my-list'); if (!box) return;
-          box.innerHTML = r.ok ? inqList(r.data || [], s ? 's' : 'p', s ? '작성하신 1:1 문의 내역이 없습니다.' : '작성하신 상품문의 내역이 없습니다.') : empty(failText(r));
+          box.innerHTML = r.ok ? iqTable(r.data || [], s ? 's' : 'p', s ? '작성하신 1:1 문의 내역이 없습니다.' : '작성하신 상품문의 내역이 없습니다.', p.name || '회원') : empty(failText(r));
           [].forEach.call(box.querySelectorAll('.my-iqh'), function (b) { b.addEventListener('click', function () { var o = b.getAttribute('aria-expanded') === 'true'; b.setAttribute('aria-expanded', o ? 'false' : 'true'); b.nextElementSibling.hidden = o; }); });
         });
       }
@@ -379,7 +391,7 @@
           '<div id="pf-res" class="pf-res" role="status" aria-live="polite" hidden></div>' +
           '<p class="pf-out"><a href="' + esc(S.links.withdraw) + '" class="pf-outb">회원탈퇴</a></p>' +
           '<div class="pf-btns"><button type="button" class="shp-btn line" id="pf-cancel">취소</button><button type="submit" class="shp-btn main" id="pf-save">회원정보수정</button></div></form>');
-        $('pf-cancel').addEventListener('click', function () { location.href = HOME; });     // nothing is saved; back to 마이쇼핑
+        $('pf-cancel').addEventListener('click', function () { location.href = HOME; });     // nothing is saved; back to MY PAGE
         [].forEach.call(main().querySelectorAll('[data-eye]'), function (bt) { bt.addEventListener('click', function () { var i = $(bt.getAttribute('data-eye')), show = i.type === 'password'; i.type = show ? 'text' : 'password'; bt.setAttribute('aria-pressed', show ? 'true' : 'false'); bt.setAttribute('aria-label', show ? '비밀번호 숨기기' : '비밀번호 표시'); }); });
         ['pf-p2', 'pf-p3'].forEach(function (id) { $(id).addEventListener('input', function () { this.value = this.value.replace(/\D/g, ''); }); });
         var need = false, loginEmail = A.normEmail(p.email), pendingEmail = '', busy = false;     // what is already saved / already requested: a retry never repeats a finished item

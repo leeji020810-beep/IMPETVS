@@ -246,7 +246,7 @@
   /* ------------------------------------------------------------------ header */
   function esc(s) { return window.IMShop ? window.IMShop.esc(s) : String(s); }
   document.addEventListener('click', function (e) {
-    // the home page draws its header icon AFTER this file ran: do not rely on the painted address, decide at click time (logged in -> 마이쇼핑)
+    // the home page draws its header icon AFTER this file ran: do not rely on the painted address, decide at click time (logged in -> MY PAGE)
     var ic = e.target.closest && e.target.closest('[data-user-icon]');
     if (ic && loggedIn()) { e.preventDefault(); location.href = (window.IMShop && window.IMShop.links && window.IMShop.links.mypage) || 'mypage.html'; return; }
     var lo = e.target.closest && e.target.closest('[data-logout]');
@@ -256,7 +256,7 @@
     var on = loggedIn();
     [].forEach.call(document.querySelectorAll('[data-user-icon]'), function (a) {
       var L = (window.IMShop && window.IMShop.links) || {};
-      a.setAttribute('aria-label', on ? '마이쇼핑' : '로그인'); a.setAttribute('data-tip', on ? '마이쇼핑' : '로그인'); a.setAttribute('href', on ? (L.mypage || 'mypage.html') : (L.login || 'login.html'));   // logged out: login page; logged in: 마이쇼핑
+      a.setAttribute('aria-label', on ? 'MY PAGE' : '로그인'); a.setAttribute('data-tip', on ? 'MY PAGE' : '로그인'); a.setAttribute('href', on ? (L.mypage || 'mypage.html') : (L.login || 'login.html'));   // logged out: login page; logged in: MY PAGE
       if (on) a.setAttribute('data-on', ''); else a.removeAttribute('data-on');
     });
   }

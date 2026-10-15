@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fig-tokens.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/typography.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/semantic.css">
-<link rel="stylesheet" href="shop.css?v=20261017a">
+<link rel="stylesheet" href="shop.css?v=20261017b">
 <style>html,body{margin:0;background:#fff}</style>
 </head>
 <body>
@@ -22,19 +22,20 @@
     <div id="cart-body"></div>
   </div>
 </main>
-<script src="config.js?v=20261017a"></script>
-<script src="shop.js?v=20261017a"></script>
-<script src="auth.js?v=20261017a"></script>
+<script src="config.js?v=20261017b"></script>
+<script src="shop.js?v=20261017b"></script>
+<script src="auth.js?v=20261017b"></script>
 <script id="shp-js-cart">
 (function () {
   var S = window.IMShop, body = document.getElementById('cart-body');
-  // 상품금액 / 배송비 / 최종 합계 are shown separately; the shipping fee is 무료 here (일반 지역); the 제주 3,000원 / 제주 외 도서산간 5,000원 fee is decided from the 우편번호 on the order page
+  var TRASH = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12h10l1-12M9 7V4h6v3"/></svg>';
+  // 상품금액 / 배송비 / 최종 합계 are shown separately and follow the TICKED lines only. 배송비: 무료 here (일반 지역); 제주 3,000원 / 제주 외 도서산간 5,000원 depend on the delivery address (order page)
   function sumHTML() {
-    var sub = S.cart.total(), fee = S.shipping.calc(sub), ok = typeof sub === 'number' && fee !== null;
+    var sel = S.cart.selected(), sub = S.cart.selTotal(), ok = sel.length > 0 && typeof sub === 'number', fee = ok ? S.shipping.calc(sub) : null;
     return '<div class="shp-osum shp-cartsum">' +
-      '<div class="shp-orow"><span>상품금액 합계 <span class="muted">(총 ' + S.cart.count() + '개)</span></span><b id="cart-sub">' + S.esc(S.money(sub)) + '</b></div>' +
+      '<div class="shp-orow"><span>상품금액 합계 <span class="muted">(총 ' + S.cart.selCount() + '개)</span></span><b id="cart-sub">' + S.esc(ok ? S.money(sub) : '0원') + '</b></div>' +
       '<div class="shp-orow"><span>배송비</span><span id="cart-ship">' + (ok ? (fee === 0 ? '무료' : S.esc(S.money(fee))) : '-') + '</span></div>' +
-      '<div class="shp-orow t"><span>최종 합계</span><b id="cart-total">' + (ok ? S.esc(S.money(sub + fee)) : '-') + '</b></div></div>';
+      '<div class="shp-orow t"><span>최종 합계</span><b id="cart-total">' + S.esc(ok ? S.money(sub + fee) : '0원') + '</b></div></div>';
   }
   // 같은 상품은 용량과 관계없이 합계 최대 30개: over = the cart already holds more (older cart) -> the visitor must reduce it
   function limitHTML(list) {
@@ -49,38 +50,46 @@
       return;
     }
     var rows = list.map(function (it, i) {
-      var p = S.products[it.id];
-      return '<li class="shp-item" data-i="' + i + '">' +
-        '<a href="' + S.links.product + '" aria-label="' + S.esc(p.name) + ' 상품 보기"><img src="' + S.esc(S.img(S.imgFor(it.id, it.option))) + '" width="96" height="128" alt="' + S.esc(p.name + ' ' + it.option) + '"></a>' +
-        '<div><p class="shp-item-name">' + S.esc(p.name) + '</p>' +
-        '<p class="shp-item-opt">용량: ' + S.esc(it.option) + '</p>' +
-        '<p class="shp-item-unit">단가 ' + S.esc(S.money(S.cart.unit(it))) + '</p>' +
-        '</div>' +
-        '<div class="shp-item-side"><div class="shp-qty" role="group" aria-label="' + S.esc(p.name + ' ' + it.option) + ' 수량">' +
+      var p = S.products[it.id], nm = S.esc(p.name + ' ' + it.option);
+      return '<li class="ct-row" data-i="' + i + '">' +
+        '<label class="ct-ck"><input type="checkbox" data-sel aria-label="' + nm + ' 선택"' + (S.cart.isSelected(it) ? ' checked' : '') + '></label>' +
+        '<a class="ct-img" href="' + S.links.product + '" aria-label="' + S.esc(p.name) + ' 상품 보기"><img src="' + S.esc(S.img(S.imgFor(it.id, it.option))) + '" width="96" height="128" alt="' + nm + '"></a>' +
+        '<p class="ct-name">' + S.esc(p.name) + '</p>' +
+        '<div class="ct-meta"><p class="ct-opt"><span class="ct-l">용량</span>' + S.esc(it.option) + '</p><p class="ct-amt"><span class="ct-l">상품금액</span><b>' + S.esc(S.money(S.cart.line(it))) + '</b></p></div>' +
+        '<div class="ct-qty"><div class="shp-qty" role="group" aria-label="' + nm + ' 수량">' +
         '<button type="button" data-act="minus" aria-label="수량 줄이기"' + (it.qty <= 1 ? ' disabled' : '') + '>−</button>' +
         '<input type="number" data-act="qty" value="' + it.qty + '" min="1" max="' + S.cart.maxQty(it.id) + '" inputmode="numeric" aria-label="수량">' +
-        '<button type="button" data-act="plus" aria-label="수량 늘리기"' + (S.cart.totalOf(it.id) >= S.cart.maxQty(it.id) ? ' disabled' : '') + '>+</button></div>' +
-        '<button type="button" class="shp-rm" data-act="rm" aria-label="' + S.esc(p.name + ' ' + it.option) + ' 삭제">삭제</button></div></li>';
+        '<button type="button" data-act="plus" aria-label="수량 늘리기"' + (S.cart.totalOf(it.id) >= S.cart.maxQty(it.id) ? ' disabled' : '') + '>+</button></div></div>' +
+        '<button type="button" class="ct-rm" data-act="rm" aria-label="' + nm + ' 삭제">' + TRASH + '</button></li>';
     }).join('');
-    body.innerHTML = limitHTML(list) + '<ul class="shp-list">' + rows + '</ul>' +
-      sumHTML() +
+    var n = S.cart.selected().length;
+    body.innerHTML = limitHTML(list) +
+      '<div class="ct-bar"><label class="ct-all"><input type="checkbox" id="ct-all"><span>전체선택</span></label><button type="button" class="ct-ds" id="ct-delsel">선택삭제</button></div>' +
+      '<div class="ct-head" aria-hidden="true"><span></span><span class="ct-h-info">상품 정보</span><span>용량</span><span>수량</span><span>상품금액</span><span></span></div>' +
+      '<ul class="ct-list">' + rows + '</ul>' + sumHTML() +
       '<p class="shp-shipnote shp-cartnote">' + S.shipping.cartNote.map(S.esc).join('<br>') + '</p>' +
       '<p class="shp-notice" id="cart-pay-note" role="status" hidden>' + S.PAY_NOT_READY + ' 담아 두신 상품은 그대로 유지됩니다.</p>' +
-      '<a class="shp-btn" id="cart-order" href="' + S.links.order + '">주문하기</a>';
+      '<a class="shp-btn" id="cart-order" href="' + S.links.order + '"' + (n ? '' : ' aria-disabled="true"') + '>주문하기</a>';
+    var all = document.getElementById('ct-all'); all.checked = n === list.length; all.indeterminate = n > 0 && n < list.length;
   }
   function refocus(i, act) {
-    var el = body.querySelector('.shp-item[data-i="' + i + '"] [data-act="' + act + '"]') || body.querySelector('.shp-item [data-act], a.shp-btn');
+    var el = body.querySelector('.ct-row[data-i="' + i + '"] [data-act="' + act + '"]') || body.querySelector('.ct-row [data-act], a.shp-btn');
     if (el && el.focus) el.focus();
   }
-  // 주문하기: the whole cart (product / capacity / quantity) goes to the order page; nothing is removed from the cart here
+  // 주문하기: only the TICKED lines (product / capacity / quantity) go to the order page; nothing is removed from the cart here
   body.addEventListener('click', function (e) {
     if (e.target.closest('#cart-order')) {
-      if (S.cart.overLimit().length) { e.preventDefault(); S.toast(S.QTY_MSG + ' 수량을 줄여 주세요.'); var ln = document.getElementById('cart-limit-note'); if (ln) ln.scrollIntoView({ block: 'center' }); return; }   // an over-limit cart is never sent to the order page
+      if (!S.cart.selected().length) { e.preventDefault(); S.toast('주문할 상품을 선택해 주세요.'); return; }
+      if (S.cart.overLimit().length) { e.preventDefault(); S.toast(S.QTY_MSG + ' 수량을 줄여 주세요.'); var ln = document.getElementById('cart-limit-note'); if (ln) ln.scrollIntoView({ block: 'center' }); return; }   // an over-limit cart is never sent
       if (!S.paymentReady()) { e.preventDefault(); var n = document.getElementById('cart-pay-note'); if (n) n.hidden = false; S.toast(S.PAY_NOT_READY); return; }   // nothing is started while payment is not connected
       S.order.fromCart(); return;
     }
+    if (e.target.closest('#ct-delsel')) {
+      if (!S.cart.selected().length) { S.toast('삭제할 상품을 선택해 주세요.'); return; }
+      S.cart.removeSelected(); render(); return;       // the unticked lines stay
+    }
     var b = e.target.closest('[data-act]'); if (!b) return;
-    var i = +b.closest('.shp-item').dataset.i, it = S.cart.items()[i]; if (!it) return;
+    var i = +b.closest('.ct-row').dataset.i, it = S.cart.items()[i]; if (!it) return;
     if (b.dataset.act === 'minus') S.cart.setQty(i, it.qty - 1);
     else if (b.dataset.act === 'plus') S.cart.setQty(i, it.qty + 1);
     else if (b.dataset.act === 'rm') S.cart.remove(i);
@@ -88,8 +97,11 @@
     render(); refocus(i, b.dataset.act);
   });
   body.addEventListener('change', function (e) {
-    if (e.target.dataset.act !== 'qty') return;
-    S.cart.setQty(+e.target.closest('.shp-item').dataset.i, Number(e.target.value)); render();
+    var t = e.target;
+    if (t.id === 'ct-all') { S.cart.setAllSelected(t.checked); render(); return; }
+    if (t.hasAttribute('data-sel')) { var i = +t.closest('.ct-row').dataset.i, it = S.cart.items()[i]; if (it) S.cart.setSelected(it, t.checked); render(); var el = body.querySelector('.ct-row[data-i="' + i + '"] [data-sel]'); if (el) el.focus(); return; }
+    if (t.dataset.act !== 'qty') return;
+    S.cart.setQty(+t.closest('.ct-row').dataset.i, Number(t.value)); render();
   });
   S.subscribe(function () { if (!body.contains(document.activeElement) || document.activeElement === document.body) render(); });
   render();

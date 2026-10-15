@@ -479,7 +479,7 @@ select.shp-in{appearance:auto}
 .shp-meth input{width:20px;height:20px;margin:0;accent-color:#000}
 .shp-hlp{margin:-4px 0 12px;font-size:13px}
 
-/* ===== 마이쇼핑: wide margins, thin lines, greeting box on top, menu on the left / content on the right (one column on phones) ===== */
+/* ===== MY PAGE: wide margins, thin lines, greeting box on top, menu on the left / content on the right (one column on phones) ===== */
 .shp-my{max-width:1200px;margin:0 auto;padding:48px 20px 120px;box-sizing:border-box}
 .my-hello{padding:36px 40px;border:1px solid rgba(112,115,124,.32)}
 .my-hello h1{margin:0 0 10px;font-size:28px;font-weight:700;letter-spacing:-.04em;line-height:1.35;color:#000;word-break:keep-all;overflow-wrap:anywhere}
@@ -577,7 +577,7 @@ select.shp-in{appearance:auto}
   .shp-tabs a{padding:0 12px;white-space:nowrap}
 }
 
-/* 마이쇼핑: title only */
+/* MY PAGE: title only */
 .my-title{margin:0 0 8px;padding:0 0 20px;border-bottom:1px solid #000;font-size:28px;font-weight:700;letter-spacing:-.04em;color:#000}
 @media (max-width:900px){.my-title{font-size:22px}}
 /* 배송지 관리 */
@@ -682,7 +682,7 @@ select.shp-in{appearance:auto;height:56px}
   .shp-tabs a{margin-bottom:0;border-bottom:0}
   .shp-tabs a[aria-current="true"]{box-shadow:inset 0 -3px 0 #000}
 }
-/* 마이쇼핑 (shared by every 마이쇼핑 page): the title has no line under it, and the menu / the content start at the same top */
+/* MY PAGE (shared by every MY PAGE page): the title has no line under it, and the menu / the content start at the same top */
 .my-title{margin:0 0 40px;padding:0;border-bottom:0}
 .shp-my .my-t{margin:0 0 20px;padding:0 0 16px;line-height:28px}
 .shp-my .my-g h2{margin:0 0 6px;line-height:28px}
@@ -725,7 +725,7 @@ select.shp-in{appearance:auto;height:56px}
 .shp-my .pf-out{margin:40px 0 0;text-align:right}
 @media (max-width:900px){
   .pf-l{padding-left:0}
-  /* mobile 마이쇼핑: a plain left-aligned vertical menu (landing page); every other 마이쇼핑 page is its own page with a back button */
+  /* mobile MY PAGE: a plain left-aligned vertical menu (landing page); every other MY PAGE page is its own page with a back button */
   .my-nav{display:block}
   .my-g{display:block;padding:0 0 12px;margin:0 0 12px;border-bottom:1px solid rgba(112,115,124,.22)}
   .my-g h2{padding:0}
@@ -775,7 +775,7 @@ select.shp-in{appearance:auto;height:56px}
   .pf-req{position:absolute;left:-13px;top:0}
   .pf-l{gap:0}
 }
-/* 회원 정보 수정 page: no 마이쇼핑 menu, centred title like the 마이쇼핑 title, the form below it */
+/* 회원 정보 수정 page: no MY PAGE menu, centred title like the MY PAGE title, the form below it */
 .my-solo .my-nav{display:none}
 .my-solo .my-grid{grid-template-columns:minmax(0,1fr);margin-top:0}
 .my-solo .my-main{max-width:760px;width:100%;margin:0 auto}
@@ -829,3 +829,116 @@ select.shp-in{appearance:auto;height:56px}
 .my-dlg .shp-dlg-d{text-align:center}
 
 .shp-sub{display:block}
+
+/* ===== 6th round ===== */
+/* ---- 장바구니: list columns on PC (상품 정보 | 용량 | 수량 | 상품금액), card layout on phones. Only the lines that are needed: header, row separators. ---- */
+.ct-bar{display:flex;align-items:center;justify-content:space-between;margin:0 0 12px}
+.ct-all,.ct-ck{display:inline-flex;align-items:center;gap:10px;cursor:pointer;font-size:15px;color:#171719}
+.ct-all input,.ct-ck input{width:20px;height:20px;margin:0;accent-color:#000;flex:none}
+.ct-ds{min-height:44px;padding:0 4px;border:0;background:none;font:500 14px var(--font-sans);color:rgba(55,56,60,.72);cursor:pointer}
+.ct-ds:hover{color:#000;text-decoration:underline}
+.ct-list{margin:0;padding:0;list-style:none}
+.ct-head,.ct-row{display:grid;grid-template-columns:44px 88px minmax(0,2.4fr) minmax(70px,1fr) 150px minmax(110px,1.2fr) 44px;align-items:center;column-gap:12px}
+.ct-head{padding:12px 0;border-top:1px solid #000;border-bottom:1px solid rgba(112,115,124,.32);font-size:13px;color:rgba(55,56,60,.72);text-align:center}
+.ct-head .ct-h-info{grid-column:2 / 4}
+.ct-row{padding:16px 0;border-bottom:1px solid rgba(112,115,124,.22)}
+.ct-meta{display:contents}
+.ct-img{grid-column:2;display:block}.ct-img img{display:block;width:88px;height:auto;aspect-ratio:3/4;object-fit:cover;background:#f4f4f5}
+.ct-name{grid-column:3;margin:0;font-size:16px;font-weight:600;color:#000;word-break:keep-all;overflow-wrap:anywhere}
+.ct-opt{grid-column:4;margin:0;text-align:center;font-size:15px}
+.ct-qty{grid-column:5;justify-self:center}
+.ct-amt{grid-column:6;margin:0;text-align:center;font-size:15px}.ct-amt b{font-weight:700;color:#000}
+.ct-l{display:none}
+.ct-ck{grid-column:1;justify-content:center}
+.ct-rm{grid-column:7;display:flex;align-items:center;justify-content:center;width:44px;height:44px;border:0;background:none;color:rgba(55,56,60,.61);cursor:pointer}
+.ct-rm:hover{color:#000}
+.ct-bar+.ct-head{margin-top:0}
+.shp-cartsum{margin-top:0}
+@media (max-width:900px){
+  .ct-head{display:none}
+  .ct-bar{padding:0 0 4px}
+  .ct-list{border-top:1px solid rgba(112,115,124,.32)}
+  .ct-row{grid-template-columns:32px 88px minmax(0,1fr) auto;grid-template-areas:"ck name name rm" "img meta meta qty";row-gap:12px;align-items:start;padding:16px 0}
+  .ct-ck{grid-area:ck;justify-content:flex-start;min-height:44px;align-items:center}
+  .ct-name{grid-area:name;align-self:center;font-size:15px}
+  .ct-rm{grid-area:rm;align-self:center}
+  .ct-img{grid-area:img}
+  .ct-meta{display:block;grid-area:meta;min-width:0}
+  .ct-opt,.ct-amt{display:flex;gap:8px;align-items:baseline;text-align:left;margin:0 0 6px;font-size:14px}
+  .ct-amt b{font-size:16px}
+  .ct-l{display:inline;flex:none;min-width:54px;font-size:12px;color:rgba(55,56,60,.6)}
+  .ct-qty{grid-area:qty;align-self:end;justify-self:end}
+}
+/* ---- 쇼핑 안내 목록: the list starts on the same left line as the paragraph above it; wrapped text lines up with the text start, not with the dot ---- */
+.shp-doc .shp-dots{padding-left:0;margin:0 0 12px}
+.shp-dots li::before{left:0}
+.shp-dots li{padding-left:16px}
+/* ---- 주문 내역 검색 (PC only): everything on one line inside a bordered box ---- */
+@media (min-width:901px){
+  .pd-box{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;max-width:none;padding:18px 24px}
+  .pd-box .my-sel{order:1;flex:0 0 190px;width:190px;margin:0;height:44px}
+  .pd-chips{order:2;flex:0 0 auto;display:flex;margin:0}
+  .pd-chips button{min-width:62px;min-height:44px;padding:0 14px}
+  .pd-chips button[data-days="7"]{display:none}
+  .pd-dates{order:3;flex:0 1 auto;margin:0;gap:10px}
+  .pd-dates input{flex:0 0 150px;width:150px;height:44px}
+  .pd-box .shp-err{order:9;flex:1 0 100%;margin:0}
+  .pd-go{order:4;width:auto;min-width:76px;min-height:44px;padding:0 22px;border-radius:0;background:#1a1a1a;font-size:14px}
+}
+/* ---- 나의 문의 내역 ---- */
+.iq-filter{margin:0 0 20px}
+.iq-sel{display:block;width:100%;height:48px;border-radius:0;background:#fff}
+.iq-tbl{border-top:1px solid #000}
+.iq-tr{display:grid;grid-template-columns:90px minmax(0,1fr) 130px 130px;align-items:center;column-gap:12px;width:100%;box-sizing:border-box;padding:14px 8px;text-align:center}
+.iq-th{border-bottom:1px solid #e1e1e4;font-size:14px;color:#171719}
+.iq-hd{border:0;border-bottom:1px solid #e1e1e4;background:none;font:400 14px/1.5 var(--font-sans);color:#171719;cursor:pointer}
+.iq-t{text-align:left;min-width:0;word-break:keep-all;overflow-wrap:anywhere}
+.iq-tt em{font-style:normal;font-size:12px;color:rgba(55,56,60,.61)}
+.iq-st{margin-left:10px;font-size:12px;color:rgba(55,56,60,.61);white-space:nowrap}
+.iq-empty{padding:84px 12px;text-align:center;font-size:14px;color:#9a9a9f;border-bottom:1px solid #e1e1e4}
+.iq-item .my-iqb{padding:12px 16px 18px;background:#fafafa;border-bottom:1px solid #e1e1e4}
+.iq-ask{display:flex;justify-content:flex-end;margin:28px 0 0}
+.iq-ask .my-ask{width:156px;min-width:0;height:52px;margin:0;border-radius:0;background:#000;border-color:#000;font-size:15px}
+@media (min-width:901px){
+  .iq-filter{margin:0 0 24px;padding:20px;background:#f7f7f7;display:flex;justify-content:center}
+  .iq-sel{width:420px;max-width:100%;height:44px;border-color:#e1e1e4}
+}
+@media (max-width:900px){
+  .iq-tbl{border-top:1px solid rgba(112,115,124,.32)}
+  .iq-th{display:none}
+  .iq-hd{grid-template-columns:minmax(0,1fr) auto;text-align:left;padding:14px 0;row-gap:2px}
+  .iq-n,.iq-a{display:none}
+  .iq-t{grid-column:1 / -1}
+  .iq-d{grid-column:1;grid-row:2;font-size:13px;color:rgba(55,56,60,.61)}
+  .iq-st{grid-column:2;grid-row:2;margin:0}
+  .iq-empty{padding:56px 0}
+  .iq-ask{justify-content:stretch;margin:20px 0 0}
+  .iq-ask .my-ask{width:100%;height:56px}
+  .iq-item .my-iqb{padding:12px 0 18px}
+}
+
+/* phones: no labels inside the card (the header row is gone), the quantity control sits under the price when the screen is narrow */
+@media (max-width:900px){.ct-l{display:none}}
+@media (max-width:520px){
+  .ct-row{grid-template-columns:32px 88px minmax(0,1fr) 44px;grid-template-areas:"ck name name rm" "img meta meta meta" "img qty qty qty"}
+  .ct-qty{align-self:start;justify-self:end}
+  .ct-amt b{white-space:nowrap}
+}
+/* PC order search: tighter so that the whole row fits into the content column */
+@media (min-width:901px){
+  .pd-box{padding:16px 18px;gap:12px}
+  .pd-box .my-sel{flex:0 0 150px;width:150px}
+  .pd-chips button{min-width:52px;padding:0 10px}
+  .pd-dates{gap:8px}.pd-dates input{flex:0 0 132px;width:132px}
+  .pd-go{min-width:66px;padding:0 16px}
+}
+
+/* 장바구니 grid fixes: PC = every cell on ONE row; phone = 2-column image block under checkbox + name */
+@media (min-width:901px){.ct-row>*,.ct-meta>*{grid-row:1}}
+@media (max-width:900px){
+  .ct-row{grid-template-columns:32px 56px minmax(0,1fr) auto;column-gap:8px;grid-template-areas:"ck name name rm" "img img meta qty"}
+  .ct-img img{width:88px}
+}
+@media (max-width:520px){
+  .ct-row{grid-template-columns:32px 56px minmax(0,1fr) 44px;grid-template-areas:"ck name name rm" "img img meta meta" "img img qty qty"}
+}

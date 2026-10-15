@@ -43,13 +43,13 @@
     var f = function (n) { return n.toLocaleString('ko-KR') + '원'; };
     var FEES = '일반 지역 무료, 제주 ' + f(SHIPPING.feeJeju) + ', 제주 외 도서산간 ' + f(SHIPPING.feeRemote);
     SHIPPING.surcharge = '제주 지역은 총 ' + f(SHIPPING.feeJeju) + ', 제주 외 도서산간 지역은 총 ' + f(SHIPPING.feeRemote) + '입니다(일반 지역은 무료).';
-    SHIPPING.items = [   // [item name, text, second line (shown under the text)]
+    SHIPPING.items = [   // [item name, text]: the parenthesis follows the sentence directly (no space, no second line)
       ['배송업체', SHIPPING.carrier, ''],
-      ['배송비', FEES, '(구매금액과 관계없이 적용되며 지역 요금은 중복 부과되지 않습니다.)'],
-      ['출고 일정', SHIPPING.dispatch, '(' + SHIPPING.slow + ')']
+      ['배송비', FEES + '(구매금액과 관계없이 적용되며 지역 요금은 중복 부과되지 않습니다.)', ''],
+      ['출고 일정', SHIPPING.dispatch + '(' + SHIPPING.slow + ')', '']
     ];
-    SHIPPING.lines = SHIPPING.items.map(function (i) { return [i[0], i[1] + (i[2] ? ' ' + i[2] : '')]; });
-    SHIPPING.cartNote = ['배송비: 일반 지역 무료 (제주 ' + f(SHIPPING.feeJeju) + ', 제주 외 도서산간 ' + f(SHIPPING.feeRemote) + ' — 주문서에서 주소(우편번호)를 입력하면 확정됩니다.)', SHIPPING.dispatch, '(' + SHIPPING.slow + ')'];
+    SHIPPING.lines = SHIPPING.items.map(function (i) { return [i[0], i[1]]; });
+    SHIPPING.cartNote = ['제주 ' + f(SHIPPING.feeJeju) + ', 제주 외 도서산간 ' + f(SHIPPING.feeRemote) + '은 배송지에 따라 적용됩니다.', SHIPPING.dispatch + '(' + SHIPPING.slow + ')'];
     SHIPPING.note = SHIPPING.lines.map(function (l) { return l[0] + ': ' + l[1]; }).join(' · ');
     SHIPPING.text = {
       order: SHIPPING.surcharge,
@@ -61,8 +61,8 @@
       'event-dispatch': SHIPPING.slow,
       'faq-carrier': SHIPPING.carrier + '로 발송합니다.',
       'faq-fee': '배송업체는 ' + SHIPPING.carrier + '입니다. 배송비는 구매금액과 관계없이 일반 지역 무료, 제주 ' + f(SHIPPING.feeJeju) + ', 제주 외 도서산간 ' + f(SHIPPING.feeRemote) + '입니다. 지역은 배송지 우편번호로 판정하며 지역 요금은 중복 부과되지 않습니다.',
-      'faq-surcharge': '제주 지역은 총 ' + f(SHIPPING.feeJeju) + ', 제주 외 도서산간 지역은 총 ' + f(SHIPPING.feeRemote) + '이며 일반 지역은 무료입니다(구매금액과 관계없이 적용, 중복 부과 없음). 지역은 배송지 우편번호로 판정하며 최종 금액은 주문서에서 주소를 입력하면 확인할 수 있습니다. ' + SHIPPING.slow,
-      'faq-when': SHIPPING.dispatch + '입니다. ' + SHIPPING.slow + ' 출고일과 도착일은 다를 수 있습니다.'
+      'faq-surcharge': '제주 지역은 총 ' + f(SHIPPING.feeJeju) + ', 제주 외 도서산간 지역은 총 ' + f(SHIPPING.feeRemote) + '입니다.',
+      'faq-when': SHIPPING.dispatch + '(' + SHIPPING.slow + ') 출고일과 도착일은 다를 수 있습니다.'
     };
   })();
   var LEGACY_IDS ={ 'impetvs-rich-man-30ml': PRODUCT_ID }; // ids written by earlier versions of the cart
@@ -150,21 +150,34 @@
       return ok && items().length ? t : null;
     }
   };
+  // ---- selection (장바구니 전체선택 / 개별선택 / 선택삭제): what is NOT ticked is neither summed up, nor deleted, nor handed to the order page. New lines are ticked by default.
+  var SEL_KEY = 'impetvs-cart-unsel';
+  function unsel() { try { var v = JSON.parse(sget(SEL_KEY) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
+  function keyOf(i) { return i.id + '|' + i.option; }
+  cart.keyOf = keyOf;
+  cart.selected = function () { var u = unsel(); return items().filter(function (i) { return u.indexOf(keyOf(i)) < 0; }); };
+  cart.isSelected = function (i) { return unsel().indexOf(keyOf(i)) < 0; };
+  cart.setSelected = function (i, on) { var u = unsel(), k = keyOf(i), p = u.indexOf(k); if (on && p > -1) u.splice(p, 1); if (!on && p < 0) u.push(k); sset(SEL_KEY, JSON.stringify(u)); };
+  cart.setAllSelected = function (on) { sset(SEL_KEY, JSON.stringify(on ? [] : items().map(keyOf))); };
+  cart.removeSelected = function () { var u = unsel(); save(items().filter(function (i) { return u.indexOf(keyOf(i)) > -1; })); };      // only the ticked lines go; the rest stays
+  cart.selCount = function () { return cart.selected().reduce(function (s, i) { return s + i.qty; }, 0); };
+  cart.selTotal = function () { var t = 0, ok = true, l = cart.selected(); l.forEach(function (i) { var x = cart.line(i); if (x === null) ok = false; else t += x; }); return ok && l.length ? t : null; };
   window.addEventListener('storage', function (e) { if (e.key === CART_KEY) emit(); });
 
   /* ------------------------------------------------------------ order hand-off */
   // What goes to the order page: product / capacity / quantity only (kept in sessionStorage for this tab).
   // Addresses, names, phone numbers and e-mail addresses are never written to any browser storage.
   var order = {
-    fromCart: function () { try { sessionStorage.setItem(ORDER_KEY, JSON.stringify({ mode: 'cart' })); } catch (e) { mem[ORDER_KEY] = JSON.stringify({ mode: 'cart' }); } },
+    fromCart: function () { var v = JSON.stringify({ mode: 'cart', sel: cart.selected().map(keyOf) }); try { sessionStorage.setItem(ORDER_KEY, v); } catch (e) { mem[ORDER_KEY] = v; } },   // only the ticked lines go to the order page
     buyNow: function (id, option, qty) { qty = Math.max(1, Math.min(maxQty(id), Math.floor(qty) || 1)); var v = JSON.stringify({ mode: 'buy', items: [{ id: id, option: option, qty: qty }] }); try { sessionStorage.setItem(ORDER_KEY, v); } catch (e) { mem[ORDER_KEY] = v; } },
     // -> {mode, items} ; the cart is read live, "buy now" uses only the single selection that was passed
     source: function () {
       var raw = null; try { raw = sessionStorage.getItem(ORDER_KEY); } catch (e) { raw = mem[ORDER_KEY] || null; }
       var s = null; try { s = JSON.parse(raw); } catch (e) {}
-      if (!s) return { mode: 'cart', items: items() };
+      if (!s) return { mode: 'cart', items: cart.selected() };
       if (s.mode === 'buy') return { mode: 'buy', items: normalize(s.items || []) };
-      return { mode: 'cart', items: items() };
+      var list = items(); if (Array.isArray(s.sel)) list = list.filter(function (i) { return s.sel.indexOf(keyOf(i)) > -1; }); else list = cart.selected();
+      return { mode: 'cart', items: list };
     }
   };
 
@@ -322,7 +335,7 @@
   };
   // seller information shown where the customer buys (order page, product page): the same data as the footer
   function sellerHTML() {
-    return ['상호: ' + COMPANY.name, '대표자: ' + COMPANY.ceo, '사업자 주소: ' + COMPANY.address, '이메일: ' + COMPANY.email,
+    return ['상호: ' + COMPANY.name, '대표자: ' + COMPANY.ceo, '사업자 주소: ' + COMPANY.address, '고객센터: ' + COMPANY.tel, '이메일: ' + COMPANY.email,
       '사업자등록번호: ' + COMPANY.biz, '통신판매업신고번호: ' + COMPANY.mailOrder].map(esc);
   }
   var FOOT_SERVICE = [['비회원 주문 조회', LINKS.guestOrder], ['교환 및 반품', LINKS.returns], ['자주 묻는 질문', LINKS.faq], ['1:1 문의하기', LINKS.contact]];
@@ -346,7 +359,7 @@
     [].forEach.call(document.querySelectorAll('[data-seller]'), function (el) { var L = sellerHTML(); el.innerHTML = el.hasAttribute('data-dots') ? '<ul class="shp-dots">' + L.map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ul>' : L.join('<br>'); });
     [].forEach.call(document.querySelectorAll('[data-ship]'), function (el) {
       if (el.hasAttribute('data-ship-ul')) {   // a real list: every item is a <li>, a second line (the parenthesis) stays under the text, not under the dot
-        el.innerHTML = SHIPPING.items.map(function (i) { return '<li><b class="shp-k">' + esc(i[0]) + '</b>: ' + esc(i[1]) + (i[2] ? '<span class="shp-sub">' + esc(i[2]) + '</span>' : '') + '</li>'; }).join(''); return;
+        el.innerHTML = SHIPPING.items.map(function (i) { return '<li><b class="shp-k">' + esc(i[0]) + '</b>: ' + esc(i[1]) + '</li>'; }).join(''); return;
       }
       var s = SHIPPING.text[el.getAttribute('data-ship')]; if (s == null) return;
       var nb = function (x) { return esc(x).replace(/(이상 구매 시 무료\))/g, '<span class="shp-nb">$1</span>').replace(/(^|\n| · )(배송업체|배송비|출고 일정): /g, '$1<b class="shp-k">$2</b>: '); };   // keep the short ending together; item names are bold
