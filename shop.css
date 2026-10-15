@@ -449,7 +449,7 @@ select.shp-in{appearance:auto}
 .shp-nb{white-space:nowrap}
 
 /* buy buttons carry the same shadow as the 카카오톡 상담 button (default / hover / focus alike) */
-#pd-buy,#pd-bar-buy{box-shadow:0 4px 16px rgba(0,0,0,.28)}
+#pd-bar-buy{box-shadow:0 4px 16px rgba(0,0,0,.28)}
 .shp-bar .shp-btn{overflow:visible}
 
 /* shipping item names (배송업체 ...) are as bold as the 교환 및 반품 주소 title */
@@ -1006,3 +1006,15 @@ html.pm-lock .shp-toast.on{transform:translate(-50%,0)}
   .ct-qty{justify-self:end}
   .shp-cartnote{text-align:center}
 }
+
+/* ===== 10th round ===== */
+/* PC product: the selected-item row sits 20px under the dropdown and no longer draws a second line at the dropdown's border; the line above 총 상품금액 stays */
+.shp-opt .shp-sel{margin-top:20px;padding:20px 0;border-top:0}
+/* 상품문의 공개 여부: round radio buttons side by side; the whole label (circle + text) is clickable */
+.shp-radios{display:flex;flex-wrap:wrap;gap:8px 28px}
+.shp-rd{display:inline-flex;align-items:center;gap:8px;min-height:44px;cursor:pointer;font-size:14px;color:var(--c-name)}
+.shp-rd input{-webkit-appearance:none;appearance:none;display:grid;place-content:center;flex:none;width:20px;height:20px;margin:0;border:1px solid rgba(112,115,124,.52);border-radius:50%;background:#fff;cursor:pointer}
+.shp-rd input::before{content:"";width:10px;height:10px;border-radius:50%;background:#000;transform:scale(0)}
+.shp-rd input:checked{border-color:#000}
+.shp-rd input:checked::before{transform:scale(1)}
+.shp-rd input:focus-visible{outline:var(--focus);outline-offset:2px}

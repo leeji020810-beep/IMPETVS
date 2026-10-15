@@ -26,7 +26,7 @@
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fig-tokens.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/typography.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/semantic.css">
-<link rel="stylesheet" href="shop.css?v=20261017e">
+<link rel="stylesheet" href="shop.css?v=20261017f">
 <style>html,body{margin:0;background:#fff;scroll-behavior:smooth}</style>
 </head>
 <body>
@@ -166,9 +166,9 @@
           <label class="shp-field"><span>문의 내용</span><textarea class="shp-in shp-ta" id="pd-qna-text" rows="5" maxlength="2000" placeholder="문의 내용을 적어 주세요."></textarea></label>
           <fieldset class="shp-rate">
             <legend>공개 여부</legend>
-            <div class="shp-rate-in two">
-              <label><input type="radio" name="pd-qna-pub" value="public" checked><span>공개</span></label>
-              <label><input type="radio" name="pd-qna-pub" value="private"><span>비공개 (작성자와 관리자만 볼 수 있음)</span></label>
+            <div class="shp-radios">
+              <label class="shp-rd"><input type="radio" name="pd-qna-pub" value="public" checked><span>공개</span></label>
+              <label class="shp-rd"><input type="radio" name="pd-qna-pub" value="private"><span>비공개</span></label>
             </div>
           </fieldset>
           <p class="shp-err" id="pd-qna-err" role="alert" hidden></p>
@@ -225,9 +225,9 @@
     </div>
   </div>
 </main>
-<script src="config.js?v=20261017e"></script>
-<script src="shop.js?v=20261017e"></script>
-<script src="auth.js?v=20261017e"></script>
+<script src="config.js?v=20261017f"></script>
+<script src="shop.js?v=20261017f"></script>
+<script src="auth.js?v=20261017f"></script>
 <script id="shp-js-product">
 (function () {
   var root = document.getElementById('product-root'), S = window.IMShop, A = window.IMAuth, P = S.products[S.PRODUCT_ID];
