@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fig-tokens.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/typography.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/semantic.css">
-<link rel="stylesheet" href="shop.css?v=20261016y">
+<link rel="stylesheet" href="shop.css?v=20261017a">
 <style>html,body{margin:0;background:#fff}</style>
 </head>
 <body>
@@ -22,13 +22,13 @@
     <div id="cart-body"></div>
   </div>
 </main>
-<script src="config.js?v=20261016y"></script>
-<script src="shop.js?v=20261016y"></script>
-<script src="auth.js?v=20261016y"></script>
+<script src="config.js?v=20261017a"></script>
+<script src="shop.js?v=20261017a"></script>
+<script src="auth.js?v=20261017a"></script>
 <script id="shp-js-cart">
 (function () {
   var S = window.IMShop, body = document.getElementById('cart-body');
-  // 상품금액 / 배송비 / 최종 합계 are shown separately; the shipping fee follows the product subtotal (free from 50,000원)
+  // 상품금액 / 배송비 / 최종 합계 are shown separately; the shipping fee is 무료 here (일반 지역); the 제주 3,000원 / 제주 외 도서산간 5,000원 fee is decided from the 우편번호 on the order page
   function sumHTML() {
     var sub = S.cart.total(), fee = S.shipping.calc(sub), ok = typeof sub === 'number' && fee !== null;
     return '<div class="shp-osum shp-cartsum">' +
@@ -55,7 +55,7 @@
         '<div><p class="shp-item-name">' + S.esc(p.name) + '</p>' +
         '<p class="shp-item-opt">용량: ' + S.esc(it.option) + '</p>' +
         '<p class="shp-item-unit">단가 ' + S.esc(S.money(S.cart.unit(it))) + '</p>' +
-        '<p class="shp-item-amt">합계 ' + S.esc(S.money(S.cart.line(it))) + '</p></div>' +
+        '</div>' +
         '<div class="shp-item-side"><div class="shp-qty" role="group" aria-label="' + S.esc(p.name + ' ' + it.option) + ' 수량">' +
         '<button type="button" data-act="minus" aria-label="수량 줄이기"' + (it.qty <= 1 ? ' disabled' : '') + '>−</button>' +
         '<input type="number" data-act="qty" value="' + it.qty + '" min="1" max="' + S.cart.maxQty(it.id) + '" inputmode="numeric" aria-label="수량">' +

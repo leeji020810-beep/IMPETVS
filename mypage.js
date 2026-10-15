@@ -87,26 +87,38 @@
     /* ---- 주문 내역: two wide buttons (주문내역조회 / 취소/교환/반품 내역), status filter, date range ---- */
     var claimsTab = !home && cv === 'orders' && /[?&]tab=claims(&|$)/.test(location.search);
     var SEARCH = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>';
-    function rangeBox(statuses) {
-      var tabs = '<div class="ot-tabs" role="tablist" aria-label="주문 조회 구분"><button type="button" role="tab" class="ot-tab" data-tab="orders" aria-selected="' + (!claimsTab) + '"><span class="ot-l">주문내역조회</span><span class="ot-n" id="ot-n-orders"></span></button><button type="button" role="tab" class="ot-tab" data-tab="claims" aria-selected="' + claimsTab + '"><span class="ot-l">취소/교환/반품 내역</span><span class="ot-n" id="ot-n-claims"></span></button></div>';
-      var sel = '<select id="rg-st" class="my-sel" aria-label="주문처리상태"><option value="">전체 주문처리상태</option>' + statuses.map(function (s) { return '<option value="' + s + '"' + (rg.st === s ? ' selected' : '') + '>' + (STATUS[s] || s) + '</option>'; }).join('') + (claimsTab ? '<option value="partial"' + (rg.st === 'partial' ? ' selected' : '') + '>일부 환불</option>' : '') + '</select>';
-      return tabs + '<div class="ot-box">' + sel + '<div class="ot-line"><div class="my-chips" role="group" aria-label="조회 기간">' + RANGES.map(function (r) { return '<button type="button" data-days="' + r[1] + '" aria-pressed="' + (rg.days === r[1] ? 'true' : 'false') + '">' + r[0] + '</button>'; }).join('') + '</div>' +
-        '<div class="ot-dates"><input type="date" id="rg-from" value="' + esc(rg.from) + '" aria-label="시작일"><span aria-hidden="true">~</span><input type="date" id="rg-to" value="' + esc(rg.to) + '" aria-label="종료일"><button type="button" class="ot-go" id="rg-go" aria-label="조회">' + SEARCH + '</button></div></div><p class="shp-err" id="rg-err" role="alert" hidden></p></div>';
+    // period box (참고: 기간 버튼 / 전체 주문처리상태 / 시작일 ~ 종료일 / 조회). st = the state object (days, from, to, st); statuses = status filter options or null
+    function periodBox(st, statuses) {
+      var sel = statuses ? '<select id="rg-st" class="my-sel" aria-label="주문처리상태"><option value="">전체 주문처리상태</option>' + statuses.map(function (s) { return '<option value="' + s + '"' + (st.st === s ? ' selected' : '') + '>' + (STATUS[s] || s) + '</option>'; }).join('') + (claimsTab && cv === 'orders' ? '<option value="partial"' + (st.st === 'partial' ? ' selected' : '') + '>일부 환불</option>' : '') + '</select>' : '';
+      return '<div class="pd-box"><div class="pd-chips" role="group" aria-label="조회 기간">' + RANGES.map(function (r) { return '<button type="button" data-days="' + r[1] + '" aria-pressed="' + (st.days === r[1] ? 'true' : 'false') + '">' + r[0] + '</button>'; }).join('') + '</div>' + sel +
+        '<div class="pd-dates"><input type="date" id="rg-from" value="' + esc(st.from) + '" aria-label="시작일"><span aria-hidden="true">~</span><input type="date" id="rg-to" value="' + esc(st.to) + '" aria-label="종료일"></div>' +
+        '<p class="shp-err" id="rg-err" role="alert" hidden></p><button type="button" class="pd-go" id="rg-go">조회</button></div>';
     }
-    function bindRange(reload) {
-      [].forEach.call(main().querySelectorAll('[data-days]'), function (b) { b.addEventListener('click', function () { rg.st = $('rg-st').value; setDays(+b.getAttribute('data-days')); reload(); }); });
-      [].forEach.call(main().querySelectorAll('[data-tab]'), function (b) { b.addEventListener('click', function () {
-        var c2 = b.getAttribute('data-tab') === 'claims'; if (c2 === claimsTab) return; claimsTab = c2; rg.st = '';
-        try { if (!location.hash) history.replaceState(null, '', location.pathname + (c2 ? '?tab=claims' : '')); } catch (e) {}      // reload / back keep the chosen button
+    function bindPeriod(st, reload, setD) {
+      [].forEach.call(main().querySelectorAll('[data-days]'), function (b) { b.addEventListener('click', function () { if ($('rg-st')) st.st = $('rg-st').value; setD(+b.getAttribute('data-days')); reload(); }); });
+      if ($('rg-st')) $('rg-st').addEventListener('change', function () {
+        st.st = this.value; var f = $('rg-from').value, t = $('rg-to').value;
+        if (f && t && f <= t && (f !== st.from || t !== st.to)) { st.days = -1; st.from = f; st.to = t; }      // dates typed but not searched yet are kept, not thrown away
         reload();
-      }); });
-      $('rg-st').addEventListener('change', function () { rg.st = this.value; reload(); });
+      });
       $('rg-go').addEventListener('click', function () {
         var f = $('rg-from').value, t = $('rg-to').value, e = $('rg-err');
         if (!f || !t) { e.hidden = false; e.textContent = '시작일과 종료일을 선택해 주세요.'; return; }
         if (f > t) { e.hidden = false; e.textContent = '시작일이 종료일보다 늦을 수 없습니다.'; return; }
-        rg.days = -1; rg.from = f; rg.to = t; rg.st = $('rg-st').value; reload();
+        st.days = -1; st.from = f; st.to = t; if ($('rg-st')) st.st = $('rg-st').value; reload();
       });
+    }
+    function rangeBox(statuses) {   // 주문 내역: underline tabs (same look as the product page tabs) + the period box
+      var tabs = '<div class="ut-tabs" role="tablist" aria-label="주문 조회 구분"><button type="button" role="tab" class="ut-tab" data-tab="orders" aria-selected="' + (!claimsTab) + '"><span class="ot-l">주문내역조회</span><span class="ot-n" id="ot-n-orders"></span></button><button type="button" role="tab" class="ut-tab" data-tab="claims" aria-selected="' + claimsTab + '"><span class="ot-l">취소/교환/반품 내역</span><span class="ot-n" id="ot-n-claims"></span></button></div>';
+      return tabs + periodBox(rg, statuses);
+    }
+    function bindRange(reload) {
+      [].forEach.call(main().querySelectorAll('[data-tab]'), function (b) { b.addEventListener('click', function () {
+        var c2 = b.getAttribute('data-tab') === 'claims'; if (c2 === claimsTab) return; claimsTab = c2; rg.st = '';
+        try { if (!location.hash) history.replaceState(null, '', location.pathname + (c2 ? '?tab=claims' : '')); } catch (e) {}      // reload / back keep the chosen tab
+        reload();
+      }); });
+      bindPeriod(rg, reload, setDays);
     }
     // claims = true: only cancelled / refunded / partly refunded orders. useStatus: the chosen status filter applies to the CURRENT button only.
     function fetchOrders(p, claims, useStatus) {
@@ -182,11 +194,11 @@
       if (!rows.length) html += '<div class="ab-empty">등록된 주소가 없습니다.</div>';
       else html += '<div class="ab-tbl" role="table"><div class="ab-tr ab-th" role="row"><span role="columnheader">주소록 고정</span><span role="columnheader">배송지명</span><span role="columnheader">수령인</span><span role="columnheader">일반전화</span><span role="columnheader">휴대전화</span><span role="columnheader">주소</span><span role="columnheader">수정</span></div>' + rows.map(function (a) {
         return '<div class="ab-tr" role="row" data-id="' + esc(a.id) + '"><span role="cell" class="ab-pin" data-l="주소록 고정"><label class="ab-chk"><input type="checkbox" data-pin' + (a.pinned ? ' checked' : '') + ' aria-label="주소록 고정: ' + esc(a.label) + '"></label></span>' +
-          '<span role="cell" class="ab-nm" data-l="배송지명"><b>' + esc(a.label) + '</b>' + (a.is_default ? '' : '<button type="button" class="ab-lnk" data-def>기본 배송지로 설정</button>') + '</span>' +
+          '<span role="cell" class="ab-nm" data-l="배송지명"><label class="ab-sel"><input type="checkbox" data-sel aria-label="삭제할 배송지 선택: ' + esc(a.label) + '"><b>' + esc(a.label) + '</b></label></span>' +
           '<span role="cell" data-l="수령인">' + esc(a.recipient) + '</span><span role="cell" data-l="일반전화">' + esc(fmtHome(a.phone_home)) + '</span><span role="cell" data-l="휴대전화">' + esc(fmtMobile(a.phone_mobile)) + '</span>' +
           '<span role="cell" class="ab-ad" data-l="주소">(' + esc(a.zip) + ') ' + esc(a.addr1) + (a.addr2 ? ' ' + esc(a.addr2) : '') + '</span><span role="cell" class="ab-ed"><button type="button" class="shp-btn line sm" data-edit>수정</button></span></div>';
       }).join('') + '</div>';
-      html += '<div class="ab-add"><button type="button" class="shp-btn main" id="ab-new"' + (full ? ' disabled' : '') + '>배송지 등록</button></div>' + (full ? '<p class="shp-note ab-full">배송지는 최대 10개까지 등록할 수 있습니다. 삭제 후 등록해 주세요.</p>' : '') +
+      html += '<div class="ab-acts"><button type="button" class="shp-btn line" id="ab-delsel">선택 주소록 삭제</button><button type="button" class="shp-btn main" id="ab-new"' + (full ? ' disabled' : '') + '>배송지 등록</button></div><p class="shp-err ab-derr" id="ab-derr" role="alert" hidden></p>' + (full ? '<p class="shp-note ab-full">배송지는 최대 10개까지 등록할 수 있습니다. 삭제 후 등록해 주세요.</p>' : '') +
         '<section class="ab-notes" aria-labelledby="ab-nh"><h3 id="ab-nh">배송주소록 유의사항</h3><ul>' +
         '<li>배송 주소록은 최대 10개까지 등록할 수 있으며, 별도로 등록하지 않을 경우 최근 배송 주소록 기준으로 자동 업데이트됩니다.</li>' +
         '<li>자동 업데이트를 원하지 않을 경우 주소록 고정을 선택하시면 선택된 주소록은 업데이트 대상에서 제외됩니다.</li>' +
@@ -195,15 +207,26 @@
       if (!paint(my, html)) return;
       function fail(m) { var e = $('ab-err'); e.hidden = false; e.textContent = m; }
       $('ab-new').addEventListener('click', function () { abForm(my, p, rows, null); });
+      // 선택 주소록 삭제: nothing selected -> a short notice and NO request; otherwise one more press confirms, then each selected address of the member is deleted on the server
+      var ds = $('ab-delsel'), asked = 0;
+      ds.addEventListener('click', function () {
+        var d = $('ab-derr'); d.hidden = true;
+        var ids = [].map.call(main().querySelectorAll('[data-sel]:checked'), function (c) { return c.closest('.ab-tr').getAttribute('data-id'); });
+        if (!ids.length) { asked = 0; ds.textContent = '선택 주소록 삭제'; d.hidden = false; d.textContent = '삭제할 배송지를 선택해 주세요.'; return; }
+        if (asked !== ids.length) { asked = ids.length; ds.textContent = '선택한 ' + ids.length + '개 삭제 (한 번 더 누르세요)'; return; }
+        ds.disabled = true; var bad = 0;
+        ids.reduce(function (pr, id) { return pr.then(function () { return A.rpc('delete_address', { p_id: id }).then(function (s) { if (!(s.ok && s.data && s.data.deleted === true)) bad++; }); }); }, Promise.resolve()).then(function () {
+          if (!bad) { run(); return; }
+          ds.disabled = false; asked = 0; ds.textContent = '선택 주소록 삭제'; d.hidden = false; d.textContent = bad + '개를 삭제하지 못했습니다. 목록을 새로 불러온 뒤 다시 시도해 주세요.'; run();
+        });
+      });
+      [].forEach.call(main().querySelectorAll('[data-sel]'), function (c) { c.addEventListener('change', function () { asked = 0; ds.textContent = '선택 주소록 삭제'; $('ab-derr').hidden = true; }); });
       [].forEach.call(main().querySelectorAll('.ab-tr[data-id]'), function (tr) {
         var id = tr.getAttribute('data-id'), a = rows.filter(function (x) { return x.id === id; })[0];
         tr.querySelector('[data-edit]').addEventListener('click', function () { abForm(my, p, rows, a); });
         tr.querySelector('[data-pin]').addEventListener('change', function (e) {
           var box = e.target; box.disabled = true;
           A.rpc('set_address_pinned', { p_id: id, p_pinned: box.checked }).then(function (s) { if (s.ok && s.data && s.data.id === id) run(); else { box.disabled = false; box.checked = !box.checked; fail(abError(s)); } });
-        });
-        var d = tr.querySelector('[data-def]'); if (d) d.addEventListener('click', function () {
-          d.disabled = true; A.rpc('set_address_default', { p_id: id, p_default: true }).then(function (s) { if (s.ok && s.data && s.data.is_default === true) run(); else { d.disabled = false; fail(abError(s)); } });
         });
       });
     }
@@ -311,16 +334,30 @@
           '<div class="my-iqb" hidden><p>' + esc(q.content).replace(/\n/g, '<br>') + '</p>' + (done ? '<div class="my-ans"><b>답변</b><p>' + esc(q.answer).replace(/\n/g, '<br>') + '</p></div>' : '') + '</div></li>';
       }).join('') + '</ul>' : '<p class="shp-empty my-empty my-empty-i">' + none + '</p>';
     }
+    var iq = { tab: 's', days: 180, from: '', to: '', st: '' };
+    (function () { var t = new Date(), f = new Date(); f.setDate(f.getDate() - 180); iq.from = ymd(f); iq.to = ymd(t); })();
+    function setIqDays(n) { var t = new Date(), f = new Date(); f.setDate(f.getDate() - n); iq.days = n; iq.from = ymd(f); iq.to = ymd(t); }
     VIEWS.inq = function (my, p) {
-      Promise.all([
-        A.rest.select('product_inquiries', 'select=id,title,content,is_public,answer,answered_at,created_at&user_id=eq.' + encodeURIComponent(p.id) + '&order=created_at.desc&limit=100', true),
-        A.rest.select('service_inquiries', 'select=id,type,title,content,status,answer,answered_at,created_at&user_id=eq.' + encodeURIComponent(p.id) + '&order=created_at.desc&limit=100', true)
-      ]).then(function (rs) {
-        if (my !== seq) return;
-        var pr = rs[0], sr = rs[1];
-        paint(my, head('나의 문의 내역') + '<a class="shp-btn main my-ask" href="' + esc(S.links.contact) + '">문의하기</a><h3 class="my-t3">1:1 문의</h3>' + (sr.ok ? inqList(sr.data || [], 's', '작성하신 1:1 문의 내역이 없습니다.') : empty(failText(sr))) + '<h3 class="my-t3">상품문의</h3>' + (pr.ok ? inqList(pr.data || [], 'p', '작성하신 상품문의 내역이 없습니다.') : empty(failText(pr))));
-        [].forEach.call(main().querySelectorAll('.my-iqh'), function (b) { b.addEventListener('click', function () { var o = b.getAttribute('aria-expanded') === 'true'; b.setAttribute('aria-expanded', o ? 'false' : 'true'); b.nextElementSibling.hidden = o; }); });
-      });
+      function load() {
+        var m2 = ++seq, s = iq.tab === 's';
+        // the write button belongs to the chosen tab: 1:1 문의 -> the 1:1 inquiry page, 상품문의 -> the 상품문의 section of the product page
+        var href = s ? S.links.contact : (S.links.product + (String(S.links.product).charAt(0) === '#' ? '' : '#pd-qna'));
+        main().innerHTML = head('나의 문의 내역') +
+          '<div class="ut-tabs" role="tablist" aria-label="문의 구분"><button type="button" role="tab" class="ut-tab" data-iq="s" aria-selected="' + s + '">1:1 문의 내역</button><button type="button" role="tab" class="ut-tab" data-iq="p" aria-selected="' + (!s) + '">상품문의</button></div>' +
+          '<a class="shp-btn main my-ask" href="' + esc(href) + '">문의하기</a>' + periodBox(iq, null) + '<div id="my-list"><p class="shp-note">불러오는 중…</p></div>';
+        [].forEach.call(main().querySelectorAll('[data-iq]'), function (b) { b.addEventListener('click', function () { var t2 = b.getAttribute('data-iq'); if (t2 === iq.tab) return; iq.tab = t2; load(); }); });
+        bindPeriod(iq, load, setIqDays);
+        var from = new Date(iq.from + 'T00:00:00'), to = new Date(iq.to + 'T23:59:59');
+        var win = '&created_at=gte.' + encodeURIComponent(from.toISOString()) + '&created_at=lte.' + encodeURIComponent(to.toISOString());      // the chosen period filters the member's OWN inquiries
+        var req = s ? A.rest.select('service_inquiries', 'select=id,type,title,content,status,answer,answered_at,created_at&user_id=eq.' + encodeURIComponent(p.id) + win + '&order=created_at.desc&limit=100', true)
+                    : A.rest.select('product_inquiries', 'select=id,title,content,is_public,answer,answered_at,created_at&user_id=eq.' + encodeURIComponent(p.id) + win + '&order=created_at.desc&limit=100', true);
+        req.then(function (r) {
+          if (m2 !== seq) return; var box = $('my-list'); if (!box) return;
+          box.innerHTML = r.ok ? inqList(r.data || [], s ? 's' : 'p', s ? '작성하신 1:1 문의 내역이 없습니다.' : '작성하신 상품문의 내역이 없습니다.') : empty(failText(r));
+          [].forEach.call(box.querySelectorAll('.my-iqh'), function (b) { b.addEventListener('click', function () { var o = b.getAttribute('aria-expanded') === 'true'; b.setAttribute('aria-expanded', o ? 'false' : 'true'); b.nextElementSibling.hidden = o; }); });
+        });
+      }
+      load();
     };
 
     /* ---- 회원 정보 수정: 아이디 (= the log-in e-mail, read only), 이름, 휴대전화, 이메일 (+ optional new password). Only CHANGED items are processed, from ONE bottom button. ---- */

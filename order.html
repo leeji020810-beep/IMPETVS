@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fig-tokens.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/typography.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/semantic.css">
-<link rel="stylesheet" href="shop.css?v=20261016y">
+<link rel="stylesheet" href="shop.css?v=20261017a">
 <style>html,body{margin:0;background:#fff}</style>
 </head>
 <body>
@@ -87,10 +87,10 @@
     </form>
   </div>
 </main>
-<script src="config.js?v=20261016y"></script>
-<script src="shop.js?v=20261016y"></script>
-<script src="auth.js?v=20261016y"></script>
-<script src="payments-toss.js?v=20261016y"></script>
+<script src="config.js?v=20261017a"></script>
+<script src="shop.js?v=20261017a"></script>
+<script src="auth.js?v=20261017a"></script>
+<script src="payments-toss.js?v=20261017a"></script>
 <script id="shp-js-order">
 (function () {
   var S = window.IMShop, A = window.IMAuth, C = A.cfg, $ = function (id) { return document.getElementById(id); };
@@ -108,13 +108,19 @@
         '<div><p class="shp-item-name">' + S.esc(p.name) + '</p><p class="shp-item-opt">용량: ' + S.esc(it.option) + '</p><p class="shp-item-unit">단가 ' + S.esc(S.money(unit)) + '</p><p class="shp-item-unit">수량 ' + it.qty + '개</p></div>' +
         '<div class="shp-item-side"><b class="shp-item-amt" style="margin:0">' + S.esc(S.money(line)) + '</b></div></li>';
     }).join('');
-    var fee = S.shipping.calc(sub);   // 3,000원, free when the product subtotal is 50,000원 or more (the server recomputes this)
-    $('od-sub').textContent = S.money(sub); $('od-ship').textContent = fee === 0 ? '무료' : S.money(fee); $('od-total').textContent = S.money(sub + fee); $('od-count').textContent = '(총 ' + cnt + '개)';
-    $('od-shipnote').textContent = S.shipping.note;
-    $('od-form').setAttribute('data-total', sub + fee);
+    subtotal = sub; $('od-count').textContent = '(총 ' + cnt + '개)'; $('od-shipnote').textContent = S.shipping.note;
+    showFee();   // 무료 until a 우편번호 is typed; then 제주 3,000원 / 제주 외 도서산간 5,000원 (the server recomputes this from the address; the browser value is never trusted)
     var ov = S.cart.overLimit(lines); if (ov.length) err(S.QTY_MSG + ' 장바구니에서 수량을 줄인 뒤 다시 시도해 주세요. (현재 ' + ov[0].total + '개)');
-    mountPay(sub + fee);
+    mountPay(sub + S.shipping.feeFor($('od-zip').value));
   }
+  var subtotal = 0;
+  function showFee() {
+    var zip = $('od-zip').value.trim(), z = S.shipping.zone(zip), fee = S.shipping.feeFor(zip);
+    $('od-sub').textContent = S.money(subtotal);
+    $('od-ship').textContent = (fee === 0 ? '무료' : S.money(fee)) + (z === 'jeju' ? ' (제주 지역)' : z === 'remote' ? ' (도서산간 지역)' : '');
+    $('od-total').textContent = S.money(subtotal + fee); $('od-form').setAttribute('data-total', subtotal + fee);
+  }
+  $('od-zip').addEventListener('input', function () { showFee(); });
   var payMounted = false;
   function mountPay(total) {   // the Toss payment-method widget is only loaded when the order can really be placed (payment ready, legal docs live)
     if (!canOrder || !pay || !pay.mount || !total) return;

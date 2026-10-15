@@ -21,29 +21,35 @@
       '50ml': { key: '50ml', price: 99000, img: 'opt/product-main-50ml.webp', alt: '임페투스 리치맨 50ml 향수 병' }
     }
   };
-  // IMPETVS operating standard for shipping (owner decision, 2026-10-12) — an internal operating policy, NOT a contract rate and not a guarantee.
-  // The fee is based on the subtotal AFTER discounts (there are no discounts yet, so it is the product subtotal). Mirrored on the server in
-  // backend/supabase/functions/_shared/util.ts (the server computes the real amount; this copy only displays it).
-  // Never promise same-day shipping or a delivery date. Remote areas / islands: a surcharge MAY apply but the amount/areas are NOT decided (owner, 2026-10-12);
-  // the server has NO surcharge calculation, so real payment must stay closed until that is decided (backend/TOSS-RESUME.md).
+  // IMPETVS shipping fee (owner decision, FINAL 2026-10-15) - an internal operating standard, NOT a contract rate. It applies to every new order, whatever the amount.
+  //   일반 지역 0원(무료) | 제주 3,000원 | 제주 외 도서산간 5,000원 = the TOTAL fee of the region (never added together or to anything else).
+  // The region is decided from the 5-digit 우편번호 only. Mirrored on the server (backend/supabase/functions/_shared/shipping.ts), which recomputes the real amount:
+  // this copy only DISPLAYS it (backend/tests/payments.test.ts checks that both tables are identical).
+  // DATA STATUS: 제주 = 63000-63644 (all of 제주특별자치도). 도서산간 = compiled from public 택배 도서산간 lists, NOT verified against the official 우체국 list (see drafts/needed-info.md).
+  var ZONES = {"jeju":[[63000,63644]],"remote":[[22386,22388],[23004,23010],[23100,23116],[23124,23136],[31708,31708],[32133,32133],[33411,33411],[40200,40240],[52570,52571],[53031,53033],[53089,53104],[54000,54003],[56347,56349],[57068,57069],[58760,58762],[58800,58810],[58816,58818],[58953,58958],[59102,59103],[59106,59106],[59127,59127],[59129,59129],[59137,59166]]};
+  function inRanges(n, rs) { for (var i = 0; i < rs.length; i++) if (n >= rs[i][0] && n <= rs[i][1]) return true; return false; }
   var SHIPPING = {
-    carrier: '우체국택배', fee: 3000, freeFrom: 50000, returnAddress: '서울 강남구 압구정로10길 30-12 2F',
-    dispatch: '평일 16시 이전 결제 완료 시 당일 출고', busy: '주문량 폭주 시 출고가 지연될 수 있습니다.', period: '결제 확인 후 영업일 기준 2~5일',
-    surcharge: '제주·도서산간은 추가 배송비가 발생할 수 있으며, 발생 시 결제 전에 안내합니다.',
-    calc: function (subtotal) { return typeof subtotal !== 'number' || subtotal <= 0 ? null : (subtotal >= SHIPPING.freeFrom ? 0 : SHIPPING.fee); }
+    carrier: '우체국택배', feeBase: 0, feeJeju: 3000, feeRemote: 5000, returnAddress: '서울 강남구 압구정로10길 30-12 2F',
+    dispatch: '결제 완료 후 영업일 기준 1~3일 이내 출고 예정', slow: '제주 및 도서산간 지역은 배송 일정이 추가 소요될 수 있습니다.',
+    zone: function (zip) { var z = String(zip == null ? '' : zip).trim(); if (!/^[0-9]{5}$/.test(z)) return 'base'; var n = +z; return inRanges(n, ZONES.jeju) ? 'jeju' : inRanges(n, ZONES.remote) ? 'remote' : 'base'; },
+    // the TOTAL shipping fee of the zone (never added to anything): 일반 0 / 제주 3,000 / 제주 외 도서산간 5,000, whatever the purchase amount
+    feeFor: function (zip) { var z = SHIPPING.zone(zip); return z === 'jeju' ? SHIPPING.feeJeju : z === 'remote' ? SHIPPING.feeRemote : SHIPPING.feeBase; },
+    // no zip (cart): 일반 지역 0원; the regional fee is only a possibility there
+    calc: function (subtotal, zip) { return typeof subtotal !== 'number' || subtotal <= 0 ? null : SHIPPING.feeFor(zip); }
   };
-  // Every shipping text on every page is built from the values above (product accordion, shopping guide, returns page, FAQ, cart, order).
+  // Every shipping text on every page is built from the values above (product accordion, shopping guide, returns page, FAQ, cart, order, event).
   // Pages only carry an empty [data-ship="..."] / [data-return-addr] slot, so the wording can never drift apart again.
   (function () {
     var f = function (n) { return n.toLocaleString('ko-KR') + '원'; };
-    SHIPPING.lines = [
-      ['배송업체', SHIPPING.carrier],
-      ['기본 배송비', f(SHIPPING.fee) + ' (할인 적용 후 상품금액 ' + f(SHIPPING.freeFrom) + ' 이상 구매 시 무료)'],
-      ['제주·도서산간', '추가 배송비가 발생할 수 있으며, 발생 시 결제 전에 안내합니다.'],
-      ['당일 출고', SHIPPING.dispatch + ' (' + SHIPPING.busy + ')'],
-      ['예상 배송 기간', SHIPPING.period + ' (당일 출고는 당일 도착을 뜻하지 않습니다.)']
+    var FEES = '일반 지역 무료, 제주 ' + f(SHIPPING.feeJeju) + ', 제주 외 도서산간 ' + f(SHIPPING.feeRemote);
+    SHIPPING.surcharge = '제주 지역은 총 ' + f(SHIPPING.feeJeju) + ', 제주 외 도서산간 지역은 총 ' + f(SHIPPING.feeRemote) + '입니다(일반 지역은 무료).';
+    SHIPPING.items = [   // [item name, text, second line (shown under the text)]
+      ['배송업체', SHIPPING.carrier, ''],
+      ['배송비', FEES, '(구매금액과 관계없이 적용되며 지역 요금은 중복 부과되지 않습니다.)'],
+      ['출고 일정', SHIPPING.dispatch, '(' + SHIPPING.slow + ')']
     ];
-    SHIPPING.cartNote = ['배송비: ' + f(SHIPPING.fee) + ' (상품금액 ' + f(SHIPPING.freeFrom) + ' 이상 구매 시 무료)', SHIPPING.dispatch, '(' + SHIPPING.busy + ')'];
+    SHIPPING.lines = SHIPPING.items.map(function (i) { return [i[0], i[1] + (i[2] ? ' ' + i[2] : '')]; });
+    SHIPPING.cartNote = ['배송비: 일반 지역 무료 (제주 ' + f(SHIPPING.feeJeju) + ', 제주 외 도서산간 ' + f(SHIPPING.feeRemote) + ' — 주문서에서 주소(우편번호)를 입력하면 확정됩니다.)', SHIPPING.dispatch, '(' + SHIPPING.slow + ')'];
     SHIPPING.note = SHIPPING.lines.map(function (l) { return l[0] + ': ' + l[1]; }).join(' · ');
     SHIPPING.text = {
       order: SHIPPING.surcharge,
@@ -51,12 +57,12 @@
       guide: SHIPPING.lines.map(function (l) { return l[0] + ': ' + l[1]; }).join('\n'),
       acc: SHIPPING.lines.map(function (l) { return l[0] + ': ' + l[1]; }).join('\n'),
       // 체험단 (event page): the SAME shipping standard as the regular product
-      'event-period': '배송기간: ' + SHIPPING.period,
-      'event-dispatch': SHIPPING.dispatch,
+      'event-period': '배송기간: ' + SHIPPING.dispatch,
+      'event-dispatch': SHIPPING.slow,
       'faq-carrier': SHIPPING.carrier + '로 발송합니다.',
-      'faq-fee': '배송업체는 ' + SHIPPING.carrier + '이며 기본 배송비는 ' + f(SHIPPING.fee) + '입니다. 할인 적용 후 상품금액 ' + f(SHIPPING.freeFrom) + ' 이상 구매 시 기본 배송비는 무료입니다(30ml ' + f(59000) + ', 50ml ' + f(99000) + '은 1개부터 해당). ' + SHIPPING.surcharge,
-      'faq-surcharge': SHIPPING.surcharge + ' 지역별 추가 금액은 아직 확정되지 않았으며, 확정되면 이 페이지와 상품 페이지에서 안내합니다.',
-      'faq-when': SHIPPING.dispatch + '(' + SHIPPING.busy + ') 당일 출고와 도착은 다르며, 예상 배송 기간은 ' + SHIPPING.period + '입니다. 16시 이후 결제나 주말·공휴일 주문의 출고 시점은 확정된 기준이 없어 안내해 드릴 수 없습니다. 현재 결제 서비스 준비 중입니다.'
+      'faq-fee': '배송업체는 ' + SHIPPING.carrier + '입니다. 배송비는 구매금액과 관계없이 일반 지역 무료, 제주 ' + f(SHIPPING.feeJeju) + ', 제주 외 도서산간 ' + f(SHIPPING.feeRemote) + '입니다. 지역은 배송지 우편번호로 판정하며 지역 요금은 중복 부과되지 않습니다.',
+      'faq-surcharge': '제주 지역은 총 ' + f(SHIPPING.feeJeju) + ', 제주 외 도서산간 지역은 총 ' + f(SHIPPING.feeRemote) + '이며 일반 지역은 무료입니다(구매금액과 관계없이 적용, 중복 부과 없음). 지역은 배송지 우편번호로 판정하며 최종 금액은 주문서에서 주소를 입력하면 확인할 수 있습니다. ' + SHIPPING.slow,
+      'faq-when': SHIPPING.dispatch + '입니다. ' + SHIPPING.slow + ' 출고일과 도착일은 다를 수 있습니다.'
     };
   })();
   var LEGACY_IDS ={ 'impetvs-rich-man-30ml': PRODUCT_ID }; // ids written by earlier versions of the cart
@@ -316,7 +322,7 @@
   };
   // seller information shown where the customer buys (order page, product page): the same data as the footer
   function sellerHTML() {
-    return ['상호: ' + COMPANY.name, '대표자: ' + COMPANY.ceo, '사업자 주소: ' + COMPANY.address, '고객센터: ' + COMPANY.tel, '이메일: ' + COMPANY.email,
+    return ['상호: ' + COMPANY.name, '대표자: ' + COMPANY.ceo, '사업자 주소: ' + COMPANY.address, '이메일: ' + COMPANY.email,
       '사업자등록번호: ' + COMPANY.biz, '통신판매업신고번호: ' + COMPANY.mailOrder].map(esc);
   }
   var FOOT_SERVICE = [['비회원 주문 조회', LINKS.guestOrder], ['교환 및 반품', LINKS.returns], ['자주 묻는 질문', LINKS.faq], ['1:1 문의하기', LINKS.contact]];
@@ -339,8 +345,11 @@
     [].forEach.call(document.querySelectorAll('main[id$="-root"]'), function (m) { var n = m.nextElementSibling; if (!(n && n.classList.contains('shp-ft'))) m.insertAdjacentHTML('afterend', footerHTML()); });
     [].forEach.call(document.querySelectorAll('[data-seller]'), function (el) { var L = sellerHTML(); el.innerHTML = el.hasAttribute('data-dots') ? '<ul class="shp-dots">' + L.map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ul>' : L.join('<br>'); });
     [].forEach.call(document.querySelectorAll('[data-ship]'), function (el) {
+      if (el.hasAttribute('data-ship-ul')) {   // a real list: every item is a <li>, a second line (the parenthesis) stays under the text, not under the dot
+        el.innerHTML = SHIPPING.items.map(function (i) { return '<li><b class="shp-k">' + esc(i[0]) + '</b>: ' + esc(i[1]) + (i[2] ? '<span class="shp-sub">' + esc(i[2]) + '</span>' : '') + '</li>'; }).join(''); return;
+      }
       var s = SHIPPING.text[el.getAttribute('data-ship')]; if (s == null) return;
-      var nb = function (x) { return esc(x).replace(/(이상 구매 시 무료\))/g, '<span class="shp-nb">$1</span>').replace(/(^|\n| · )(배송업체|기본 배송비|제주·도서산간|당일 출고|예상 배송 기간): /g, '$1<b class="shp-k">$2</b>: '); };   // keep the short ending together; item names are bold
+      var nb = function (x) { return esc(x).replace(/(이상 구매 시 무료\))/g, '<span class="shp-nb">$1</span>').replace(/(^|\n| · )(배송업체|배송비|출고 일정): /g, '$1<b class="shp-k">$2</b>: '); };   // keep the short ending together; item names are bold
       el.innerHTML = el.hasAttribute('data-dots') ? '<ul class="shp-dots">' + s.split('\n').map(function (x) { return '<li>' + nb(x) + '</li>'; }).join('') + '</ul>'
         : el.hasAttribute('data-ship-p') ? s.split('\n').map(function (x) { return '<p>' + nb(x) + '</p>'; }).join('') : nb(s).replace(/\n/g, '<br>');
     });
