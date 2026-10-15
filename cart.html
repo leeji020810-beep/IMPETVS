@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fig-tokens.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/typography.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/semantic.css">
-<link rel="stylesheet" href="shop.css?v=20261017f">
+<link rel="stylesheet" href="shop.css?v=20261017g">
 <style>html,body{margin:0;background:#fff}</style>
 </head>
 <body>
@@ -22,9 +22,9 @@
     <div id="cart-body"></div>
   </div>
 </main>
-<script src="config.js?v=20261017f"></script>
-<script src="shop.js?v=20261017f"></script>
-<script src="auth.js?v=20261017f"></script>
+<script src="config.js?v=20261017g"></script>
+<script src="shop.js?v=20261017g"></script>
+<script src="auth.js?v=20261017g"></script>
 <script id="shp-js-cart">
 (function () {
   var S = window.IMShop, body = document.getElementById('cart-body');
@@ -64,7 +64,6 @@
     body.innerHTML = limitHTML(list) +
       '<div class="ct-head" aria-hidden="true"><span class="ct-h-info">상품 정보</span><span>용량</span><span>수량</span><span>상품금액</span><span></span></div>' +
       '<ul class="ct-list">' + rows + '</ul>' + sumHTML() +
-      '<p class="shp-shipnote shp-cartnote">' + S.shipping.cartNote.map(S.esc).join('<br>') + '</p>' +
       '<p class="shp-notice" id="cart-pay-note" role="status" hidden>' + S.PAY_NOT_READY + ' 담아 두신 상품은 그대로 유지됩니다.</p>' +
       '<a class="shp-btn" id="cart-order" href="' + S.links.order + '"' + '>주문하기</a>';
   }

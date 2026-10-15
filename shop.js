@@ -217,11 +217,32 @@
   var shareState = null;
   // 카카오톡 needs a Kakao app: it is offered only when config.js has the public JavaScript key; otherwise the entry is visibly disabled ("준비 중") and never claims to work
   function kakaoReady() { var k = window.IMPETVS_CONFIG && window.IMPETVS_CONFIG.kakaoShare; return !!(k && k.jsKey); }
+  // The Kakao JavaScript SDK is loaded as soon as the share menu opens (when the JavaScript key is set), so that the click itself can open Kakao's share window
+  // (browsers block a pop-up that is opened after a download has finished). The key is the PUBLIC "JavaScript key" of the Kakao app, NOT the REST API key / Client Secret used for login.
+  var kakaoSdk = null;
+  function loadKakao() {
+    if (window.Kakao) return Promise.resolve();
+    if (kakaoSdk) return kakaoSdk;
+    kakaoSdk = new Promise(function (res, rej) {
+      var sc = document.createElement('script'); sc.src = 'https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js'; sc.async = true;
+      sc.onload = function () { window.Kakao ? res() : rej(new Error('sdk')); }; sc.onerror = function () { kakaoSdk = null; sc.remove(); rej(new Error('sdk')); };
+      document.head.appendChild(sc);
+    });
+    return kakaoSdk;
+  }
+  // what the Kakao message says: the real product name, its price line, the product picture (absolute address, JPG) and the product page. Built from the product data + siteUrl only.
+  function kakaoPayload(url) {
+    var P = PRODUCTS[PRODUCT_ID], base = url.replace(/[^\/]*$/, ''), ks = Object.keys(P.options);
+    var desc = P.sub + ' · ' + ks.map(function (k) { return k + ' ' + money(P.options[k].price); }).join(' / ');
+    var link = { mobileWebUrl: url, webUrl: url };
+    return { objectType: 'feed', content: { title: P.name, description: desc, imageUrl: base + 'opt/og-product.jpg', link: link }, buttons: [{ title: '상품 보기', link: link }] };
+  }
+  // -> resolves when Kakao's share window / app was OPENED (that is not "shared": the person sends it inside KakaoTalk, and Kakao reports nothing back); rejects when it could not be opened
   function kakaoShare(url) {
-    return new Promise(function (res, rej) {
-      function go() { try { if (!window.Kakao.isInitialized()) window.Kakao.init(window.IMPETVS_CONFIG.kakaoShare.jsKey); window.Kakao.Share.sendScrap({ requestUrl: url }); res(); } catch (e) { rej(e); } }
-      if (window.Kakao) return go();
-      var sc = document.createElement('script'); sc.src = 'https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js'; sc.async = true; sc.onload = go; sc.onerror = function () { rej(new Error('sdk')); }; document.head.appendChild(sc);
+    return loadKakao().then(function () {
+      if (!window.Kakao.isInitialized()) window.Kakao.init(window.IMPETVS_CONFIG.kakaoShare.jsKey);
+      if (!window.Kakao.Share || typeof window.Kakao.Share.sendDefault !== 'function') throw new Error('share');
+      window.Kakao.Share.sendDefault(kakaoPayload(url));
     });
   }
   function closeShare(returnFocus) {
@@ -289,7 +310,14 @@
         var r = document.createRange(); r.selectNodeContents(u); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); });
     });
     var kb = ov.querySelector('[data-kakao]');
-    if (kb) kb.addEventListener('click', function () { msg.textContent = ''; kakaoShare(url).catch(function () { msg.textContent = '카카오톡 공유를 시작하지 못했습니다. 다른 방법을 이용해 주세요.'; }); });   // opening Kakao's own share screen is not "shared"
+    if (kb) {
+      loadKakao().catch(function () {});   // preload: the SDK is ready when the button is pressed
+      kb.addEventListener('click', function () {
+        msg.textContent = '';
+        kakaoShare(url).then(function () { msg.textContent = '카카오톡 공유 창을 열었습니다. 전송은 카카오톡에서 완료해 주세요.'; },   // opening Kakao's own share screen is NOT "shared": no success toast
+          function () { msg.textContent = '카카오톡 공유를 시작하지 못했습니다. 잠시 후 다시 시도하거나 다른 방법을 이용해 주세요.'; });
+      });
+    }
     if (phone()) document.documentElement.classList.add('shp-sh-lock');
     if (trigger) trigger.setAttribute('aria-expanded', 'true');
     place(); var f = choices()[0] || items()[0]; (f || box).focus();
