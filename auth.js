@@ -7,7 +7,7 @@
 (function () {
   'use strict';
   var C = window.IMPETVS_CONFIG || {}, SB = C.supabase || {};
-  var SKEY = 'impetvs-session', NKEY = 'impetvs-next', OKEY = 'impetvs-oauth-state';
+  var SKEY = 'impetvs-session', NKEY = 'impetvs-next', OKEY = 'impetvs-oauth-state', BKEY = 'impetvs-oauth-bind', CHK = 'impetvs-su-ok';
   var mem = {};
   function lget(k) { try { return window.localStorage.getItem(k); } catch (e) { return mem[k] || null; } }
   function lset(k, v) { try { window.localStorage.setItem(k, v); } catch (e) { mem[k] = v; } }
@@ -17,8 +17,10 @@
   function sdel(k) { try { window.sessionStorage.removeItem(k); } catch (e) {} delete mem['s' + k]; }
 
   function backendReady() { return !!(SB.url && SB.anonKey); }
-  // sign-up, social login, 1:1 inquiries and orders collect personal data: they also wait for the approved 약관 / 개인정보처리방침
+  // orders (and the order page) collect personal data: they wait for the approved 약관 / 개인정보처리방침 (legalReady). Social login has its own switch (socialReady).
   function legalReady() { return backendReady() && C.legalReady === true; }
+  // Kakao / Naver login have their OWN switch (config.js socialLoginReady): it never opens orders or payment, and it does not wait for legalReady
+  function socialReady() { return backendReady() && C.socialLoginReady === true; }
   // e-mail sign-up has its own switch: opening it must not open inquiries, orders or social login (those keep using legalReady)
   function signupReady() { return backendReady() && C.signupReady === true; }
   // 1:1 inquiries have their own switch too (they never open orders, social login or payment)
@@ -43,7 +45,7 @@
     if (keep) { lset(SKEY, v); sdel(SKEY); } else { sset(SKEY, v); ldel(SKEY); }
     me = null; notify();
   }
-  function clearSession() { ldel(SKEY); sdel(SKEY); sdel(NKEY); sdel(OKEY); me = null; notify(); }   // tokens (both places) + the remembered return address / login-state value; the cart is not login data and stays   // tokens + the remembered return address / login-state value; the cart is not login data and stays
+  function clearSession() { ldel(SKEY); sdel(SKEY); sdel(NKEY); sdel(OKEY); sdel(BKEY); sdel(CHK); me = null; notify(); }   // tokens (both places) + the remembered return address / login-state value; the cart is not login data and stays   // tokens + the remembered return address / login-state value; the cart is not login data and stays
   function loggedIn() { return !!readSession(); }
   function notify() { listeners.forEach(function (f) { try { f(); } catch (e) {} }); paintHeader(); }
 
@@ -66,6 +68,12 @@
     if (c === 'same_password' || m.indexOf('different from the old') > -1) return '현재 비밀번호와 다른 비밀번호를 입력해 주세요.';
     if (res.status === 429 || c === 'over_request_rate_limit' || c === 'over_email_send_rate_limit') return '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.';
     if (res.status === 401 || res.status === 403) return '권한이 없습니다. 로그인 후 다시 시도해 주세요.';
+    if (m.indexOf('phone_duplicate') > -1) return '이미 가입에 사용된 휴대폰 번호입니다.';
+    if (m.indexOf('phone_required') > -1) return '휴대폰 번호 형식이 올바르지 않습니다. 예: 010-1234-5678';
+    if (m.indexOf('consent_required') > -1) return '필수 약관에 모두 동의해 주세요.';
+    if (m.indexOf('email_required') > -1) return '연락 받을 이메일 주소를 정확히 입력해 주세요.';
+    if (m.indexOf('name_required') > -1) return '이름을 입력해 주세요.';
+    if (m.indexOf('already_complete') > -1) return '이미 가입이 완료된 계정입니다.';
     if (res.message && /[가-힣]/.test(res.message)) return res.message; // messages written by our own Edge Functions are already Korean
     return '요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.';
   }
@@ -175,35 +183,74 @@
   function updatePassword(accessToken, password) {
     return raw('/auth/v1/user', { method: 'PUT', token: accessToken, body: { password: password } }).then(function (r) { return r.ok ? { ok: true } : { ok: false, message: errorText(r) }; });
   }
+  /* ---------------------------------------------------------------- social login (Kakao via Supabase, Naver via the naver-login function) */
+  // Kakao: Supabase Auth runs the whole exchange. The account exists after the Kakao login but is NOT usable until the sign-up form (consents) is finished.
   function startKakao() {
-    if (!(C.kakao && C.kakao.enabled && legalReady())) return false;
+    if (!(C.kakao && C.kakao.enabled && socialReady())) return false;
     location.href = String(SB.url).replace(/\/$/, '') + '/auth/v1/authorize?provider=kakao&redirect_to=' + encodeURIComponent(siteBase() + '/auth-callback.html');
     return true;
   }
+  function randHex(n) { var a = new Uint8Array(n || 24); (window.crypto || window.msCrypto).getRandomValues(a); return [].map.call(a, function (x) { return ('0' + x.toString(16)).slice(-2); }).join(''); }
+  // Naver: the SERVER makes the login request (state) and remembers it; this browser only keeps a random "bind" value so that nobody else can finish this request.
   function startNaver() {
-    if (!(C.naver && C.naver.enabled && C.naver.clientId && legalReady())) return false;
-    var st = Math.random().toString(36).slice(2) + Date.now().toString(36); sset(OKEY, st);
-    location.href = 'https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=' + encodeURIComponent(C.naver.clientId) + '&redirect_uri=' + encodeURIComponent(siteBase() + '/auth-callback.html') + '&state=' + encodeURIComponent(st);
-    return true;
+    if (!(C.naver && C.naver.enabled && socialReady())) return Promise.resolve({ ok: false, message: '네이버 로그인은 준비 중입니다.' });
+    var bind = randHex(24); sset(BKEY, bind);
+    return raw('/functions/v1/naver-login', { method: 'POST', body: { action: 'start', bind: bind, redirect_uri: siteBase() + '/auth-callback.html' } }).then(function (r) {
+      if (r.ok && r.data && r.data.url) { location.href = r.data.url; return { ok: true }; }
+      sdel(BKEY); return { ok: false, message: errorText(r) };
+    });
   }
   function parseHash(h) { var o = {}; String(h || '').replace(/^#/, '').split('&').forEach(function (p) { var i = p.indexOf('='); if (i > 0) o[decodeURIComponent(p.slice(0, i))] = decodeURIComponent(p.slice(i + 1).replace(/\+/g, ' ')); }); return o; }
-  // Kakao comes back through Supabase with the tokens in the URL fragment
+  // Kakao (and the e-mail confirmation links) come back through Supabase with the tokens in the URL fragment
   function finishFromHash(hash) {
     var p = parseHash(hash);
     if (p.error) return { ok: false, message: p.error_description || '소셜 로그인이 취소되었거나 실패했습니다.' };
     if (p.access_token && p.refresh_token) { writeSession({ access_token: p.access_token, refresh_token: p.refresh_token, expires_in: +p.expires_in || 3600 }); return { ok: true }; }
     return { ok: false, message: '로그인 정보를 받지 못했습니다.' };
   }
-  // Naver comes back with ?code&state: the Edge Function (which holds the Naver secret) exchanges it
+  function verifyHash(th) {
+    return raw('/auth/v1/verify', { method: 'POST', body: { type: 'magiclink', token_hash: th } }).then(function (v) {
+      if (v.ok && v.data && v.data.access_token) { writeSession(v.data); sset(CHK, '1'); return { ok: true }; }
+      return { ok: false, message: errorText(v) };
+    });
+  }
+  // Naver comes back with ?code&state. -> {ok:true} (signed in) | {ok:true, signup:true, pending, name} (new person: the form comes next) | {ok:false, message}
   function finishNaver(code, state) {
-    var saved = sget(OKEY); sdel(OKEY);
-    if (!code || !state || state !== saved) return Promise.resolve({ ok: false, message: '로그인 요청을 확인하지 못했습니다. 처음부터 다시 시도해 주세요.' });
-    return raw('/functions/v1/naver-login', { method: 'POST', body: { code: code, state: state, redirect_uri: siteBase() + '/auth-callback.html' } }).then(function (r) {
-      if (!r.ok || !r.data || !r.data.token_hash) return { ok: false, message: errorText(r) };
-      return raw('/auth/v1/verify', { method: 'POST', body: { type: 'magiclink', token_hash: r.data.token_hash } }).then(function (v) {
-        if (v.ok && v.data && v.data.access_token) { writeSession(v.data); return { ok: true }; }
-        return { ok: false, message: errorText(v) };
-      });
+    var bind = sget(BKEY); sdel(BKEY);
+    if (!code || !state || !bind) return Promise.resolve({ ok: false, message: '로그인 요청을 확인하지 못했습니다. 처음부터 다시 시도해 주세요.' });
+    return raw('/functions/v1/naver-login', { method: 'POST', body: { action: 'login', code: code, state: state, bind: bind, redirect_uri: siteBase() + '/auth-callback.html' } }).then(function (r) {
+      var d = r.data || {};
+      if (!r.ok) return { ok: false, message: errorText(r) };
+      if (d.status === 'ok' && d.token_hash) return verifyHash(d.token_hash);
+      if (d.status === 'signup' && d.pending) return { ok: true, signup: true, pending: d.pending, name: d.name || '' };
+      return { ok: false, message: d.message || '네이버 로그인을 완료하지 못했습니다.' };
+    });
+  }
+  // the Naver sign-up form: nothing exists on the server before this succeeds. f = {name, phone, age14, terms, privacy}
+  function completeNaver(pending, f) {
+    return raw('/functions/v1/naver-login', { method: 'POST', body: { action: 'complete', pending: pending, name: f.name, phone: f.phone, age14: f.age14 === true, terms: f.terms === true, privacy: f.privacy === true } }).then(function (r) {
+      var d = r.data || {};
+      if (r.ok && d.status === 'ok' && d.token_hash) return verifyHash(d.token_hash);
+      return { ok: false, message: d.message || errorText(r) };
+    });
+  }
+  // Kakao: where does this signed-in member stand? -> {exists, complete, provider, has_email, linked_email_account, name, phone} | null
+  function signupState() { return rpc('my_signup_state').then(function (r) { return r.ok && r.data ? r.data : null; }); }
+  // the Kakao sign-up form: the three ticks come from the person; the server records them with its own time. f = {name, phone, age14, terms, privacy, contactEmail}
+  function completeSocial(f) {
+    return rpc('complete_social_signup', { p_name: f.name, p_phone: f.phone, p_age14: f.age14 === true, p_terms: f.terms === true, p_privacy: f.privacy === true, p_contact_email: f.contactEmail || null }).then(function (r) {
+      if (r.ok) { sset(CHK, '1'); return { ok: true }; }
+      return { ok: false, message: errorText(r) };
+    });
+  }
+  // 취소: an unfinished Kakao account is removed on the server, then this browser signs out
+  function cancelSocial() { return rpc('cancel_social_signup').then(function () { return signOut(); }); }
+  // a Kakao login that was not finished (the tab was closed on the form) is sent back to the form, once per browser tab
+  function guardIncomplete() {
+    if (!loggedIn() || !socialReady() || location.protocol === 'file:' || sget(CHK) === '1' || /auth-callback\.html$/.test(location.pathname)) return;
+    signupState().then(function (st) {
+      if (!st) return;
+      if (st.complete) sset(CHK, '1'); else if (st.exists) location.replace('auth-callback.html?resume=1');
     });
   }
   // 아이디 찾기: the server checks name + phone and an SMS code, and only then answers with a masked address (never the full one)
@@ -273,9 +320,11 @@
   window.IMAuth = {
     cfg: C, backendReady: backendReady, legalReady: legalReady, guestLookupReady: guestLookupReady, guestLookup: guestLookup, signupReady: signupReady, inquiryReady: inquiryReady, loggedIn: loggedIn, profile: profile, isAdmin: isAdmin, onChange: function (f) { listeners.push(f); },
     signUp: signUp, signIn: signIn, changeEmail: changeEmail, changePassword: changePassword, sendReauth: sendReauth, refreshProfile: refreshProfile, remembered: remembered, signOut: signOut, resetRequest: resetRequest, updatePassword: updatePassword,
-    startKakao: startKakao, startNaver: startNaver, finishFromHash: finishFromHash, finishNaver: finishNaver, parseHash: parseHash,
+    startKakao: startKakao, startNaver: startNaver, finishFromHash: finishFromHash, finishNaver: finishNaver, completeNaver: completeNaver, parseHash: parseHash,
+    socialReady: socialReady, signupState: signupState, completeSocial: completeSocial, cancelSocial: cancelSocial, guardIncomplete: guardIncomplete,
     clearSession: clearSession, checkSignup: checkSignup, normEmail: normEmail, normPhone: normPhone, findIdSend: findIdSend, findIdVerify: findIdVerify, rest: rest, rpc: rpc, fn: fn, errorText: errorText, NOT_READY: NOT_READY,
     setNext: setNext, takeNext: takeNext, needLogin: needLogin, paintHeader: paintHeader, siteBase: siteBase
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', paintHeader); else paintHeader();
+  guardIncomplete();
 })();

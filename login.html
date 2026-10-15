@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fig-tokens.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/typography.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/semantic.css">
-<link rel="stylesheet" href="shop.css?v=20261017c">
+<link rel="stylesheet" href="shop.css?v=20261017e">
 <style>html,body{margin:0;background:#fff}</style>
 </head>
 <body>
@@ -104,15 +104,14 @@
     </section>
   </div>
 </main>
-<script src="config.js?v=20261017c"></script>
-<script src="shop.js?v=20261017c"></script>
-<script src="auth.js?v=20261017c"></script>
+<script src="config.js?v=20261017e"></script>
+<script src="shop.js?v=20261017e"></script>
+<script src="auth.js?v=20261017e"></script>
 <script id="shp-js-login">
 (function () {
   var root = document.getElementById('login-root'), S = window.IMShop, A = window.IMAuth, C = A.cfg;
   var $ = function (id) { return document.getElementById(id); };
   var OFF = '회원 서비스 연결 전입니다. 서버(Supabase) 설정이 끝나면 이용할 수 있습니다.';
-  var LEGAL = '이용약관·개인정보처리방침 게시 후 이용할 수 있습니다.';
   var SMS_OFF = '휴대폰 인증은 준비 중입니다.';
 
   function show(mode) {
@@ -150,17 +149,21 @@
       if (r.ok) { $('lg-pw').value = ''; afterLogin(); } else { $('lg-pw').value = ''; err($('lg-err'), r.message); }
     });
   });
-  function social(btn, name, start, enabled) {
+  // Kakao / Naver: their own switch (socialLoginReady), independent of legalReady and of payment. The consents are NOT asked here: the person ticks them on the sign-up form after the login.
+  var SOC_OFF = ' 로그인/회원가입은 준비 중입니다. (앱 등록과 인증 키 설정이 필요합니다.)';
+  function social(btn, name, enabled, run) {
     btn.addEventListener('click', function () {
       $('lg-err').hidden = true;
       if (!ready) return err($('lg-err'), OFF);
-      if (!enabled()) return err($('lg-err'), name + ' 로그인/회원가입은 준비 중입니다. (앱 등록과 인증 키 설정이 필요합니다.)');
-      if (!A.legalReady()) return err($('lg-err'), LEGAL);
-      if (!start()) err($('lg-err'), name + ' 로그인을 시작하지 못했습니다.');
+      if (!enabled() || !A.socialReady()) return err($('lg-err'), name + SOC_OFF);
+      run();
     });
   }
-  social($('lg-kakao'), '카카오', A.startKakao, function () { return !!(C.kakao && C.kakao.enabled); });
-  social($('lg-naver'), '네이버', A.startNaver, function () { return !!(C.naver && C.naver.enabled && C.naver.clientId); });
+  social($('lg-kakao'), '카카오', function () { return !!(C.kakao && C.kakao.enabled); }, function () { if (!A.startKakao()) err($('lg-err'), '카카오 로그인을 시작하지 못했습니다.'); });
+  social($('lg-naver'), '네이버', function () { return !!(C.naver && C.naver.enabled); }, function () {
+    var b = $('lg-naver'); b.disabled = true;
+    A.startNaver().then(function (r) { if (!r.ok) { b.disabled = false; err($('lg-err'), r.message || '네이버 로그인을 시작하지 못했습니다.'); } });
+  });
 
   // ② tabs + method switch
   function tab(which) {
