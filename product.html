@@ -26,7 +26,7 @@
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fig-tokens.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/typography.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/semantic.css">
-<link rel="stylesheet" href="shop.css?v=20261017b">
+<link rel="stylesheet" href="shop.css?v=20261017c">
 <style>html,body{margin:0;background:#fff;scroll-behavior:smooth}</style>
 </head>
 <body>
@@ -90,6 +90,7 @@
         </div>
 
         <div class="shp-opt">
+          <h2 class="shp-opt-h">옵션 선택</h2>
           <fieldset class="shp-sizes">
             <legend>용량</legend>
             <div class="shp-sizes-in">
@@ -196,17 +197,53 @@
   <!-- 모바일 하단 고정 바: 모바일의 총 상품금액 표시 + 위의 '바로 구매'와 같은 동작 -->
   <div class="shp-bar">
     <div class="shp-bar-t"><small>총 상품금액</small><b id="pd-bar-total">59,000원</b></div>
-    <button type="button" class="shp-btn" id="pd-bar-buy">바로 구매</button>
+    <button type="button" class="shp-btn" id="pd-bar-buy" aria-haspopup="dialog" aria-controls="pm" aria-expanded="false">구매하기</button>
+  </div>
+
+  <!-- 모바일 구매 옵션 시트: 같은 옵션·수량·가격 로직을 쓰고, 페이지와 값이 동기화됨 (결제는 준비 중이므로 '바로 구매'는 안내만 표시) -->
+  <div class="pm" id="pm" hidden>
+    <div class="pm-bd" data-pm-close></div>
+    <div class="pm-sheet" role="dialog" aria-modal="true" aria-labelledby="pm-t" tabindex="-1">
+      <div class="pm-h">
+        <h2 id="pm-t">옵션 선택</h2>
+        <button type="button" class="pm-x" id="pm-x" aria-label="닫기"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+      </div>
+      <div class="pm-body">
+        <fieldset class="shp-sizes">
+          <legend>용량</legend>
+          <div class="shp-sizes-in">
+            <label class="shp-size"><input type="radio" name="pm-size" value="30ml" checked><span>30ml</span></label>
+            <label class="shp-size"><input type="radio" name="pm-size" value="50ml"><span>50ml</span></label>
+          </div>
+        </fieldset>
+        <div class="shp-sel">
+          <div class="shp-sel-name">임페투스 리치맨<small id="pm-size-label">30ml</small></div>
+          <div class="shp-qty" role="group" aria-label="수량">
+            <button type="button" id="pm-minus" aria-label="수량 줄이기">−</button>
+            <input type="number" id="pm-qty" value="1" min="1" max="30" inputmode="numeric" aria-label="수량">
+            <button type="button" id="pm-plus" aria-label="수량 늘리기">+</button>
+          </div>
+        </div>
+        <p class="shp-notice" id="pm-qty-note" role="status" hidden></p>
+        <div class="shp-total"><span>총 상품금액</span><b id="pm-total" aria-live="polite">59,000원<small>(1개)</small></b></div>
+        <p class="shp-notice" id="pm-pay-note" role="status" hidden>결제 서비스 준비 중입니다. 장바구니에는 담아 두실 수 있습니다.</p>
+      </div>
+      <div class="pm-f">
+        <button type="button" class="shp-btn line" id="pm-cart">장바구니</button>
+        <button type="button" class="shp-btn" id="pm-buy">바로 구매</button>
+      </div>
+    </div>
   </div>
 </main>
-<script src="config.js?v=20261017b"></script>
-<script src="shop.js?v=20261017b"></script>
-<script src="auth.js?v=20261017b"></script>
+<script src="config.js?v=20261017c"></script>
+<script src="shop.js?v=20261017c"></script>
+<script src="auth.js?v=20261017c"></script>
 <script id="shp-js-product">
 (function () {
   var root = document.getElementById('product-root'), S = window.IMShop, A = window.IMAuth, P = S.products[S.PRODUCT_ID];
   var $ = function (id) { return document.getElementById(id); };
   var qtyEl = $('pd-qty'), minus = $('pd-minus'), plus = $('pd-plus'), imgEl = $('pd-img');
+  var mqty = $('pm-qty'), mminus = $('pm-minus'), mplus = $('pm-plus');
   var size = P.defaultOption;
   S.accordion(root);
 
@@ -215,40 +252,79 @@
   function qty() { var n = Math.floor(Number(qtyEl.value)); if (isFinite(n) && n > cap()) typedOver = true; return isFinite(n) && n >= 1 ? Math.min(n, cap()) : 1; }
   function preload() { Object.keys(P.options).forEach(function (k) { var i = new Image(); i.src = S.img(P.options[k].img); }); }
 
+  // the page and the sheet share ONE state (capacity + quantity): both sets of controls are redrawn from it
   function render() {
-    var q = qty(), o = P.options[size]; qtyEl.value = q;
-    minus.disabled = q <= 1; plus.disabled = q >= cap();
-    var qn = $('pd-qty-note'); qn.hidden = !(q >= cap() || typedOver); if (!qn.hidden) qn.textContent = S.QTY_MSG; if (q < cap()) typedOver = false;
+    var q = qty(), o = P.options[size]; qtyEl.value = q; mqty.value = q;
+    minus.disabled = mminus.disabled = q <= 1; plus.disabled = mplus.disabled = q >= cap();
+    var msg = (q >= cap() || typedOver) ? S.QTY_MSG : ''; if (q < cap()) typedOver = false;
+    ['pd-qty-note', 'pm-qty-note'].forEach(function (id) { var n = $(id); n.hidden = !msg; if (msg) n.textContent = msg; });
     // image of the chosen capacity (same box + same ratio, so nothing around it moves)
     var src = S.img(o.img); if (imgEl.getAttribute('src') !== src) imgEl.setAttribute('src', src);
     imgEl.alt = o.alt;
-    $('pd-size-label').textContent = size;
+    $('pd-size-label').textContent = $('pm-size-label').textContent = size;
     var total = S.money(o.price * q);
     $('pd-total').innerHTML = S.esc(total) + '<small id="pd-count">(' + q + '개)</small>';
+    $('pm-total').innerHTML = S.esc(total) + '<small>(' + q + '개)</small>';
     $('pd-bar-total').textContent = total;
-    [].forEach.call(root.querySelectorAll('input[name="pd-size"]'), function (r) { r.checked = r.value === size; });
+    [].forEach.call(root.querySelectorAll('input[name="pd-size"],input[name="pm-size"]'), function (r) { r.checked = r.value === size; });
   }
   function setSize(s) { if (P.options[s]) { size = s; render(); } }
-  [].forEach.call(root.querySelectorAll('input[name="pd-size"]'), function (r) { r.addEventListener('change', function () { if (r.checked) setSize(r.value); }); });
-  minus.addEventListener('click', function () { typedOver = false; qtyEl.value = qty() - 1; render(); });
-  plus.addEventListener('click', function () { qtyEl.value = qty() + 1; render(); });
-  qtyEl.addEventListener('input', function () { if (qtyEl.value !== '') render(); });
-  qtyEl.addEventListener('blur', render);
-  qtyEl.addEventListener('keydown', function (e) { if (e.key === 'e' || e.key === '-' || e.key === '+' || e.key === '.') e.preventDefault(); });
+  [].forEach.call(root.querySelectorAll('input[name="pd-size"],input[name="pm-size"]'), function (r) { r.addEventListener('change', function () { if (r.checked) setSize(r.value); }); });
+  [[qtyEl, minus, plus], [mqty, mminus, mplus]].forEach(function (g) {
+    var inp = g[0];
+    function take() { qtyEl.value = inp.value; }   // the edited box is the source of the shared quantity
+    g[1].addEventListener('click', function () { take(); typedOver = false; qtyEl.value = qty() - 1; render(); });
+    g[2].addEventListener('click', function () { take(); qtyEl.value = qty() + 1; render(); });
+    inp.addEventListener('input', function () { if (inp.value !== '') { take(); render(); } });
+    inp.addEventListener('blur', function () { take(); render(); });
+    inp.addEventListener('keydown', function (e) { if (e.key === 'e' || e.key === '-' || e.key === '+' || e.key === '.') e.preventDefault(); });
+  });
 
   // 바로 구매: only the capacity + quantity chosen here go to the order page (the cart is not touched)
-  function buy() {
-    if (!S.paymentReady()) { $('pd-pay-note').hidden = false; S.toast(S.PAY_NOT_READY); return; }   // nothing is started while payment is not connected
+  function buy(noteId) {
+    if (!S.paymentReady()) { $(noteId).hidden = false; S.toast(S.PAY_NOT_READY); return; }   // nothing is started while payment is not connected
     S.order.buyNow(P.id, size, qty()); location.href = S.links.order;
   }
-  $('pd-buy').addEventListener('click', buy); $('pd-bar-buy').addEventListener('click', buy);
+  $('pd-buy').addEventListener('click', function () { buy('pd-pay-note'); });
+  $('pm-buy').addEventListener('click', function () { buy('pm-pay-note'); });
 
-  $('pd-cart').addEventListener('click', function () {
-    var r = S.cart.add(P.id, size, qty()), qn = $('pd-qty-note');
+  function addCart(noteId) {
+    var r = S.cart.add(P.id, size, qty()), qn = $(noteId);
     if (r.added === 0) { qn.hidden = false; qn.textContent = '장바구니에 이미 ' + r.total + '개가 담겨 있어 더 담을 수 없습니다. ' + S.QTY_MSG; S.toast('더 담을 수 없습니다. ' + S.QTY_MSG, { href: S.links.cart, label: '장바구니 보기' }); return; }
     if (r.capped) { qn.hidden = false; qn.textContent = '장바구니에 담긴 수량을 포함해 ' + S.QTY_MSG + ' ' + r.added + '개만 담았습니다.'; S.toast('장바구니에 ' + r.added + '개만 담았습니다. ' + S.QTY_MSG, { href: S.links.cart, label: '장바구니 보기' }); return; }
     S.toast('장바구니에 담았습니다. (' + size + ' ' + r.qty + '개)', { href: S.links.cart, label: '장바구니 보기' });
+  }
+  $('pd-cart').addEventListener('click', function () { addCart('pd-qty-note'); });
+  $('pm-cart').addEventListener('click', function () { addCart('pm-qty-note'); });
+
+  // ---- mobile purchase sheet: open / close (button, backdrop, Esc), background scroll lock, focus kept inside and returned to the opener
+  var pm = $('pm'), sheet = pm.querySelector('.pm-sheet'), opener = null;
+  function pmFocusables() { return [].filter.call(sheet.querySelectorAll('button,input,a[href]'), function (el) { return !el.disabled && el.offsetParent !== null; }); }
+  function pmOpen() {
+    opener = document.activeElement; $('pm-pay-note').hidden = true; render();
+    pm.hidden = false; document.documentElement.classList.add('pm-lock'); $('pd-bar-buy').setAttribute('aria-expanded', 'true');
+    $('pm-x').focus();
+  }
+  function pmClose() {
+    if (pm.hidden) return;
+    pm.hidden = true; document.documentElement.classList.remove('pm-lock'); $('pd-bar-buy').setAttribute('aria-expanded', 'false');
+    if (opener && opener.focus) opener.focus(); opener = null;
+  }
+  $('pd-bar-buy').addEventListener('click', pmOpen);
+  $('pm-x').addEventListener('click', pmClose);
+  pm.addEventListener('click', function (e) { if (e.target.hasAttribute('data-pm-close')) pmClose(); });
+  document.addEventListener('keydown', function (e) {
+    if (pm.hidden) return;
+    if (e.key === 'Escape') { e.preventDefault(); pmClose(); return; }
+    if (e.key === 'Tab') {
+      var f = pmFocusables(); if (!f.length) return;
+      var first = f[0], last = f[f.length - 1];
+      if (!sheet.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
+      else if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
   });
+  window.addEventListener('resize', function () { if (window.innerWidth > 900) pmClose(); });
   $('pd-share').addEventListener('click', function () { S.share('임페투스 리치맨 | IMPETVS', { page: 'product', trigger: this }); });
 
   /* ---------------- 후기 / 문의 (server-backed: Supabase tables reviews / product_inquiries) ---------------- */

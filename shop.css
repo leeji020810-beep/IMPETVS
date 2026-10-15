@@ -832,42 +832,36 @@ select.shp-in{appearance:auto;height:56px}
 
 /* ===== 6th round ===== */
 /* ---- 장바구니: list columns on PC (상품 정보 | 용량 | 수량 | 상품금액), card layout on phones. Only the lines that are needed: header, row separators. ---- */
-.ct-bar{display:flex;align-items:center;justify-content:space-between;margin:0 0 12px}
-.ct-all,.ct-ck{display:inline-flex;align-items:center;gap:10px;cursor:pointer;font-size:15px;color:#171719}
-.ct-all input,.ct-ck input{width:20px;height:20px;margin:0;accent-color:#000;flex:none}
-.ct-ds{min-height:44px;padding:0 4px;border:0;background:none;font:500 14px var(--font-sans);color:rgba(55,56,60,.72);cursor:pointer}
-.ct-ds:hover{color:#000;text-decoration:underline}
 .ct-list{margin:0;padding:0;list-style:none}
-.ct-head,.ct-row{display:grid;grid-template-columns:44px 88px minmax(0,2.4fr) minmax(70px,1fr) 150px minmax(110px,1.2fr) 44px;align-items:center;column-gap:12px}
+.ct-head,.ct-row{display:grid;grid-template-columns:88px minmax(0,2.4fr) minmax(70px,1fr) 150px minmax(110px,1.2fr) 44px;align-items:center;column-gap:12px}
 .ct-head{padding:12px 0;border-top:1px solid #000;border-bottom:1px solid rgba(112,115,124,.32);font-size:13px;color:rgba(55,56,60,.72);text-align:center}
-.ct-head .ct-h-info{grid-column:2 / 4}
+.ct-head .ct-h-info{grid-column:1 / 3;text-align:left}
 .ct-row{padding:16px 0;border-bottom:1px solid rgba(112,115,124,.22)}
 .ct-meta{display:contents}
-.ct-img{grid-column:2;display:block}.ct-img img{display:block;width:88px;height:auto;aspect-ratio:3/4;object-fit:cover;background:#f4f4f5}
-.ct-name{grid-column:3;margin:0;font-size:16px;font-weight:600;color:#000;word-break:keep-all;overflow-wrap:anywhere}
-.ct-opt{grid-column:4;margin:0;text-align:center;font-size:15px}
-.ct-qty{grid-column:5;justify-self:center}
-.ct-amt{grid-column:6;margin:0;text-align:center;font-size:15px}.ct-amt b{font-weight:700;color:#000}
+.ct-img{grid-column:1;display:block}.ct-img img{display:block;width:88px;height:auto;aspect-ratio:3/4;object-fit:cover;background:#f4f4f5}
+.ct-name{grid-column:2;margin:0;font-size:16px;font-weight:600;color:#000;word-break:keep-all;overflow-wrap:anywhere}
+.ct-opt{grid-column:3;margin:0;text-align:center;font-size:15px}
+.ct-nm{display:none}
+.ct-qty{grid-column:4;justify-self:center}
+.ct-amt{grid-column:5;margin:0;text-align:center;font-size:15px}.ct-amt b{font-weight:700;color:#000}
 .ct-l{display:none}
-.ct-ck{grid-column:1;justify-content:center}
-.ct-rm{grid-column:7;display:flex;align-items:center;justify-content:center;width:44px;height:44px;border:0;background:none;color:rgba(55,56,60,.61);cursor:pointer}
+.ct-rm{grid-column:6;display:flex;align-items:center;justify-content:center;width:44px;height:44px;border:0;background:none;color:rgba(55,56,60,.61);cursor:pointer}
 .ct-rm:hover{color:#000}
-.ct-bar+.ct-head{margin-top:0}
 .shp-cartsum{margin-top:0}
+@media (min-width:901px){.ct-row>*,.ct-meta>*{grid-row:1}}
+/* phones: image | name + capacity + amount | trash, quantity under the text */
 @media (max-width:900px){
-  .ct-head{display:none}
-  .ct-bar{padding:0 0 4px}
+  .ct-head,.ct-name{display:none}
   .ct-list{border-top:1px solid rgba(112,115,124,.32)}
-  .ct-row{grid-template-columns:32px 88px minmax(0,1fr) auto;grid-template-areas:"ck name name rm" "img meta meta qty";row-gap:12px;align-items:start;padding:16px 0}
-  .ct-ck{grid-area:ck;justify-content:flex-start;min-height:44px;align-items:center}
-  .ct-name{grid-area:name;align-self:center;font-size:15px}
-  .ct-rm{grid-area:rm;align-self:center}
+  .ct-row{grid-template-columns:88px minmax(0,1fr) 44px;grid-template-areas:"img meta rm" "img qty qty";column-gap:12px;row-gap:8px;align-items:start;padding:16px 0}
   .ct-img{grid-area:img}
-  .ct-meta{display:block;grid-area:meta;min-width:0}
-  .ct-opt,.ct-amt{display:flex;gap:8px;align-items:baseline;text-align:left;margin:0 0 6px;font-size:14px}
-  .ct-amt b{font-size:16px}
-  .ct-l{display:inline;flex:none;min-width:54px;font-size:12px;color:rgba(55,56,60,.6)}
-  .ct-qty{grid-area:qty;align-self:end;justify-self:end}
+  .ct-meta{display:block;grid-area:meta;min-width:0;align-self:center}
+  .ct-nm{display:inline}
+  .ct-opt{margin:0 0 6px;text-align:left;font-size:15px;font-weight:600;color:#000;word-break:keep-all}
+  .ct-amt{margin:0;text-align:left;font-size:14px}
+  .ct-amt b{font-size:16px;white-space:nowrap}
+  .ct-rm{grid-area:rm;align-self:start}
+  .ct-qty{grid-area:qty;align-self:end;justify-self:start}
 }
 /* ---- 쇼핑 안내 목록: the list starts on the same left line as the paragraph above it; wrapped text lines up with the text start, not with the dot ---- */
 .shp-doc .shp-dots{padding-left:0;margin:0 0 12px}
@@ -917,13 +911,6 @@ select.shp-in{appearance:auto;height:56px}
   .iq-item .my-iqb{padding:12px 0 18px}
 }
 
-/* phones: no labels inside the card (the header row is gone), the quantity control sits under the price when the screen is narrow */
-@media (max-width:900px){.ct-l{display:none}}
-@media (max-width:520px){
-  .ct-row{grid-template-columns:32px 88px minmax(0,1fr) 44px;grid-template-areas:"ck name name rm" "img meta meta meta" "img qty qty qty"}
-  .ct-qty{align-self:start;justify-self:end}
-  .ct-amt b{white-space:nowrap}
-}
 /* PC order search: tighter so that the whole row fits into the content column */
 @media (min-width:901px){
   .pd-box{padding:16px 18px;gap:12px}
@@ -933,12 +920,69 @@ select.shp-in{appearance:auto;height:56px}
   .pd-go{min-width:66px;padding:0 16px}
 }
 
-/* 장바구니 grid fixes: PC = every cell on ONE row; phone = 2-column image block under checkbox + name */
-@media (min-width:901px){.ct-row>*,.ct-meta>*{grid-row:1}}
+
+/* ===== 7th round: role tokens + role layer =====
+   One place for the values that every page shares. Roles: text, line, shape (radius), control height, focus.
+   Intended exceptions (not changed on purpose): home main title / HOW TO USE card / PRODUCT SAFETY image (own sizes),
+   Kakao button (external-service logo: circle, white), home floating buy bar (premium.css). */
+:root{
+  --c-title:#000;--c-name:#171719;--c-body:rgba(46,47,51,.88);--c-meta:rgba(55,56,60,.61);--c-ph:#a8abb2;--c-off:#878a93;
+  --c-err:#d92d20;--c-ok:#067647;--c-link:#000;
+  --ln-strong:#171719;--ln:rgba(112,115,124,.32);--ln-soft:rgba(112,115,124,.22);--ln-tab:3px;
+  --r-btn:0;--r-in:0;--r-card:0;--r-dlg:0;
+  --h-btn:56px;--h-btn-sm:44px;--h-in:52px;--h-touch:44px;
+  --bg-soft:#f7f7f8;--sh-cta:0 4px 16px rgba(0,0,0,.28);
+  --focus:2px solid #000;
+}
+/* shape: buttons, inputs, cards and dialogs read their radius from the tokens (square everywhere on the shop pages) */
+.shp-btn{border-radius:var(--r-btn);min-height:var(--h-touch)}
+.shp-in,.my-sel,.shp-field input{border-radius:var(--r-in)}
+.shp-notice,.shp-dlg{border-radius:var(--r-dlg)}
+:where(.shp-btn,.shp-in,.my-sel,.shp-qty button,.shp-qty input,.pm-x,.shp-size input):focus-visible{outline:var(--focus);outline-offset:2px}
+.shp-size input:focus-visible+span{outline:var(--focus)}
+.shp-btn.sm{min-height:var(--h-btn-sm)}
+
+/* select: ONE custom arrow (the native one is switched off), 16px from the right border, text never reaches the arrow */
+select.shp-in,.my-sel{-webkit-appearance:none;-moz-appearance:none;appearance:none;padding-right:44px;
+  background-color:#fff;background-repeat:no-repeat;background-position:right 16px center;background-size:12px 8px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none' stroke='%23171719' stroke-width='1.6' stroke-linecap='square'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E");
+  text-overflow:ellipsis;cursor:pointer}
+select.shp-in::-ms-expand,.my-sel::-ms-expand{display:none}
+select.shp-in:disabled,.my-sel:disabled{cursor:not-allowed;color:var(--c-off)}
+.pf-ph select.shp-in{padding-left:8px;padding-right:28px;background-position:right 10px center}
+
+/* cart: the shipping notice uses the full totals width, left aligned */
+.shp-cartnote{display:block;width:100%;max-width:none;box-sizing:border-box;text-align:left}
+.shp-cartnote{white-space:normal}
+
+/* product: 옵션 선택 area + square CTA buttons (shadow and functions unchanged) */
+.shp-opt-h{margin:0 0 14px;font-size:16px;font-weight:700;color:var(--c-title)}
+.shp-sizes legend{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.shp-act2 .shp-btn,.shp-bar .shp-btn{border-radius:var(--r-btn)}
+.shp-qty,.shp-size span{border-radius:0}
+
+/* mobile purchase sheet (square, bottom-fixed buttons stay usable, body scrolls on small screens) */
+.pm[hidden]{display:none}
+.pm{position:fixed;inset:0;z-index:120;display:flex;align-items:flex-end}
+.pm-bd{position:absolute;inset:0;background:rgba(0,0,0,.5)}
+.pm-sheet{position:relative;display:flex;flex-direction:column;width:100%;max-height:calc(100% - 24px);max-height:calc(100dvh - 24px);background:#fff;border-radius:0;outline:0;box-shadow:0 -8px 32px rgba(0,0,0,.2)}
+.pm-h{flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 8px 0 20px;min-height:56px;border-bottom:1px solid var(--ln-soft)}
+.pm-h h2{margin:0;font-size:16px;font-weight:700;color:var(--c-title)}
+.pm-x{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border:0;border-radius:0;background:none;color:var(--c-name);cursor:pointer}
+.pm-body{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:20px 20px 8px}
+.pm .shp-total{display:flex;margin:20px 0 12px}
+.pm .shp-sizes{margin:0 0 16px}
+.pm-f{flex:none;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;padding:12px 20px calc(12px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--ln-soft)}
+.pm-f .shp-btn{height:var(--h-btn);font-size:16px;padding:0 12px}
+html.pm-lock,html.pm-lock body{overflow:hidden}
+@media (min-width:901px){.pm{display:none}}
+
+/* mobile: the page itself shows only the price bar + 구매하기; the options live in the sheet */
 @media (max-width:900px){
-  .ct-row{grid-template-columns:32px 56px minmax(0,1fr) auto;column-gap:8px;grid-template-areas:"ck name name rm" "img img meta qty"}
-  .ct-img img{width:88px}
+  .shp-info>.shp-opt,.shp-info>.shp-act2,.shp-info>#pd-pay-note{display:none}
+  .shp-bar .shp-btn{flex:1;max-width:60%}
+  .shp-toast{z-index:200}
 }
-@media (max-width:520px){
-  .ct-row{grid-template-columns:32px 56px minmax(0,1fr) 44px;grid-template-areas:"ck name name rm" "img img meta meta" "img img qty qty"}
-}
+/* the toast must not cover the sheet's controls: while the sheet is open it shows at the top */
+html.pm-lock .shp-toast{bottom:auto;top:72px;transform:translate(-50%,-12px)}
+html.pm-lock .shp-toast.on{transform:translate(-50%,0)}

@@ -150,25 +150,20 @@
       return ok && items().length ? t : null;
     }
   };
-  // ---- selection (장바구니 전체선택 / 개별선택 / 선택삭제): what is NOT ticked is neither summed up, nor deleted, nor handed to the order page. New lines are ticked by default.
-  var SEL_KEY = 'impetvs-cart-unsel';
-  function unsel() { try { var v = JSON.parse(sget(SEL_KEY) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } }
+  // ---- no per-line selection any more: every line of the cart is part of the order. (An older "unticked" list from a previous version is deleted so that no line is silently left out.)
+  try { localStorage.removeItem('impetvs-cart-unsel'); } catch (e) {}
   function keyOf(i) { return i.id + '|' + i.option; }
   cart.keyOf = keyOf;
-  cart.selected = function () { var u = unsel(); return items().filter(function (i) { return u.indexOf(keyOf(i)) < 0; }); };
-  cart.isSelected = function (i) { return unsel().indexOf(keyOf(i)) < 0; };
-  cart.setSelected = function (i, on) { var u = unsel(), k = keyOf(i), p = u.indexOf(k); if (on && p > -1) u.splice(p, 1); if (!on && p < 0) u.push(k); sset(SEL_KEY, JSON.stringify(u)); };
-  cart.setAllSelected = function (on) { sset(SEL_KEY, JSON.stringify(on ? [] : items().map(keyOf))); };
-  cart.removeSelected = function () { var u = unsel(); save(items().filter(function (i) { return u.indexOf(keyOf(i)) > -1; })); };      // only the ticked lines go; the rest stays
-  cart.selCount = function () { return cart.selected().reduce(function (s, i) { return s + i.qty; }, 0); };
-  cart.selTotal = function () { var t = 0, ok = true, l = cart.selected(); l.forEach(function (i) { var x = cart.line(i); if (x === null) ok = false; else t += x; }); return ok && l.length ? t : null; };
+  cart.selected = function () { return items(); };
+  cart.selCount = function () { return items().reduce(function (s, i) { return s + i.qty; }, 0); };
+  cart.selTotal = function () { return cart.total(); };
   window.addEventListener('storage', function (e) { if (e.key === CART_KEY) emit(); });
 
   /* ------------------------------------------------------------ order hand-off */
   // What goes to the order page: product / capacity / quantity only (kept in sessionStorage for this tab).
   // Addresses, names, phone numbers and e-mail addresses are never written to any browser storage.
   var order = {
-    fromCart: function () { var v = JSON.stringify({ mode: 'cart', sel: cart.selected().map(keyOf) }); try { sessionStorage.setItem(ORDER_KEY, v); } catch (e) { mem[ORDER_KEY] = v; } },   // only the ticked lines go to the order page
+    fromCart: function () { var v = JSON.stringify({ mode: 'cart' }); try { sessionStorage.setItem(ORDER_KEY, v); } catch (e) { mem[ORDER_KEY] = v; } },   // the whole cart goes to the order page
     buyNow: function (id, option, qty) { qty = Math.max(1, Math.min(maxQty(id), Math.floor(qty) || 1)); var v = JSON.stringify({ mode: 'buy', items: [{ id: id, option: option, qty: qty }] }); try { sessionStorage.setItem(ORDER_KEY, v); } catch (e) { mem[ORDER_KEY] = v; } },
     // -> {mode, items} ; the cart is read live, "buy now" uses only the single selection that was passed
     source: function () {
@@ -176,8 +171,7 @@
       var s = null; try { s = JSON.parse(raw); } catch (e) {}
       if (!s) return { mode: 'cart', items: cart.selected() };
       if (s.mode === 'buy') return { mode: 'buy', items: normalize(s.items || []) };
-      var list = items(); if (Array.isArray(s.sel)) list = list.filter(function (i) { return s.sel.indexOf(keyOf(i)) > -1; }); else list = cart.selected();
-      return { mode: 'cart', items: list };
+      return { mode: 'cart', items: items() };
     }
   };
 
