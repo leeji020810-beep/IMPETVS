@@ -22,9 +22,10 @@
   // Kakao / Naver login have their OWN switch (config.js socialLoginReady): it never opens orders or payment, and it does not wait for legalReady
   // TEST MODE: while config.js has socialTest: true, a browser that opened any page once with ?social-test=1 can use Kakao / Naver login and the Kakao share although the public
   // switches (socialLoginReady / kakao.enabled / naver.enabled / kakaoShare.ready) are still false. Other visitors see nothing change. ?social-test=0 switches it off again.
-  try { var tm = /[?&]social-test=([01])(&|$)/.exec(location.search); if (tm && C.socialTest === true) { if (tm[1] === '1') lset(TKEY, '1'); else ldel(TKEY); } } catch (e) {}
-  function testMode() { return C.socialTest === true && lget(TKEY) === '1'; }
-  function providerOn(name) { return testMode() || !!(C[name] && C[name].enabled); }
+  try { var tm = /[?&]social-test=([01])(&|$)/.exec(location.search); if (tm && (C.socialTest === true || C.naverTest === true)) { if (tm[1] === '1') lset(TKEY, '1'); else ldel(TKEY); } } catch (e) {}
+  // naverTest: true = ONLY the Naver button works in a browser that opened ?social-test=1 (for the Naver reviewers, until Naver approves the app); socialTest: true = every provider.
+  function testMode() { return (C.socialTest === true || C.naverTest === true) && lget(TKEY) === '1'; }
+  function providerOn(name) { return !!(C[name] && C[name].enabled) || (testMode() && (C.socialTest === true || name === 'naver')); }
   function socialReady() { return backendReady() && (C.socialLoginReady === true || testMode()); }
   // e-mail sign-up has its own switch: opening it must not open inquiries, orders or social login (those keep using legalReady)
   function signupReady() { return backendReady() && C.signupReady === true; }
