@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fig-tokens.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/typography.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/semantic.css">
-<link rel="stylesheet" href="shop.css?v=20261017g">
+<link rel="stylesheet" href="shop.css?v=20261017h">
 <style>html,body{margin:0;background:#fff}</style>
 </head>
 <body>
@@ -30,7 +30,6 @@
       <p class="shp-notice" id="cb-intro" style="margin:0 0 24px">처음 이용하시는 계정입니다. 아래 정보를 입력하고 약관에 동의하면 가입이 완료됩니다.</p>
       <label class="shp-field"><span>이름</span><input class="shp-in" type="text" id="cb-name" autocomplete="name" maxlength="50"></label>
       <label class="shp-field"><span>휴대폰 번호</span><input class="shp-in" type="tel" id="cb-phone" autocomplete="tel" inputmode="numeric" placeholder="숫자만 입력"></label>
-      <label class="shp-field" id="cb-email-wrap" hidden><span>이메일 <small style="font-weight:400;color:rgba(55,56,60,.61)">(소셜 계정에서 이메일을 받지 못했습니다)</small></span><input class="shp-in" type="email" id="cb-email" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false"></label>
       <label class="shp-chk su-all"><input type="checkbox" id="cb-all"><span><b>모든 약관 동의에 동의합니다.</b></span></label>
       <label class="shp-chk"><input type="checkbox" id="cb-c0"><span>[필수] 만 14세 이상입니다.</span></label>
       <label class="shp-chk"><input type="checkbox" id="cb-c1"><span>[필수] <a href="terms.html" target="_blank" rel="noopener">이용약관</a>에 동의합니다.</span></label>
@@ -41,9 +40,9 @@
     </form>
   </div>
 </main>
-<script src="config.js?v=20261017g"></script>
-<script src="shop.js?v=20261017g"></script>
-<script src="auth.js?v=20261017g"></script>
+<script src="config.js?v=20261017h"></script>
+<script src="shop.js?v=20261017h"></script>
+<script src="auth.js?v=20261017h"></script>
 <script id="shp-js-callback">
 /* Callback for Kakao (Supabase puts the tokens in the URL fragment), Naver (?code&state -> naver-login Edge Function) and the e-mail confirmation links.
    A login is shown as successful only after the server really returned a session. A NEW social account is finished on the form below: nothing is consented to automatically. */
@@ -57,28 +56,27 @@
   if (!A.backendReady()) return fail('회원 서비스 연결 전입니다.');
 
   /* ---------- the sign-up form (consents + required data) */
-  var mode = null, pending = null, needEmail = false, busy = false;
+  var mode = null, pending = null, busy = false;
   var items = ['cb-c0', 'cb-c1', 'cb-c2'];
   function syncAll() { var k = items.filter(function (id) { return $(id).checked; }).length, all = $('cb-all'); all.checked = k === 3; all.indeterminate = k > 0 && k < 3; }
   $('cb-all').addEventListener('change', function () { items.forEach(function (id) { $(id).checked = $('cb-all').checked; }); syncAll(); });
   items.forEach(function (id) { $(id).addEventListener('change', syncAll); });
   function ferr(m) { $('cb-ferr').hidden = false; $('cb-ferr').textContent = m; }
   function showForm(o) {
-    mode = o.mode; pending = o.pending || null; needEmail = !!o.needEmail;
+    mode = o.mode; pending = o.pending || null;
     $('cb-msg').hidden = true; $('cb-err').hidden = true; $('cb-form').hidden = false; $('cb-h').textContent = '회원가입 완료';
-    $('cb-name').value = o.name || ''; $('cb-email-wrap').hidden = !needEmail;
+    $('cb-name').value = o.name || '';
     $('cb-name').focus();
   }
   $('cb-form').addEventListener('submit', function (e) {
     e.preventDefault(); $('cb-ferr').hidden = true; if (busy) return;
-    var name = $('cb-name').value.trim(), phoneRaw = $('cb-phone').value.trim(), phone = A.normPhone(phoneRaw), mail = A.normEmail($('cb-email').value);
+    var name = $('cb-name').value.trim(), phoneRaw = $('cb-phone').value.trim(), phone = A.normPhone(phoneRaw);
     if (!$('cb-c0').checked) return ferr('만 14세 이상만 가입할 수 있습니다. ‘만 14세 이상입니다’를 확인해 주세요.');
     if (!name) return ferr('이름을 입력해 주세요.');
     if (!phoneRaw) return ferr('휴대폰 번호를 입력해 주세요.');
     if (!phone) return ferr('휴대폰 번호 형식이 올바르지 않습니다. 예: 010-1234-5678');
-    if (needEmail && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) return ferr('연락 받을 이메일 주소를 정확히 입력해 주세요.');
     if (!$('cb-c1').checked || !$('cb-c2').checked) return ferr('필수 약관에 모두 동의해 주세요.');
-    var f = { name: name, phone: phone, age14: $('cb-c0').checked, terms: $('cb-c1').checked, privacy: $('cb-c2').checked, contactEmail: needEmail ? mail : null };
+    var f = { name: name, phone: phone, age14: $('cb-c0').checked, terms: $('cb-c1').checked, privacy: $('cb-c2').checked };
     var b = $('cb-submit'); busy = true; b.disabled = true; b.textContent = '처리 중…';
     (mode === 'naver' ? A.completeNaver(pending, f) : A.completeSocial(f)).then(function (r) {
       busy = false; b.disabled = false; b.textContent = '가입 완료';
@@ -97,7 +95,9 @@
     A.signupState().then(function (st) {
       if (!st) { return A.signOut().then(function () { fail('회원 정보를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.'); }); }
       if (st.linked_email_account) return A.signOut().then(function () { fail('이미 같은 이메일로 가입된 계정이 있습니다. 가입한 방법(이메일·비밀번호)으로 로그인해 주세요.'); });
-      if (!st.complete) return showForm({ mode: 'kakao', name: st.name || '', needEmail: !st.has_email });
+      // e-mail is a REQUIRED Kakao consent item: an account that came without one is removed again, nothing is kept
+      if (!st.complete && !st.has_email) return A.cancelSocial().then(function () { fail('카카오 계정에서 이메일 정보를 받지 못했습니다. 카카오 로그인 동의 화면에서 이메일 제공에 동의한 뒤 다시 시도해 주세요.'); });
+      if (!st.complete) return showForm({ mode: 'kakao', name: st.name || '' });
       done();
     });
   }
@@ -119,7 +119,7 @@
   if (q.get('error')) return fail(q.get('error') === 'access_denied' ? '로그인을 취소하셨습니다. 필요하시면 다시 시도해 주세요.' : '소셜 로그인이 취소되었거나 실패했습니다.');
   if (q.get('code')) return A.finishNaver(q.get('code'), q.get('state')).then(function (r) {
     if (!r.ok) return fail(r.message);
-    if (r.signup) return showForm({ mode: 'naver', pending: r.pending, name: r.name, needEmail: false });
+    if (r.signup) return showForm({ mode: 'naver', pending: r.pending, name: r.name });
     done();
   });
   if (q.get('resume') && A.loggedIn()) return afterSession();

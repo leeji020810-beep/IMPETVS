@@ -7,7 +7,7 @@
 (function () {
   'use strict';
   var C = window.IMPETVS_CONFIG || {}, SB = C.supabase || {};
-  var SKEY = 'impetvs-session', NKEY = 'impetvs-next', OKEY = 'impetvs-oauth-state', BKEY = 'impetvs-oauth-bind', CHK = 'impetvs-su-ok';
+  var SKEY = 'impetvs-session', NKEY = 'impetvs-next', OKEY = 'impetvs-oauth-state', BKEY = 'impetvs-oauth-bind', CHK = 'impetvs-su-ok', TKEY = 'impetvs-social-test';
   var mem = {};
   function lget(k) { try { return window.localStorage.getItem(k); } catch (e) { return mem[k] || null; } }
   function lset(k, v) { try { window.localStorage.setItem(k, v); } catch (e) { mem[k] = v; } }
@@ -20,7 +20,12 @@
   // orders (and the order page) collect personal data: they wait for the approved 약관 / 개인정보처리방침 (legalReady). Social login has its own switch (socialReady).
   function legalReady() { return backendReady() && C.legalReady === true; }
   // Kakao / Naver login have their OWN switch (config.js socialLoginReady): it never opens orders or payment, and it does not wait for legalReady
-  function socialReady() { return backendReady() && C.socialLoginReady === true; }
+  // TEST MODE: while config.js has socialTest: true, a browser that opened any page once with ?social-test=1 can use Kakao / Naver login and the Kakao share although the public
+  // switches (socialLoginReady / kakao.enabled / naver.enabled / kakaoShare.ready) are still false. Other visitors see nothing change. ?social-test=0 switches it off again.
+  try { var tm = /[?&]social-test=([01])(&|$)/.exec(location.search); if (tm && C.socialTest === true) { if (tm[1] === '1') lset(TKEY, '1'); else ldel(TKEY); } } catch (e) {}
+  function testMode() { return C.socialTest === true && lget(TKEY) === '1'; }
+  function providerOn(name) { return testMode() || !!(C[name] && C[name].enabled); }
+  function socialReady() { return backendReady() && (C.socialLoginReady === true || testMode()); }
   // e-mail sign-up has its own switch: opening it must not open inquiries, orders or social login (those keep using legalReady)
   function signupReady() { return backendReady() && C.signupReady === true; }
   // 1:1 inquiries have their own switch too (they never open orders, social login or payment)
@@ -71,7 +76,7 @@
     if (m.indexOf('phone_duplicate') > -1) return '이미 가입에 사용된 휴대폰 번호입니다.';
     if (m.indexOf('phone_required') > -1) return '휴대폰 번호 형식이 올바르지 않습니다. 예: 010-1234-5678';
     if (m.indexOf('consent_required') > -1) return '필수 약관에 모두 동의해 주세요.';
-    if (m.indexOf('email_required') > -1) return '연락 받을 이메일 주소를 정확히 입력해 주세요.';
+    if (m.indexOf('email_required') > -1) return '카카오 계정에서 이메일 정보를 받지 못했습니다. 카카오 로그인 동의 화면에서 이메일 제공에 동의해 주세요.';
     if (m.indexOf('name_required') > -1) return '이름을 입력해 주세요.';
     if (m.indexOf('already_complete') > -1) return '이미 가입이 완료된 계정입니다.';
     if (res.message && /[가-힣]/.test(res.message)) return res.message; // messages written by our own Edge Functions are already Korean
@@ -186,14 +191,14 @@
   /* ---------------------------------------------------------------- social login (Kakao via Supabase, Naver via the naver-login function) */
   // Kakao: Supabase Auth runs the whole exchange. The account exists after the Kakao login but is NOT usable until the sign-up form (consents) is finished.
   function startKakao() {
-    if (!(C.kakao && C.kakao.enabled && socialReady())) return false;
+    if (!(providerOn('kakao') && socialReady())) return false;
     location.href = String(SB.url).replace(/\/$/, '') + '/auth/v1/authorize?provider=kakao&redirect_to=' + encodeURIComponent(siteBase() + '/auth-callback.html');
     return true;
   }
   function randHex(n) { var a = new Uint8Array(n || 24); (window.crypto || window.msCrypto).getRandomValues(a); return [].map.call(a, function (x) { return ('0' + x.toString(16)).slice(-2); }).join(''); }
   // Naver: the SERVER makes the login request (state) and remembers it; this browser only keeps a random "bind" value so that nobody else can finish this request.
   function startNaver() {
-    if (!(C.naver && C.naver.enabled && socialReady())) return Promise.resolve({ ok: false, message: '네이버 로그인은 준비 중입니다.' });
+    if (!(providerOn('naver') && socialReady())) return Promise.resolve({ ok: false, message: '네이버 로그인은 준비 중입니다.' });
     var bind = randHex(24); sset(BKEY, bind);
     return raw('/functions/v1/naver-login', { method: 'POST', body: { action: 'start', bind: bind, redirect_uri: siteBase() + '/auth-callback.html' } }).then(function (r) {
       if (r.ok && r.data && r.data.url) { location.href = r.data.url; return { ok: true }; }
@@ -236,9 +241,9 @@
   }
   // Kakao: where does this signed-in member stand? -> {exists, complete, provider, has_email, linked_email_account, name, phone} | null
   function signupState() { return rpc('my_signup_state').then(function (r) { return r.ok && r.data ? r.data : null; }); }
-  // the Kakao sign-up form: the three ticks come from the person; the server records them with its own time. f = {name, phone, age14, terms, privacy, contactEmail}
+  // the Kakao sign-up form: the three ticks come from the person; the server records them with its own time. f = {name, phone, age14, terms, privacy}
   function completeSocial(f) {
-    return rpc('complete_social_signup', { p_name: f.name, p_phone: f.phone, p_age14: f.age14 === true, p_terms: f.terms === true, p_privacy: f.privacy === true, p_contact_email: f.contactEmail || null }).then(function (r) {
+    return rpc('complete_social_signup', { p_name: f.name, p_phone: f.phone, p_age14: f.age14 === true, p_terms: f.terms === true, p_privacy: f.privacy === true }).then(function (r) {
       if (r.ok) { sset(CHK, '1'); return { ok: true }; }
       return { ok: false, message: errorText(r) };
     });
@@ -321,7 +326,7 @@
     cfg: C, backendReady: backendReady, legalReady: legalReady, guestLookupReady: guestLookupReady, guestLookup: guestLookup, signupReady: signupReady, inquiryReady: inquiryReady, loggedIn: loggedIn, profile: profile, isAdmin: isAdmin, onChange: function (f) { listeners.push(f); },
     signUp: signUp, signIn: signIn, changeEmail: changeEmail, changePassword: changePassword, sendReauth: sendReauth, refreshProfile: refreshProfile, remembered: remembered, signOut: signOut, resetRequest: resetRequest, updatePassword: updatePassword,
     startKakao: startKakao, startNaver: startNaver, finishFromHash: finishFromHash, finishNaver: finishNaver, completeNaver: completeNaver, parseHash: parseHash,
-    socialReady: socialReady, signupState: signupState, completeSocial: completeSocial, cancelSocial: cancelSocial, guardIncomplete: guardIncomplete,
+    socialReady: socialReady, testMode: testMode, providerOn: providerOn, signupState: signupState, completeSocial: completeSocial, cancelSocial: cancelSocial, guardIncomplete: guardIncomplete,
     clearSession: clearSession, checkSignup: checkSignup, normEmail: normEmail, normPhone: normPhone, findIdSend: findIdSend, findIdVerify: findIdVerify, rest: rest, rpc: rpc, fn: fn, errorText: errorText, NOT_READY: NOT_READY,
     setNext: setNext, takeNext: takeNext, needLogin: needLogin, paintHeader: paintHeader, siteBase: siteBase
   };

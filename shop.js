@@ -216,7 +216,12 @@
   }
   var shareState = null;
   // 카카오톡 needs a Kakao app: it is offered only when config.js has the public JavaScript key; otherwise the entry is visibly disabled ("준비 중") and never claims to work
-  function kakaoReady() { var k = window.IMPETVS_CONFIG && window.IMPETVS_CONFIG.kakaoShare; return !!(k && k.jsKey); }
+  // The entry is live for visitors only when kakaoShare.ready is true (set it after the privacy policy that names the Kakao SDK is published); a tester browser (?social-test=1, see auth.js) can use it earlier.
+  function kakaoReady() {
+    var C = window.IMPETVS_CONFIG || {}, k = C.kakaoShare, test = false;
+    try { test = C.socialTest === true && window.localStorage.getItem('impetvs-social-test') === '1'; } catch (e) {}
+    return !!(k && k.jsKey && (k.ready === true || test));
+  }
   // The Kakao JavaScript SDK is loaded as soon as the share menu opens (when the JavaScript key is set), so that the click itself can open Kakao's share window
   // (browsers block a pop-up that is opened after a download has finished). The key is the PUBLIC "JavaScript key" of the Kakao app, NOT the REST API key / Client Secret used for login.
   var kakaoSdk = null;
