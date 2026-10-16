@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/fig-tokens.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/typography.css">
 <link rel="stylesheet" href="_ds/wanted-design-system-beb8d14c-f6b2-4c59-bddd-968280ae75bb/tokens/semantic.css">
-<link rel="stylesheet" href="shop.css?v=20261017h">
+<link rel="stylesheet" href="shop.css?v=20261017i">
 <style>html,body{margin:0;background:#fff}</style>
 </head>
 <body>
@@ -104,9 +104,9 @@
     </section>
   </div>
 </main>
-<script src="config.js?v=20261017h"></script>
-<script src="shop.js?v=20261017h"></script>
-<script src="auth.js?v=20261017h"></script>
+<script src="config.js?v=20261017i"></script>
+<script src="shop.js?v=20261017i"></script>
+<script src="auth.js?v=20261017i"></script>
 <script id="shp-js-login">
 (function () {
   var root = document.getElementById('login-root'), S = window.IMShop, A = window.IMAuth, C = A.cfg;
@@ -230,7 +230,6 @@
     });
   });
 
-  if (A.testMode()) { var tn = document.createElement('p'); tn.className = 'shp-note'; tn.setAttribute('role', 'status'); tn.textContent = '소셜 로그인 시험 모드입니다(이 브라우저에서만). 끄려면 주소 끝에 ?social-test=0'; $('lg-form').appendChild(tn); }
   if (A.loggedIn()) $('lg-note').textContent = '이미 로그인되어 있습니다. 상단의 사람 아이콘에서 MY PAGE으로 이동할 수 있습니다.';
 })();
 </script>
