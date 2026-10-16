@@ -192,7 +192,7 @@
   // Kakao: Supabase Auth runs the whole exchange. The account exists after the Kakao login but is NOT usable until the sign-up form (consents) is finished.
   function startKakao() {
     if (!(providerOn('kakao') && socialReady())) return false;
-    location.href = String(SB.url).replace(/\/$/, '') + '/auth/v1/authorize?provider=kakao&redirect_to=' + encodeURIComponent(siteBase() + '/auth-callback.html');
+    location.href = String(SB.url).replace(/\/$/, '') + '/auth/v1/authorize?provider=kakao&scope=account_email&redirect_to=' + encodeURIComponent(siteBase() + '/auth-callback.html');   // scope=account_email: Supabase asks Kakao for profile_nickname + profile_image by default, which this Kakao app does not use (KOE205); a plain `scope` parameter replaces that list with the e-mail only
     return true;
   }
   function randHex(n) { var a = new Uint8Array(n || 24); (window.crypto || window.msCrypto).getRandomValues(a); return [].map.call(a, function (x) { return ('0' + x.toString(16)).slice(-2); }).join(''); }
