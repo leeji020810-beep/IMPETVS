@@ -10,9 +10,7 @@ window.IMPETVS_CONFIG = {
   supabase: { url: 'https://bjxxilrwbydpcdemrnon.supabase.co', anonKey: 'sb_publishable_m9QpzhyAfdMCaNKKq41S5w_4bM4gPEQ' }, // public project URL + publishable key (anonKey = the publishable key)
   siteUrl: 'https://leeji020810-beep.github.io/IMPETVS',                            // public address of the site, e.g. 'https://<id>.github.io/<repo>' (empty = same folder as the current page)
   kakao: { enabled: true },                // Kakao login is open to everyone (tested 2026-10-16). Needs socialLoginReady: true.
-  naver: { enabled: false },               // stays false until Naver approves the app (검수 승인 대기). Then set true.
-  socialTest: false,                       // all-provider test mode is closed (a browser with ?social-test=1 gets nothing extra)
-  naverTest: true,                         // TEMPORARY, until Naver approves the app: ONLY the Naver button works in a browser that opened login.html?social-test=1 (so the Naver reviewers and test members can log in). Set false (or remove) after approval.
+  naver: { enabled: true },                // Naver login is open to everyone (Naver approved the app on 2026-10-19). Needs socialLoginReady: true.
   socialLoginReady: true,                  // Kakao login (and, later, Naver) are open. SEPARATE from legalReady and from payment: it opens NOTHING else (no orders, no payment).
   sms: { enabled: false },                 // true after an SMS provider is connected to the find-id Edge Function
   payment: { provider: 'toss', clientKey: '', live: false }, // Toss Payments. clientKey = the PUBLIC client key (test_gck_… for tests). live: true ONLY after contract, review and live keys are done (see backend/TOSS-SETUP.md). The SECRET key never goes here.
